@@ -215,17 +215,17 @@ const loadImage = async () => {
   };
 
   return (
-    <div className="group relative cursor-pointer" onClick={onClick}>
+    <div className="group relative cursor-pointer " onClick={onClick}>
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/50 to-blue-100/50 rounded-3xl blur-xl transition-all duration-300 group-hover:blur-2xl opacity-0 group-hover:opacity-100"></div>
 
-      <Card className="relative bg-white rounded-3xl p-6 shadow-xl border-0 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden">
+      <Card className="relative  bg-white rounded-3xl p-6 shadow-xl border-0 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden">
         {/* Category Badge */}
         <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs z-50 font-semibold ${getCategoryBadgeColor(product.category)}`}>
           {product.category}
         </div>
 
         {/* Product Image with Loader */}
-        <div className="relative mb-6 h-40 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+        <div className="relative  mb-6 h-40 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
           {!isImageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
               <div className="w-6 h-6 border-2 border-t-transparent border-emerald-500 rounded-full animate-spin" />
@@ -247,28 +247,16 @@ const loadImage = async () => {
         </div>
 
         {/* Product Info */}
-        <div className="space-y-3">
-          <h3 className="text-lg font-bold text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-2">
-            {product.name}
-          </h3>
+        <div className="space-y-3 ">
+         <h3 className="text-lg font-bold text-gray-900 group-hover:text-emerald-700 transition-colors truncate">
+  {product.name}
+</h3>
+
+
       
 
           {/* Features */}
-          {product.key_features && (
-            <div className="flex flex-wrap gap-1">
-              {product.key_features
-                .split(",")
-                .slice(0, 2)
-                .map((feature, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
-                  >
-                    {feature.trim()}
-                  </span>
-                ))}
-            </div>
-          )}
+         
 
           {/* Size Info */}
           {product.sizes?.length > 0 && (
