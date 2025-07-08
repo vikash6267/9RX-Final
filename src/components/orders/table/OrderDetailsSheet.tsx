@@ -285,7 +285,7 @@ export const OrderDetailsSheet = ({
       // INVOICE title (large, bold, left-aligned)
       doc.setFontSize(24)
       doc.setFont("helvetica", "bold")
-      doc.text("INVOICE", margin, currentY + 15)
+      doc.text("PURCHASE ORDER", margin, currentY + 15)
 
       // Date (top-right, below barcode)
       doc.setFontSize(11)
@@ -404,7 +404,7 @@ export const OrderDetailsSheet = ({
           const unitOfMeasure = item.sizes?.map((s: any) => `${s.size_value}${s.size_unit}`).join(", ") || "Each"
           const price = `$${Number(item.price || 0).toFixed(2)}`
           const quantity = (item.quantity || 0).toString()
-          const total = `$${(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2)}`
+          const total = `$${(Number(item.price )).toFixed(2)}`
           return [itemNumber, description, unitOfMeasure, price, quantity, total]
         }) || []
         ; (doc as any).autoTable({
@@ -529,153 +529,153 @@ export const OrderDetailsSheet = ({
 
 
   const updateSizeQuantities = async (orderItems, isApprove = true) => {
-  for (const item of orderItems) {
-    if (item.sizes && item.sizes.length > 0) {
-      for (const size of item.sizes) {
-        // Fetch current stock for this size
-        const { data: currentSize, error: fetchError } = await supabase
-          .from("product_sizes")
-          .select("stock")
-          .eq("id", size.id)
-          .single();
+    for (const item of orderItems) {
+      if (item.sizes && item.sizes.length > 0) {
+        for (const size of item.sizes) {
+          // Fetch current stock for this size
+          const { data: currentSize, error: fetchError } = await supabase
+            .from("product_sizes")
+            .select("stock")
+            .eq("id", size.id)
+            .single();
 
-        if (fetchError || !currentSize) {
-          console.warn(`⚠️ Size not found in Supabase for ID: ${size.id}, skipping...`);
-          continue;
-        }
+          if (fetchError || !currentSize) {
+            console.warn(`⚠️ Size not found in Supabase for ID: ${size.id}, skipping...`);
+            continue;
+          }
 
-        const newQuantity = isApprove
-          ? currentSize.stock + size.quantity
-          : currentSize.stock - size.quantity;
+          const newQuantity = isApprove
+            ? currentSize.stock + size.quantity
+            : currentSize.stock - size.quantity;
 
-        // Update stock
-        const { error: updateError } = await supabase
-          .from("product_sizes")
-          .update({ stock: newQuantity })
-          .eq("id", size.id);
+          // Update stock
+          const { error: updateError } = await supabase
+            .from("product_sizes")
+            .update({ stock: newQuantity })
+            .eq("id", size.id);
 
-        if (updateError) {
-          console.error(`❌ Failed to update stock for size ID: ${size.id}`, updateError);
-          throw new Error("Failed to update size quantity");
-        } else {
-          console.log(`✅ Updated stock for size ID: ${size.id}`);
+          if (updateError) {
+            console.error(`❌ Failed to update stock for size ID: ${size.id}`, updateError);
+            throw new Error("Failed to update size quantity");
+          } else {
+            console.log(`✅ Updated stock for size ID: ${size.id}`);
+          }
         }
       }
     }
-  }
-};
+  };
 
-const handleApprove = async () => {
-  try {
-    // Show loading popup
-    Swal.fire({
-      title: 'Approving Order...',
-      text: 'Please wait while we update the stock.',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-      background: '#f9fafb',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-        title: 'text-lg font-semibold',
-      },
-    });
+  const handleApprove = async () => {
+    try {
+      // Show loading popup
+      Swal.fire({
+        title: 'Approving Order...',
+        text: 'Please wait while we update the stock.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+        background: '#f9fafb',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+          title: 'text-lg font-semibold',
+        },
+      });
 
-    await updateSizeQuantities(order.items, true);
-    await supabase
-      .from("orders")
-      .update({ poApproved: true })
-      .eq("id", order.id);
+      await updateSizeQuantities(order.items, true);
+      await supabase
+        .from("orders")
+        .update({ poApproved: true })
+        .eq("id", order.id);
 
-    onOpenChange(false);
-    Swal.close(); // Close loading
+      onOpenChange(false);
+      Swal.close(); // Close loading
 
-    // Show success
-    Swal.fire({
-      title: 'Order Approved ✅',
-      text: 'Stock has been updated successfully!',
-      icon: 'success',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#22c55e',
-      background: '#f0fdf4',
-      color: '#065f46',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-      },
-    }).then(() => {
-      window.location.reload();
-    });
-  } catch (error) {
-    Swal.close();
-    Swal.fire({
-      title: 'Error',
-      text: 'Something went wrong while approving the order.',
-      icon: 'error',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#ef4444',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-      },
-    });
-  }
-};
+      // Show success
+      Swal.fire({
+        title: 'Order Approved ✅',
+        text: 'Stock has been updated successfully!',
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#22c55e',
+        background: '#f0fdf4',
+        color: '#065f46',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+        },
+      }).then(() => {
+        window.location.reload();
+      });
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        title: 'Error',
+        text: 'Something went wrong while approving the order.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#ef4444',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+        },
+      });
+    }
+  };
 
-const handleReject = async () => {
-  try {
-    Swal.fire({
-      title: 'Rejecting Order...',
-      text: 'Please wait while we update the stock.',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-      background: '#f9fafb',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-        title: 'text-lg font-semibold',
-      },
-    });
+  const handleReject = async () => {
+    try {
+      Swal.fire({
+        title: 'Rejecting Order...',
+        text: 'Please wait while we update the stock.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+        background: '#f9fafb',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+          title: 'text-lg font-semibold',
+        },
+      });
 
-    await updateSizeQuantities(order.items, false);
-    await supabase
-      .from("orders")
-      .update({ poApproved: false })
-      .eq("id", order.id);
+      await updateSizeQuantities(order.items, false);
+      await supabase
+        .from("orders")
+        .update({ poApproved: false })
+        .eq("id", order.id);
 
-    onOpenChange(false);
-    Swal.close();
+      onOpenChange(false);
+      Swal.close();
 
-    Swal.fire({
-      title: 'Order Rejected ❌',
-      text: 'Stock has been reduced successfully!',
-      icon: 'warning',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#f59e0b',
-      background: '#fff7ed',
-      color: '#78350f',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-      },
-    }).then(() => {
-      window.location.reload();
-    });
-  } catch (error) {
-    Swal.close();
-    Swal.fire({
-      title: 'Error',
-      text: 'Something went wrong while rejecting the order.',
-      icon: 'error',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#ef4444',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-      },
-    });
-  }
-};
+      Swal.fire({
+        title: 'Order Rejected ❌',
+        text: 'Stock has been reduced successfully!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#f59e0b',
+        background: '#fff7ed',
+        color: '#78350f',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+        },
+      }).then(() => {
+        window.location.reload();
+      });
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        title: 'Error',
+        text: 'Something went wrong while rejecting the order.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#ef4444',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+        },
+      });
+    }
+  };
 
 
 
@@ -771,8 +771,8 @@ const handleReject = async () => {
                     onClick={sendMail}
                     disabled={loading}
                     className={`px-4 py-2 font-semibold text-sm md:text-base rounded-lg transition duration-300 ${loading
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-red-600 hover:bg-red-700 text-white"
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 text-white"
                       }`}
                   >
                     {loading ? "Sending..." : "Send Payment Link"}
@@ -824,23 +824,23 @@ const handleReject = async () => {
             </button>
 
             {/* Approve / Reject Buttons */}
-           {order?.poApproved ? (
-  <button
-    onClick={handleReject}
-    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg shadow hover:shadow-lg transition duration-300"
-  >
-    <XCircle size={18} className="text-white" />
-    Reject Purchase
-  </button>
-) : (
-  <button
-    onClick={handleApprove}
-    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg shadow hover:shadow-lg transition duration-300"
-  >
-    <CheckCircle size={18} className="text-white" />
-    Approve Purchase
-  </button>
-)}
+            {order?.poApproved ? (
+              <button
+                onClick={handleReject}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg shadow hover:shadow-lg transition duration-300"
+              >
+                <XCircle size={18} className="text-white" />
+                Reject Purchase
+              </button>
+            ) : (
+              <button
+                onClick={handleApprove}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg shadow hover:shadow-lg transition duration-300"
+              >
+                <CheckCircle size={18} className="text-white" />
+                Approve Purchase
+              </button>
+            )}
 
           </div>
         )}

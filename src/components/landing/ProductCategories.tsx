@@ -198,20 +198,9 @@ const loadImage = async () => {
   }, [product.image_url]);
 
   const getCategoryBadgeColor = (category: string) => {
-    switch (category?.toUpperCase()) {
-      case "RX VIALS":
+ 
         return "bg-blue-100 text-blue-700";
-      case "RX LABELS":
-        return "bg-green-100 text-green-700";
-      case "LIQUID OVALS":
-        return "bg-purple-100 text-purple-700";
-      case "OINTMENT JARS":
-        return "bg-orange-100 text-orange-700";
-      case "RX PAPER BAGS":
-        return "bg-pink-100 text-pink-700";
-      default:
-        return "bg-emerald-100 text-emerald-700";
-    }
+  
   };
 
   return (
@@ -273,7 +262,7 @@ const loadImage = async () => {
           {/* Pricing Placeholder */}
           <div className="pt-2 border-t border-gray-100">
             <div className="flex items-center justify-between">
-              <span className="text-gray-400 font-medium">Pricing Available</span>
+              {/* <span className="text-gray-400 font-medium">Pricing Available</span> */}
               <div className="flex items-center text-emerald-600">
                 <Lock className="w-4 h-4 mr-1" />
                 <span className="text-sm font-semibold">After Login</span>

@@ -232,10 +232,12 @@ const fetchUsers = async () => {
 
   const {
     statusFilter,
+    statusFilter2,
     searchQuery,
     dateRange,
     setStatusFilter,
     setSearchQuery,
+    setStatusFilter2,
     setDateRange,
     filteredOrders,
   } = useOrderFilters(orders, poIs);
@@ -416,10 +418,19 @@ const fetchUsers = async () => {
 
           {/* Move StatusFilter right here */}
           {!poIs && (
-            <StatusFilter
+            <>
+              <StatusFilter
               value={statusFilter}
               onValueChange={setStatusFilter}
+              type="status"
             />
+              <StatusFilter
+              value={statusFilter2}
+              onValueChange={setStatusFilter2}
+            />
+            
+            </>
+          
           )}
 
           {/* Export Orders */}

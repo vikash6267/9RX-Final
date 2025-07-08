@@ -44,7 +44,7 @@ export const AddSizeForm = ({ newSize, onSizeChange, onAddSize, category }: AddS
                 </SelectTrigger>
                 <SelectContent>
                   {categoryConfig.sizeUnits.map((unit) => (
-                    <SelectItem key={unit} value={unit}>
+                    <SelectItem key={unit} value={unit} className="uppercase">
                       {unit}
                     </SelectItem>
                   ))}

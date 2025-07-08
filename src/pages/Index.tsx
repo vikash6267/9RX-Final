@@ -157,20 +157,6 @@ const Index = () => {
   );
 };
 
-const FooterColumn = ({ title, items }: { title: string; items: string[] }) => (
-  <div>
-    <h4 className="text-white font-bold mb-4 md:mb-6">{title}</h4>
-    <ul className="space-y-2 md:space-y-3">
-      {items.map((item, index) => (
-        <li
-          key={index}
-          className="text-gray-400 hover:text-white transition-colors duration-300 cursor-pointer text-sm md:text-base"
-        >
-          {item}
-        </li>
-      ))}
-    </ul>
-  </div>
-);
+
 
 export default Index;

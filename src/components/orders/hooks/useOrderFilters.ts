@@ -3,6 +3,7 @@ import { OrderFormValues } from "../schemas/orderSchema";
 
 export const useOrderFilters = (orders: OrderFormValues[],po:boolean = true) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter2, setStatusFilter2] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined;
@@ -15,6 +16,9 @@ console.log(orders)
   const filteredOrders = (orders || [])
   .filter(order =>
     statusFilter === "all" ? true : order.payment_status === statusFilter
+  )
+  .filter(order =>
+    statusFilter2 === "all" ? true : order.status?.toLowerCase() === statusFilter2.toLowerCase()
   )
  .filter(order => {
   if (!searchQuery) return true;
@@ -56,9 +60,11 @@ console.log(orders)
 
   return {
     statusFilter,
+    statusFilter2,
     searchQuery,
     dateRange,
     setStatusFilter,
+    setStatusFilter2,
     setSearchQuery,
     setDateRange,
     filteredOrders
