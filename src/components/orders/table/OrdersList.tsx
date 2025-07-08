@@ -425,7 +425,7 @@ console.log(orders)
             </TableHead>
           )}
           <TableHead className="font-semibold text-center border-gray-300">
-            Customer Name
+            {poIs ? "Vendor":"Customer"} Name
           </TableHead>
           <TableHead className="font-semibold text-center border-gray-300">
             Order Date

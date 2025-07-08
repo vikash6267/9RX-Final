@@ -22,9 +22,10 @@ declare global {
 interface CustomerInfoFieldsProps {
   form: UseFormReturn<any>
   readOnly?: boolean
+  poIs?: boolean
 }
 
-export function CustomerInfoFields({ form, readOnly = false }: CustomerInfoFieldsProps) {
+export function CustomerInfoFields({ form, readOnly = false,poIs = false }: CustomerInfoFieldsProps) {
   const [sameAsCustomer, setSameAsCustomer] = useState(false)
   const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([])
   const [shippingSuggestions, setShippingSuggestions] = useState<any[]>([])
@@ -151,7 +152,7 @@ export function CustomerInfoFields({ form, readOnly = false }: CustomerInfoField
   return (
     <div className="space-y-4">
       {/* Customer Info Fields */}
-      <h2 className="text-lg font-semibold">Customer Information</h2>
+      <h2 className="text-lg font-semibold">{poIs ? "Vendor" :"Customer"} Information</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {renderField("customerInfo.name", "Name")}
         {renderField("customerInfo.email", "Email", "email")}

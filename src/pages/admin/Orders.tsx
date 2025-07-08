@@ -28,8 +28,8 @@ export default function Orders() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h3 className="text-3xl font-bold tracking-tight">{poIs ? "Purchase Orders":"Orders Management"}</h3>
-{     !poIs &&     <p className="text-muted-foreground">
+          <h3 className="text-3xl font-bold tracking-tight">{poIs ? "Purchase Orders" : "Orders Management"}</h3>
+          {!poIs && <p className="text-muted-foreground">
             Process and manage customer orders
           </p>}
         </div>
@@ -42,7 +42,7 @@ export default function Orders() {
           onDeleteOrder={handleDeleteOrder}
           poIs={poIs}
 
-/>
+        />
       </div>
     </DashboardLayout>
   );

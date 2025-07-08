@@ -98,6 +98,7 @@ export const useOrderManagement = () => {
             tax_amount: order.tax_amount,
             void: order.void,
             voidReason: order.voidReason,
+            poApproved: order.poApproved,
             customerInfo: order.customerInfo || {
               name:
                 profileData.first_name && profileData.last_name

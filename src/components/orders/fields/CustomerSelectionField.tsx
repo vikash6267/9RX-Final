@@ -11,6 +11,7 @@ interface CustomerSelectionFieldProps {
   form: UseFormReturn<any>;
   initialData : any
   locationId : any
+  poIs? : boolean
 }
 
 // Improved customer validation schema
@@ -27,7 +28,7 @@ const customerValidationSchema = z.object({
   }),
 });
 
-export function CustomerSelectionField({ form ,initialData,locationId}: CustomerSelectionFieldProps) {
+export function CustomerSelectionField({ form ,initialData,locationId,poIs=false}: CustomerSelectionFieldProps) {
   const { toast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
   const userProfile = useSelector(selectUserProfile);
@@ -193,7 +194,7 @@ export function CustomerSelectionField({ form ,initialData,locationId}: Customer
             Validating customer information...
           </div>
         ) : (
-          <CustomerInfoFields form={form} />
+          <CustomerInfoFields form={form} poIs={poIs} />
         )}
       </div>
     </div>

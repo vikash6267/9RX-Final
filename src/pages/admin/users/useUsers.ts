@@ -129,14 +129,16 @@ export function useUsers() {
     };
   }, []);
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === "all" || user.type.toLowerCase() === filterType.toLowerCase();
-    const matchesStatus = filterStatus === "all" || user.status.toLowerCase() === filterStatus.toLowerCase();
-    return matchesSearch && matchesType && matchesStatus;
-  });
+const filteredUsers = users.filter((user) => {
+  const isNotVendor = user.type.toLowerCase() !== "vendor";
+  const matchesSearch =
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesType = filterType === "all" || user.type.toLowerCase() === filterType.toLowerCase();
+  const matchesStatus = filterStatus === "all" || user.status.toLowerCase() === filterStatus.toLowerCase();
+  return isNotVendor && matchesSearch && matchesType && matchesStatus;
+});
+
 
   
   // Update User Mutation

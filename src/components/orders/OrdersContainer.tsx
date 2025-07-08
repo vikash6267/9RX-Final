@@ -34,6 +34,7 @@ import { CSVLink } from "react-csv";
 import { useCart } from "@/hooks/use-cart";
 import { useDispatch } from "react-redux";
 import { updateCartPrice } from "@/store/actions/cartActions";
+import VendorDialogForm from "./vendor-dialof-form";
 
 const exportToCSV = (orders: OrderFormValues[]) => {
   if (!orders || orders.length === 0) {
@@ -155,74 +156,63 @@ export const OrdersContainer = ({
       }
     };
 
-    const fetchUsers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("id, display_name, type, email");
+const fetchUsers = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, display_name, type, email");
 
-        if (error) {
-          console.error("Failed to fetch customer information:", error);
-          throw new Error(
-            `Failed to fetch customer information: ${error.message}`
-          );
-        }
+    if (error) {
+      console.error("Failed to fetch customer information:", error);
+      throw new Error(`Failed to fetch customer information: ${error.message}`);
+    }
 
-        const userEmail = sessionStorage.getItem("userEmail")?.toLowerCase();
-        console.log("User Email from Session:", userEmail);
+    const userEmail = sessionStorage.getItem("userEmail")?.toLowerCase();
+    console.log("User Email from Session:", userEmail);
 
-        // ✅ poIs is true: show only the logged-in admin
-        if (poIs) {
-          const onlyLoggedInAdmin = data.find(
-            (user) =>
-              user.email.toLowerCase() === userEmail && user.type === "admin"
-          );
+    if (poIs) {
+      // ✅ Only return users with type "vendor"
+      const vendorUsers = data.filter((user) => user.type === "vendor");
 
-          if (onlyLoggedInAdmin) {
-            setOptions([
-              {
-                value: onlyLoggedInAdmin.id,
-                label: "Custom", // You can change label if needed
-              },
-            ]);
-          } else {
-            // If not found or not admin, set empty list
-            setOptions([]);
-          }
+      const vendorOptions = vendorUsers.map((user) => ({
+        value: user.id,
+        label: user.display_name,
+      }));
 
-          return; // ✅ return early
-        }
+      setOptions(vendorOptions);
+      return; // ✅ return early
+    }
 
-        // ✅ poIs is false: apply original logic
-        const loggedInAdmin = data.find(
-          (user) =>
-            user.email.toLowerCase() === userEmail && user.type === "admin"
-        );
+    // ✅ poIs is false: original logic
+    const loggedInAdmin = data.find(
+      (user) => user.email.toLowerCase() === userEmail && user.type === "admin"
+    );
 
-        const filteredData = data.filter((user) => {
-          if (
-            loggedInAdmin &&
-            user.email.toLowerCase() === userEmail &&
-            user.type === "admin"
-          ) {
-            return true;
-          }
-          return user.type !== "admin";
-        });
-
-        const sortedOptions = filteredData
-          .map((user) => ({
-            value: user.id,
-            label: user.type === "admin" ? "Custom" : user.display_name,
-            isCustom: user.type === "admin" ? 0 : 1,
-          }))
-          .sort((a, b) => a.isCustom - b.isCustom);
-
-        setOptions(sortedOptions);
-      } catch (error) {
-        console.error("Error fetching users:", error);
+    const filteredData = data.filter((user) => {
+      if (
+        loggedInAdmin &&
+        user.email.toLowerCase() === userEmail &&
+        user.type === "admin"
+      ) {
+        return true;
       }
-    };
+      return user.type !== "admin";
+    });
+
+    const sortedOptions = filteredData
+      .map((user) => ({
+        value: user.id,
+        label: user.type === "admin" ? "Custom" : user.display_name,
+        isCustom: user.type === "admin" ? 0 : 1,
+      }))
+      .sort((a, b) => a.isCustom - b.isCustom);
+
+    setOptions(sortedOptions);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+  }
+};
+
 
     fetchUsers();
     fetchOrders();
@@ -398,6 +388,19 @@ export const OrdersContainer = ({
     setPharmacy();
   }, [isCreateOrderOpen]);
 
+
+
+    const handleVendorSubmit = (data: any) => {
+    console.log("Vendor data submitted:", data)
+    // Here you would typically send the data to your API
+  }
+
+
+
+
+
+
+  
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row flex-wrap justify-between items-center gap-2 p-2 bg-card rounded-lg shadow-sm border">
@@ -459,9 +462,9 @@ export const OrdersContainer = ({
                     </div>
                   )}
 
-                  {!poIs && (
+                  { (
                     <div className="mb-4 mt-2">
-                      <Label htmlFor="pharmacy-select">Select Pharmacy</Label>
+                      <Label htmlFor="pharmacy-select">{poIs ?"Select Vendor":"Select Pharmacy"}</Label>
                       <Select
                         id="pharmacy-select"
                         options={options}
@@ -471,7 +474,7 @@ export const OrdersContainer = ({
                         onChange={(selectedOption) =>
                           handlePharmacyChange(selectedOption.value)
                         }
-                        placeholder="Search pharmacy..."
+                        placeholder={`${poIs ?"Select Vendor":"Select Pharmacy"}`}
                         isSearchable
                         className="w-full mt-1"
                       />
@@ -503,6 +506,10 @@ export const OrdersContainer = ({
                   </Button>
                 </SheetTrigger>
               </Sheet>
+
+              {
+                poIs &&   <VendorDialogForm mode="add" onSubmit={handleVendorSubmit} />
+              }
             </>
           )}
         </div>

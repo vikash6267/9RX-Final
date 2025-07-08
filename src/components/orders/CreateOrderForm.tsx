@@ -455,7 +455,7 @@ console.log(cleanedCartItems)
         }
       }
 
-for (const item of data.items) {
+if(!poIs){for (const item of data.items) {
   if (item.sizes && item.sizes.length > 0) {
     for (const size of item.sizes) {
       // Step 1: Fetch current size
@@ -486,7 +486,7 @@ for (const item of data.items) {
       }
     }
   }
-}
+}}
 
       // Reset form and local state
       window.location.reload();
@@ -574,6 +574,7 @@ for (const item of data.items) {
             form={form}
             initialData={initialData}
             locationId={locationId}
+            poIs={poIs}
           />
 
 

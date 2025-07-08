@@ -5,7 +5,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Edit, CreditCard, Download, LoaderCircle } from "lucide-react";
+import { Edit, CreditCard, Download, LoaderCircle, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateOrderForm } from "../CreateOrderForm";
 import { OrderFormValues } from "../schemas/orderSchema";
@@ -25,6 +25,8 @@ import { Link } from "react-router-dom";
 import { useCart } from "@/hooks/use-cart";
 import jsPDF from "jspdf";
 import { current } from "@reduxjs/toolkit";
+import JsBarcode from "jsbarcode"
+import Swal from "sweetalert2";
 
 interface OrderDetailsSheetProps {
   order: OrderFormValues;
@@ -144,7 +146,7 @@ export const OrderDetailsSheet = ({
 
       console.log("✅ User Data:", data);
       setComponyName(data.company_name || "");
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -238,329 +240,446 @@ export const OrderDetailsSheet = ({
     }
   );
 
+  // This is a proposed modification based on the analysis.
+  // It assumes currentOrder object contains the necessary data fields.
+  const generateBarcode = (text: string): string => {
+    const canvas = document.createElement("canvas")
+    JsBarcode(canvas, text, {
+      format: "CODE128",
+      width: 2,
+      height: 40,
+      displayValue: false,
+      margin: 0,
+    })
+    return canvas.toDataURL("image/png")
+  }
   const handleDownloadPDF = async () => {
-    setIsGeneratingPDF(true);
-
+    setIsGeneratingPDF(true)
     try {
       // Create a new PDF document
       const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
-      });
+      })
 
       // Set font
-      doc.setFont("helvetica");
+      doc.setFont("helvetica")
 
       // Page dimensions
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 10;
-      const contentWidth = pageWidth - margin * 2;
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const margin = 15
+      const contentWidth = pageWidth - margin * 2
+      let currentY = margin
 
-      // Add company logo
-      if (true) {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
+      // Generate barcode
+      const barcodeData = currentOrder.order_number || "123456789"
+      const barcodeImage = generateBarcode(barcodeData)
 
-        await new Promise((resolve) => {
-          img.onload = resolve;
-        });
+      // Add barcode image (top-right)
+      const barcodeWidth = 40
+      const barcodeHeight = 15
+      doc.addImage(barcodeImage, "PNG", pageWidth - margin - barcodeWidth, currentY, barcodeWidth, barcodeHeight)
 
-        // Calculate logo dimensions (max height 20mm)
-        const logoHeight = 25;
-        const logoWidth = (img.width / img.height) * logoHeight;
+      // INVOICE title (large, bold, left-aligned)
+      doc.setFontSize(24)
+      doc.setFont("helvetica", "bold")
+      doc.text("INVOICE", margin, currentY + 15)
 
-        // Position logo at top center
-        doc.addImage(
-          img,
-          "PNG",
-          pageWidth / 2 - logoWidth / 2,
-          margin,
-          logoWidth,
-          logoHeight
-        );
-      }
+      // Date (top-right, below barcode)
+      doc.setFontSize(11)
+      doc.setFont("helvetica", "normal")
+      const dateString = new Date(currentOrder.date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+      doc.text(`Date: ${dateString}`, pageWidth - margin - doc.getTextWidth(`Date: ${dateString}`), currentY + 25)
 
-      // Add currentOrder title and details
-      doc.setFontSize(15);
-      doc.text("PURCHASE ORDER", pageWidth - margin - 45, margin + 10);
-
-      doc.setFontSize(10);
-
-      doc.text(
-        `ORDER - ${currentOrder.order_number}`,
-        pageWidth - margin - 40,
-        margin + 20
-      );
-      doc.text(`Date - ${formattedDate}`, pageWidth - margin - 40, margin + 25);
-
-      // Company details
-      doc.setFontSize(9);
-      doc.text("Tax ID : 99-0540972", margin, margin + 5);
-      doc.text("936 Broad River Ln,", margin, margin + 10);
-      doc.text("Charlotte, NC 28211", margin, margin + 15);
-      doc.text("+1 800 969 6295", margin, margin + 20);
-      doc.text("info@9rx.com", margin, margin + 25);
-      doc.text("www.9rx.com", margin, margin + 30);
+      currentY += 35
 
       // Horizontal line
-      doc.setDrawColor(200, 200, 200);
-      doc.line(margin, margin + 40, pageWidth - margin, margin + 40);
+      doc.setDrawColor(0, 0, 0)
+      doc.setLineWidth(0.5)
+      doc.line(margin, currentY, pageWidth - margin, currentY)
+      currentY += 15
 
-      // Customer and shipping info
-      const infoStartY = margin + 50;
+      // SOLD TO and SHIP TO sections
+      const infoStartY = currentY
+      const columnWidth = (contentWidth - 10) / 2
 
-      // Bill To
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("Bill To", margin, infoStartY);
+      // SOLD TO (left column)
+      doc.setFontSize(12)
+      doc.setFont("helvetica", "bold")
+      doc.text("SOLD TO", margin, infoStartY)
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(componyName, margin, infoStartY + 5);
-      doc.text(
-        currentOrder.customerInfo?.name || "N/A",
-        margin,
-        infoStartY + 10
-      );
-      doc.text(
-        currentOrder.customerInfo?.phone || "N/A",
-        margin,
-        infoStartY + 15
-      );
-      doc.text(
-        currentOrder.customerInfo?.email || "N/A",
-        margin,
-        infoStartY + 20
-      );
-      doc.text(
-        `${currentOrder.customerInfo.address?.street || "N/A"}, ${
-          currentOrder.customerInfo.address?.city || "N/A"
-        }, ${currentOrder.customerInfo.address?.state || "N/A"} ${
-          currentOrder.customerInfo.address?.zip_code || "N/A"
-        }`,
-        margin,
-        infoStartY + 25,
-        { maxWidth: contentWidth / 2 - 5 }
-      );
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(10)
+      let soldToY = infoStartY + 8
+      doc.text(currentOrder.customerInfo?.name || "N/A", margin, soldToY)
+      soldToY += 5
+      doc.text(currentOrder.customerInfo?.phone || "N/A", margin, soldToY)
+      soldToY += 5
+      doc.text(currentOrder.customerInfo?.email || "N/A", margin, soldToY)
+      soldToY += 5
 
-      // Ship To
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("Ship To", pageWidth / 2, infoStartY);
+      const soldToAddress = [
+        currentOrder.customerInfo?.address?.street || "",
+        currentOrder.customerInfo?.address?.city || "",
+        `${currentOrder.customerInfo?.address?.state || ""} ${currentOrder.customerInfo?.address?.zip_code || ""}`,
+      ]
+        .filter(Boolean)
+        .join(", ")
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(componyName, pageWidth / 2, infoStartY + 5);
-      doc.text(
-        currentOrder.shippingAddress?.fullName || "N/A",
-        pageWidth / 2,
-        infoStartY + 10
-      );
-      doc.text(
-        currentOrder.shippingAddress?.phone || "N/A",
-        pageWidth / 2,
-        infoStartY + 15
-      );
-      doc.text(
-        currentOrder.shippingAddress?.email || "N/A",
-        pageWidth / 2,
-        infoStartY + 20
-      );
-      doc.text(
-        `${currentOrder.shippingAddress.address?.street || "N/A"}, ${
-          currentOrder.shippingAddress.address?.city || "N/A"
-        }, ${currentOrder.shippingAddress.address?.state || "N/A"} ${
-          currentOrder.shippingAddress.address?.zip_code || "N/A"
-        }`,
-        pageWidth / 2,
-        infoStartY + 25,
-        { maxWidth: contentWidth / 2 - 5 }
-      );
+      const soldToLines = doc.splitTextToSize(soldToAddress, columnWidth)
+      doc.text(soldToLines, margin, soldToY)
+
+      // SHIP TO (right column)
+      doc.setFontSize(12)
+      doc.setFont("helvetica", "bold")
+      doc.text("SHIP TO", margin + columnWidth + 10, infoStartY)
+
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(10)
+      let shipToY = infoStartY + 8
+      doc.text(currentOrder.shippingAddress?.fullName || "N/A", margin + columnWidth + 10, shipToY)
+      shipToY += 5
+      doc.text(currentOrder.shippingAddress?.phone || "N/A", margin + columnWidth + 10, shipToY)
+      shipToY += 5
+      doc.text(currentOrder.shippingAddress?.email || "N/A", margin + columnWidth + 10, shipToY)
+      shipToY += 5
+
+      const shipToAddress = [
+        currentOrder.shippingAddress?.address?.street || "",
+        currentOrder.shippingAddress?.address?.city || "",
+        `${currentOrder.shippingAddress?.address?.state || ""} ${currentOrder.shippingAddress?.address?.zip_code || ""}`,
+      ]
+        .filter(Boolean)
+        .join(", ")
+
+      const shipToLines = doc.splitTextToSize(shipToAddress, columnWidth)
+      doc.text(shipToLines, margin + columnWidth + 10, shipToY)
+
+      currentY = Math.max(soldToY + 15, shipToY + 15)
 
       // Horizontal line
-      doc.line(margin, infoStartY + 35, pageWidth - margin, infoStartY + 35);
+      doc.line(margin, currentY, pageWidth - margin, currentY)
+      currentY += 15
+
+      // Order details section (3 columns layout)
+      doc.setFontSize(10)
+      doc.setFont("helvetica", "normal")
+
+      const col1X = margin
+      const col2X = margin + contentWidth / 3
+      const col3X = margin + (2 * contentWidth) / 3
+
+      // Column 1
+      doc.text(`Order #: ${currentOrder.order_number || "N/A"}`, col1X, currentY)
+      doc.text(`Terms: ${currentOrder.payment?.notes || "Net 30"}`, col1X, currentY + 6)
+      doc.text(
+        `Due Date: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}`,
+        col1X,
+        currentY + 12,
+      )
+
+      // Column 2
+      doc.text(`Transaction #: ${currentOrder.payment?.transactionId || "N/A"}`, col2X, currentY)
+      doc.text(`Ship via: ${currentOrder.shipping?.method || "Standard"}`, col2X, currentY + 6)
+      doc.text(`Tracking: ${currentOrder.shipping?.trackingNumber || "N/A"}`, col2X, currentY + 12)
+
+      currentY += 25
+
+      // Horizontal line before table
+      doc.line(margin, currentY, pageWidth - margin, currentY)
+      currentY += 10
 
       // Items table
-      const tableStartY = infoStartY + 45;
-
-      // Prepare table data
-      const tableHead = [["Description", "Sizes", "Qty", "Amount"]];
+      const tableHead = [["Item#", "Description", "UoM", "Price", "Qty", "Total"]]
       const tableBody =
-        currentOrder?.items?.map((item) => [
-          item.name,
-          item.sizes
-            ?.map((size) => `${size.size_value} ${size.size_unit}`)
-            .join(", "),
-          item.quantity.toString(),
-          `$${item.price}`,
-        ]) || [];
+        currentOrder?.items?.map((item: any, index: number) => {
+          const itemNumber = (index + 1).toString()
+          const description = item.name || "N/A"
+          const unitOfMeasure = item.sizes?.map((s: any) => `${s.size_value}${s.size_unit}`).join(", ") || "Each"
+          const price = `$${Number(item.price || 0).toFixed(2)}`
+          const quantity = (item.quantity || 0).toString()
+          const total = `$${(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2)}`
+          return [itemNumber, description, unitOfMeasure, price, quantity, total]
+        }) || []
+        ; (doc as any).autoTable({
+          head: tableHead,
+          body: tableBody,
+          startY: currentY,
+          margin: { left: margin, right: margin },
+          styles: {
+            fontSize: 10,
+            cellPadding: 4,
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
+          },
+          headStyles: {
+            fillColor: [240, 240, 240],
+            textColor: [0, 0, 0],
+            fontStyle: "bold",
+            lineWidth: 0.1,
+          },
+          columnStyles: {
+            0: { cellWidth: 20, halign: "center" }, // Item#
+            1: { cellWidth: "auto" }, // Description
+            2: { cellWidth: 25, halign: "center" }, // UoM
+            3: { cellWidth: 25, halign: "right" }, // Price
+            4: { cellWidth: 20, halign: "center" }, // Qty
+            5: { cellWidth: 30, halign: "right" }, // Total
+          },
+          theme: "grid",
+        })
 
-      // Add table
-      (doc as any).autoTable({
-        head: tableHead,
-        body: tableBody,
-        startY: tableStartY,
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: {
-          fillColor: [220, 220, 220],
-          textColor: [0, 0, 0],
-          fontStyle: "bold",
-        },
-        columnStyles: {
-          0: { cellWidth: "auto" },
-          1: { cellWidth: "auto" },
-          2: { cellWidth: 20, halign: "right" },
-          3: { cellWidth: 30, halign: "right" },
-        },
-        theme: "grid",
-      });
+      currentY = (doc as any).lastAutoTable.finalY + 15
 
-      // Get the final Y position after the table
-      const finalY = (doc as any).lastAutoTable.finalY + 10;
+      // Summary section (right-aligned)
+      const summaryWidth = 60
+      const summaryX = pageWidth - margin - summaryWidth
+      let summaryY = currentY
 
-      // Payment status and summary section
-      const paymentStatusX = margin;
-      const paymentStatusWidth = contentWidth / 3;
-      const summaryX = margin + paymentStatusWidth + 10;
-      const summaryWidth = contentWidth - paymentStatusWidth - 10;
+      doc.setFontSize(10)
+      doc.setFont("helvetica", "normal")
 
-      // Payment status box
-      // doc.setFillColor(240, 240, 240)
-      // doc.rect(paymentStatusX, finalY, paymentStatusWidth, 40, "F")
-      // doc.setDrawColor(200, 200, 200)
-      // doc.rect(paymentStatusX, finalY, paymentStatusWidth, 40, "S")
-
-      // Payment status label
-      // if (currentOrder?.payment_status === "paid") {
-      //   doc.setFillColor(39, 174, 96)
-      //   doc.setTextColor(255, 255, 255)
-      // } else {
-      //   doc.setFillColor(231, 76, 60)
-      //   doc.setTextColor(255, 255, 255)
-      // }
-
-      // doc.roundedRect(paymentStatusX + 5, finalY + 5, 50, 10, 5, 5, "F")
-      // doc.setFontSize(8)
-      // doc.setFont("helvetica", "bold")
-      // doc.text(currentOrder?.payment_status === "paid" ? "Paid" : "Unpaid", paymentStatusX + 10, finalY + 11)
-
-      // Payment details if paid
-      // if (currentOrder?.payment_status === "paid") {
-      //   doc.setTextColor(0, 0, 0)
-      //   doc.setFontSize(8)
-      //   doc.setFont("helvetica", "bold")
-      //   doc.text(
-      //     currentOrder.payment_method === "card" ? "Transaction ID:" : "Payment Notes:",
-      //     paymentStatusX + 5,
-      //     finalY + 25,
-      //   )
-
-      //   doc.setFont("helvetica", "normal")
-      //   doc.text(
-      //     currentOrder.payment_method === "card" ? currentOrder?.payment_transication : currentOrder?.payment_notes,
-      //     paymentStatusX + 5,
-      //     finalY + 30,
-      //     { maxWidth: paymentStatusWidth - 10 },
-      //   )
-      // }
-
-      // Summary box
-      doc.setFillColor(255, 255, 255);
-      doc.setTextColor(0, 0, 0);
-      doc.rect(summaryX, finalY, summaryWidth, 40, "F");
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(summaryX, finalY, summaryWidth, 40, "S");
-
-      // Summary content
-      const summaryLeftX = summaryX + 5;
-      const summaryRightX = summaryX + summaryWidth - 5;
-      let summaryY = finalY + 10;
+      // Calculate subtotal
+      const subtotal =
+        Number(currentOrder?.total || 0) -
+        Number(currentOrder?.tax_amount || 0) -
+        Number(currentOrder?.shipping_cost || 0)
 
       // Sub Total
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text("Sub Total", summaryLeftX, summaryY);
+      doc.text("Sub Total:", summaryX, summaryY)
       doc.text(
-        `$${
-          (
-            Number(currentOrder?.total) -
-            currentOrder?.tax_amount -
-            Number(currentOrder.shipping_cost)
-          )?.toFixed(2) || "0.00"
-        }`,
-        summaryRightX,
+        `$${subtotal.toFixed(2)}`,
+        summaryX + summaryWidth - doc.getTextWidth(`$${subtotal.toFixed(2)}`),
         summaryY,
-        {
-          align: "right",
-        }
-      );
+      )
+      summaryY += 6
+
+      // Misc
+      doc.text("Misc:", summaryX, summaryY)
+      doc.text("$0.00", summaryX + summaryWidth - doc.getTextWidth("$0.00"), summaryY)
+      summaryY += 6
+
+      // Shipping
+      doc.text("Shipping:", summaryX, summaryY)
+      const shippingCost = `$${Number(currentOrder?.shipping_cost || 0).toFixed(2)}`
+      doc.text(shippingCost, summaryX + summaryWidth - doc.getTextWidth(shippingCost), summaryY)
+      summaryY += 6
 
       // Tax
-      summaryY += 5;
-      doc.text(`Tax `, summaryLeftX, summaryY);
-      doc.text(
-        `$${Number(currentOrder?.tax_amount)?.toFixed(2) || "0.00"}`,
-        summaryRightX,
-        summaryY,
-        { align: "right" }
-      );
-      summaryY += 5;
-      doc.text(`Shipping `, summaryLeftX, summaryY);
-      doc.text(
-        `$${Number(currentOrder?.shipping_cost)?.toFixed(2) || "0.00"}`,
-        summaryRightX,
-        summaryY,
-        { align: "right" }
-      );
+      doc.text("Tax:", summaryX, summaryY)
+      const taxAmount = `$${Number(currentOrder?.tax_amount || 0).toFixed(2)}`
+      doc.text(taxAmount, summaryX + summaryWidth - doc.getTextWidth(taxAmount), summaryY)
+      summaryY += 8
 
-      // Divider
-      summaryY += 3;
-      doc.line(summaryLeftX, summaryY, summaryRightX, summaryY);
+      // Line before total
+      doc.setLineWidth(0.5)
+      doc.line(summaryX, summaryY - 2, summaryX + summaryWidth, summaryY - 2)
 
-      // Total
-      summaryY += 5;
-      doc.setFont("helvetica", "bold");
-      doc.text("Total", summaryLeftX, summaryY);
-      doc.text(
-        `$${Number(currentOrder?.total)?.toFixed(2) || "0.00"}`,
-        summaryRightX,
-        summaryY,
-        { align: "right" }
-      );
+      // Invoice Total
+      doc.setFont("helvetica", "bold")
+      doc.text("Invoice Total:", summaryX, summaryY)
+      const invoiceTotal = `$${Number(currentOrder?.total || 0).toFixed(2)}`
+      doc.text(invoiceTotal, summaryX + summaryWidth - doc.getTextWidth(invoiceTotal), summaryY)
+      summaryY += 8
+
+      // PrePayment
+      doc.setFont("helvetica", "normal")
+      const prepayment = currentOrder?.payment_status === "paid" ? Number(currentOrder?.total || 0).toFixed(2) : "0.00"
+      doc.text("PrePayment:", summaryX, summaryY)
+      doc.text(`$${prepayment}`, summaryX + summaryWidth - doc.getTextWidth(`$${prepayment}`), summaryY)
+      summaryY += 6
 
       // Balance Due
-      summaryY += 5;
-      // doc.setTextColor(231, 76, 60)
-      // doc.text("Balance Due", summaryLeftX, summaryY)
-      // doc.text(
-      //   currentOrder?.payment_status === "paid" ? "$0" : `$${Number(currentOrder?.total)?.toFixed(2) || "0.00"}`,
-      //   summaryRightX,
-      //   summaryY,
-      //   { align: "right" },
-      // )
+      const balanceDue = currentOrder?.payment_status === "paid" ? "0.00" : Number(currentOrder?.total || 0).toFixed(2)
+      doc.setFont("helvetica", "bold")
+      doc.text("Balance Due:", summaryX, summaryY)
+      doc.text(`$${balanceDue}`, summaryX + summaryWidth - doc.getTextWidth(`$${balanceDue}`), summaryY)
 
       // Save the PDF
-      doc.save(`Invoice_${currentOrder.id}.pdf`);
+      doc.save(`Invoice_${currentOrder.order_number || currentOrder.id}.pdf`)
 
       toast({
         title: "Success",
         description: "Invoice downloaded successfully",
-      });
+      })
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("Error generating PDF:", error)
       toast({
         title: "Error",
         description: "Failed to generate PDF. Please try again.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsGeneratingPDF(false);
+      setIsGeneratingPDF(false)
     }
-  };
+  }
+
+
+
+
+
+
+
+
+
+  const updateSizeQuantities = async (orderItems, isApprove = true) => {
+  for (const item of orderItems) {
+    if (item.sizes && item.sizes.length > 0) {
+      for (const size of item.sizes) {
+        // Fetch current stock for this size
+        const { data: currentSize, error: fetchError } = await supabase
+          .from("product_sizes")
+          .select("stock")
+          .eq("id", size.id)
+          .single();
+
+        if (fetchError || !currentSize) {
+          console.warn(`⚠️ Size not found in Supabase for ID: ${size.id}, skipping...`);
+          continue;
+        }
+
+        const newQuantity = isApprove
+          ? currentSize.stock + size.quantity
+          : currentSize.stock - size.quantity;
+
+        // Update stock
+        const { error: updateError } = await supabase
+          .from("product_sizes")
+          .update({ stock: newQuantity })
+          .eq("id", size.id);
+
+        if (updateError) {
+          console.error(`❌ Failed to update stock for size ID: ${size.id}`, updateError);
+          throw new Error("Failed to update size quantity");
+        } else {
+          console.log(`✅ Updated stock for size ID: ${size.id}`);
+        }
+      }
+    }
+  }
+};
+
+const handleApprove = async () => {
+  try {
+    // Show loading popup
+    Swal.fire({
+      title: 'Approving Order...',
+      text: 'Please wait while we update the stock.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      background: '#f9fafb',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+        title: 'text-lg font-semibold',
+      },
+    });
+
+    await updateSizeQuantities(order.items, true);
+    await supabase
+      .from("orders")
+      .update({ poApproved: true })
+      .eq("id", order.id);
+
+    onOpenChange(false);
+    Swal.close(); // Close loading
+
+    // Show success
+    Swal.fire({
+      title: 'Order Approved ✅',
+      text: 'Stock has been updated successfully!',
+      icon: 'success',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#22c55e',
+      background: '#f0fdf4',
+      color: '#065f46',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+      },
+    }).then(() => {
+      window.location.reload();
+    });
+  } catch (error) {
+    Swal.close();
+    Swal.fire({
+      title: 'Error',
+      text: 'Something went wrong while approving the order.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#ef4444',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+      },
+    });
+  }
+};
+
+const handleReject = async () => {
+  try {
+    Swal.fire({
+      title: 'Rejecting Order...',
+      text: 'Please wait while we update the stock.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      background: '#f9fafb',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+        title: 'text-lg font-semibold',
+      },
+    });
+
+    await updateSizeQuantities(order.items, false);
+    await supabase
+      .from("orders")
+      .update({ poApproved: false })
+      .eq("id", order.id);
+
+    onOpenChange(false);
+    Swal.close();
+
+    Swal.fire({
+      title: 'Order Rejected ❌',
+      text: 'Stock has been reduced successfully!',
+      icon: 'warning',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#f59e0b',
+      background: '#fff7ed',
+      color: '#78350f',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+      },
+    }).then(() => {
+      window.location.reload();
+    });
+  } catch (error) {
+    Swal.close();
+    Swal.fire({
+      title: 'Error',
+      text: 'Something went wrong while rejecting the order.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#ef4444',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+      },
+    });
+  }
+};
+
+
+
+
 
   if (!currentOrder) return null;
 
@@ -583,11 +702,10 @@ export const OrderDetailsSheet = ({
               className={`
         px-5 py-2 rounded-3xl font-semibold transition-all duration-300 
         flex items-center gap-2 
-        ${
-          loadingQuick
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-500 hover:bg-blue-600"
-        } 
+        ${loadingQuick
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+                } 
         text-white
       `}
             >
@@ -652,11 +770,10 @@ export const OrderDetailsSheet = ({
                   <button
                     onClick={sendMail}
                     disabled={loading}
-                    className={`px-4 py-2 font-semibold text-sm md:text-base rounded-lg transition duration-300 ${
-                      loading
+                    className={`px-4 py-2 font-semibold text-sm md:text-base rounded-lg transition duration-300 ${loading
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-red-600 hover:bg-red-700 text-white"
-                    }`}
+                      }`}
                   >
                     {loading ? "Sending..." : "Send Payment Link"}
                   </button>
@@ -696,7 +813,8 @@ export const OrderDetailsSheet = ({
         )}
 
         {poIs && (
-          <div className="flex w-full justify-end mt-6">
+          <div className="flex w-full justify-end mt-6 gap-3">
+            {/* Download PDF */}
             <button
               onClick={handleDownloadPDF}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow hover:shadow-lg transition duration-300"
@@ -704,8 +822,29 @@ export const OrderDetailsSheet = ({
               <Download size={18} />
               Download PDF
             </button>
+
+            {/* Approve / Reject Buttons */}
+           {order?.poApproved ? (
+  <button
+    onClick={handleReject}
+    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg shadow hover:shadow-lg transition duration-300"
+  >
+    <XCircle size={18} className="text-white" />
+    Reject Purchase
+  </button>
+) : (
+  <button
+    onClick={handleApprove}
+    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg shadow hover:shadow-lg transition duration-300"
+  >
+    <CheckCircle size={18} className="text-white" />
+    Approve Purchase
+  </button>
+)}
+
           </div>
         )}
+
       </SheetContent>
     </Sheet>
   );
