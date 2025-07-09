@@ -27,6 +27,7 @@ import jsPDF from "jspdf";
 import { current } from "@reduxjs/toolkit";
 import JsBarcode from "jsbarcode"
 import Swal from "sweetalert2";
+import { ChargesDialog } from "./ChargesDialog";
 
 interface OrderDetailsSheetProps {
   order: OrderFormValues;
@@ -565,117 +566,113 @@ export const OrderDetailsSheet = ({
     }
   };
 
-  const handleApprove = async () => {
-    try {
-      // Show loading popup
-      Swal.fire({
-        title: 'Approving Order...',
-        text: 'Please wait while we update the stock.',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-        background: '#f9fafb',
-        customClass: {
-          popup: 'z-[99999] rounded-xl shadow-lg',
-          title: 'text-lg font-semibold',
-        },
-      });
 
-      await updateSizeQuantities(order.items, true);
-      await supabase
-        .from("orders")
-        .update({ poApproved: true })
-        .eq("id", order.id);
+  const [chargesOpen, setChargesOpen] = useState(false);
 
-      onOpenChange(false);
-      Swal.close(); // Close loading
+ const handleApprove = async () => {
+  setChargesOpen(true);
+};
 
-      // Show success
-      Swal.fire({
-        title: 'Order Approved ✅',
-        text: 'Stock has been updated successfully!',
-        icon: 'success',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#22c55e',
-        background: '#f0fdf4',
-        color: '#065f46',
-        customClass: {
-          popup: 'z-[99999] rounded-xl shadow-lg',
-        },
-      }).then(() => {
-        window.location.reload();
-      });
-    } catch (error) {
-      Swal.close();
-      Swal.fire({
-        title: 'Error',
-        text: 'Something went wrong while approving the order.',
-        icon: 'error',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#ef4444',
-        customClass: {
-          popup: 'z-[99999] rounded-xl shadow-lg',
-        },
-      });
-    }
-  };
+
+const submitCharges = async (handling, fred) => {
+  try {
+    Swal.fire({
+      title: 'Approving Order...',
+      text: 'Please wait while we update the stock.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    await updateSizeQuantities(order.items, true);
+
+    await supabase
+      .from("orders")
+      .update({
+        poApproved: true,
+        po_handling_charges: handling,
+        po_fred_charges: fred,
+      })
+      .eq("id", order.id);
+
+    onOpenChange(false);
+    Swal.close();
+
+    Swal.fire({
+      title: 'Order Approved ✅',
+      icon: 'success',
+    }).then(() => window.location.reload());
+  } catch (error) {
+    Swal.close();
+    Swal.fire({
+      title: 'Error',
+      text: 'Approval failed',
+      icon: 'error',
+    });
+  }
+};
+
+
 
   const handleReject = async () => {
-    try {
-      Swal.fire({
-        title: 'Rejecting Order...',
-        text: 'Please wait while we update the stock.',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-        background: '#f9fafb',
-        customClass: {
-          popup: 'z-[99999] rounded-xl shadow-lg',
-          title: 'text-lg font-semibold',
-        },
-      });
+  try {
+    Swal.fire({
+      title: 'Rejecting Order...',
+      text: 'Please wait while we update the stock.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      background: '#f9fafb',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+        title: 'text-lg font-semibold',
+      },
+    });
 
-      await updateSizeQuantities(order.items, false);
-      await supabase
-        .from("orders")
-        .update({ poApproved: false })
-        .eq("id", order.id);
+    await updateSizeQuantities(order.items, false);
+    await supabase
+      .from("orders")
+      .update({
+        poApproved: false,
+        po_handling_charges: 0,  // ✅ set to 0
+        po_fred_charges: 0,      // ✅ set to 0
+      })
+      .eq("id", order.id);
 
-      onOpenChange(false);
-      Swal.close();
+    onOpenChange(false);
+    Swal.close();
 
-      Swal.fire({
-        title: 'Order Rejected ❌',
-        text: 'Stock has been reduced successfully!',
-        icon: 'warning',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#f59e0b',
-        background: '#fff7ed',
-        color: '#78350f',
-        customClass: {
-          popup: 'z-[99999] rounded-xl shadow-lg',
-        },
-      }).then(() => {
-        window.location.reload();
-      });
-    } catch (error) {
-      Swal.close();
-      Swal.fire({
-        title: 'Error',
-        text: 'Something went wrong while rejecting the order.',
-        icon: 'error',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#ef4444',
-        customClass: {
-          popup: 'z-[99999] rounded-xl shadow-lg',
-        },
-      });
-    }
-  };
+    Swal.fire({
+      title: 'Order Rejected ❌',
+      text: 'Stock has been reduced successfully!',
+      icon: 'warning',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#f59e0b',
+      background: '#fff7ed',
+      color: '#78350f',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+      },
+    }).then(() => {
+      window.location.reload();
+    });
+  } catch (error) {
+    Swal.close();
+    Swal.fire({
+      title: 'Error',
+      text: 'Something went wrong while rejecting the order.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#ef4444',
+      customClass: {
+        popup: 'z-[99999] rounded-xl shadow-lg',
+      },
+    });
+  }
+};
+
 
 
 
@@ -844,6 +841,14 @@ export const OrderDetailsSheet = ({
 
           </div>
         )}
+
+
+        <ChargesDialog
+  open={chargesOpen}
+  onOpenChange={setChargesOpen}
+  onSubmit={submitCharges}
+/>
+
 
       </SheetContent>
     </Sheet>
