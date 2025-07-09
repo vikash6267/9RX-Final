@@ -123,10 +123,10 @@ export function CustomerSelectionField({ form ,initialData,locationId,poIs=false
         email:initialData?.customerInfo?.email || data.email || "",
         phone: initialData?.customerInfo?.phone || data.shipping_address.phone || data.mobile_phone || "",
           address: {
-          street: initialData?.customerInfo?.address?.street || `${data.shipping_address.street1} , ${data.shipping_address.street2}` || "N/A",
-          city: initialData?.customerInfo?.address?.city || data.shipping_address.city || "N/A", // Populate with relevant field if available
-          state: initialData?.customerInfo?.address?.state || data.shipping_address.state || "N/A", // Populate with relevant field if available
-          zip_code: initialData?.customerInfo?.address?.zip_code || data.shipping_address.zip_code ||"00000", // Replace with actual data if available
+          street:  `${data.shipping_address.street1} , ${data.shipping_address.street2}` || "N/A",
+          city:  data.shipping_address.city || "N/A", // Populate with relevant field if available
+          state:  data.shipping_address.state || "N/A", // Populate with relevant field if available
+          zip_code: data.shipping_address.zip_code ||"00000", // Replace with actual data if available
         },
       };
 
@@ -159,7 +159,7 @@ export function CustomerSelectionField({ form ,initialData,locationId,poIs=false
       setIsValidating(true);
       try {
         const customerInfo = await fetchCustomerInfo(userProfile?.id);
-        const shpiingInfo = await fetchShippingInfo(userProfile?.id);
+        const shpiingInfo = await fetchShippingInfo(initialData?.customerInfo.cusid || userProfile?.id);
         if (customerInfo) {
           form.setValue("customerInfo", customerInfo);
           form.trigger("customerInfo"); // Trigger validation

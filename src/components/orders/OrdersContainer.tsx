@@ -354,6 +354,20 @@ const fetchUsers = async () => {
             zip_code: data.billing_address?.zip_code || "",
           },
         },
+        shippingAddress: {
+          cusid: data.id || "test",
+          type: "Pharmacy",
+          name: data.display_name,
+          email: data.email || "",
+          phone: data.mobile_phone || data?.work_phone || data?.phone || "",
+          address: {
+            street: `${data.shipping_address?.street1 || ""}`,
+            city: data.shipping_address?.city || "",
+            state: data.shipping_address?.state || "",
+            zip_code: data.shipping_address?.zip_code || "",
+          },
+        },
+       
       }));
 
       console.log("Updated Order Data:", orderData);

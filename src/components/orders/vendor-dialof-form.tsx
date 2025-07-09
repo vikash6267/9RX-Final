@@ -80,13 +80,13 @@ const defaultValues: VendorFormData = {
   },
   shippingAddress: {
     attention: "",
-    countryRegion: "",
-    street1: "",
+    countryRegion: "USA",
+    street1: "936 Broad River Ln",
     street2: "",
-    city: "",
-    state: "",
-    zip_code: "",
-    phone: "",
+    city: "Charlotte",
+    state: "NC",
+    zip_code: "28211",
+    phone: "1 800 969 6295",
     faxNumber: "",
   },
   sameAsShipping: false,
@@ -488,30 +488,7 @@ export default function VendorDialogForm({ vendor, mode = "add", onSubmit }: Ven
                     <CardDescription>Enter the shipping address information</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <FormField
-                        control={form.control}
-                        name="sameAsShipping"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={(checked) => {
-                                  field.onChange(checked)
-                                  if (checked) {
-                                    copyBillingToShipping()
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Same as billing address</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                 
 
                     {!watchSameAsShipping && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

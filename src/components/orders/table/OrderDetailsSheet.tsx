@@ -254,272 +254,241 @@ export const OrderDetailsSheet = ({
     })
     return canvas.toDataURL("image/png")
   }
-  const handleDownloadPDF = async () => {
-    setIsGeneratingPDF(true)
-    try {
-      // Create a new PDF document
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      })
 
-      // Set font
-      doc.setFont("helvetica")
 
-      // Page dimensions
-      const pageWidth = doc.internal.pageSize.getWidth()
-      const pageHeight = doc.internal.pageSize.getHeight()
-      const margin = 15
-      const contentWidth = pageWidth - margin * 2
-      let currentY = margin
 
-      // Generate barcode
-      const barcodeData = currentOrder.order_number || "123456789"
-      const barcodeImage = generateBarcode(barcodeData)
 
-      // Add barcode image (top-right)
-      const barcodeWidth = 40
-      const barcodeHeight = 15
-      doc.addImage(barcodeImage, "PNG", pageWidth - margin - barcodeWidth, currentY, barcodeWidth, barcodeHeight)
 
-      // INVOICE title (large, bold, left-aligned)
-      doc.setFontSize(24)
-      doc.setFont("helvetica", "bold")
-      doc.text("PURCHASE ORDER", margin, currentY + 15)
+const handleDownloadPDF = async () => {
+  console.log(currentOrder)
+  setIsGeneratingPDF(true);
+  try {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
 
-      // Date (top-right, below barcode)
-      doc.setFontSize(11)
-      doc.setFont("helvetica", "normal")
-      const dateString = new Date(currentOrder.date).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      })
-      doc.text(`Date: ${dateString}`, pageWidth - margin - doc.getTextWidth(`Date: ${dateString}`), currentY + 25)
+    doc.setFont("helvetica");
 
-      currentY += 35
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - margin * 2;
+    let currentY = margin;
 
-      // Horizontal line
-      doc.setDrawColor(0, 0, 0)
-      doc.setLineWidth(0.5)
-      doc.line(margin, currentY, pageWidth - margin, currentY)
-      currentY += 15
+    const barcodeData = currentOrder.order_number || "123456789";
+    const barcodeImage = generateBarcode(barcodeData);
 
-      // SOLD TO and SHIP TO sections
-      const infoStartY = currentY
-      const columnWidth = (contentWidth - 10) / 2
+    const barcodeWidth = 40;
+    const barcodeHeight = 15;
+    doc.addImage(barcodeImage, "PNG", pageWidth - margin - barcodeWidth, currentY, barcodeWidth, barcodeHeight);
 
-      // SOLD TO (left column)
-      doc.setFontSize(12)
-      doc.setFont("helvetica", "bold")
-      doc.text("SOLD TO", margin, infoStartY)
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("PURCHASE ORDER", margin, currentY + 15);
 
-      doc.setFont("helvetica", "normal")
-      doc.setFontSize(10)
-      let soldToY = infoStartY + 8
-      doc.text(currentOrder.customerInfo?.name || "N/A", margin, soldToY)
-      soldToY += 5
-      doc.text(currentOrder.customerInfo?.phone || "N/A", margin, soldToY)
-      soldToY += 5
-      doc.text(currentOrder.customerInfo?.email || "N/A", margin, soldToY)
-      soldToY += 5
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    const dateString = new Date(currentOrder.date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    doc.text(`Date: ${dateString}`, pageWidth - margin - doc.getTextWidth(`Date: ${dateString}`), currentY + 25);
 
-      const soldToAddress = [
-        currentOrder.customerInfo?.address?.street || "",
-        currentOrder.customerInfo?.address?.city || "",
-        `${currentOrder.customerInfo?.address?.state || ""} ${currentOrder.customerInfo?.address?.zip_code || ""}`,
-      ]
-        .filter(Boolean)
-        .join(", ")
+    currentY += 35;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 15;
 
-      const soldToLines = doc.splitTextToSize(soldToAddress, columnWidth)
-      doc.text(soldToLines, margin, soldToY)
+    const infoStartY = currentY;
+    const columnWidth = (contentWidth - 10) / 2;
 
-      // SHIP TO (right column)
-      doc.setFontSize(12)
-      doc.setFont("helvetica", "bold")
-      doc.text("SHIP TO", margin + columnWidth + 10, infoStartY)
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("SOLD TO", margin, infoStartY);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
 
-      doc.setFont("helvetica", "normal")
-      doc.setFontSize(10)
-      let shipToY = infoStartY + 8
-      doc.text(currentOrder.shippingAddress?.fullName || "N/A", margin + columnWidth + 10, shipToY)
-      shipToY += 5
-      doc.text(currentOrder.shippingAddress?.phone || "N/A", margin + columnWidth + 10, shipToY)
-      shipToY += 5
-      doc.text(currentOrder.shippingAddress?.email || "N/A", margin + columnWidth + 10, shipToY)
-      shipToY += 5
+    let soldToY = infoStartY + 8;
+    doc.text(currentOrder.customerInfo?.name || "N/A", margin, soldToY);
+    soldToY += 5;
+    doc.text(currentOrder.customerInfo?.phone || "N/A", margin, soldToY);
+    soldToY += 5;
+    doc.text(currentOrder.customerInfo?.email || "N/A", margin, soldToY);
+    soldToY += 5;
 
-      const shipToAddress = [
-        currentOrder.shippingAddress?.address?.street || "",
-        currentOrder.shippingAddress?.address?.city || "",
-        `${currentOrder.shippingAddress?.address?.state || ""} ${currentOrder.shippingAddress?.address?.zip_code || ""}`,
-      ]
-        .filter(Boolean)
-        .join(", ")
+    const soldToAddress = [
+      currentOrder.customerInfo?.address?.street || "",
+      currentOrder.customerInfo?.address?.city || "",
+      `${currentOrder.customerInfo?.address?.state || ""} ${currentOrder.customerInfo?.address?.zip_code || ""}`,
+    ].filter(Boolean).join(", ");
+    doc.text(doc.splitTextToSize(soldToAddress, columnWidth), margin, soldToY);
 
-      const shipToLines = doc.splitTextToSize(shipToAddress, columnWidth)
-      doc.text(shipToLines, margin + columnWidth + 10, shipToY)
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("SHIP TO", margin + columnWidth + 10, infoStartY);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
 
-      currentY = Math.max(soldToY + 15, shipToY + 15)
+    let shipToY = infoStartY + 8;
+    doc.text(currentOrder.shippingAddress?.fullName || "N/A", margin + columnWidth + 10, shipToY);
+    shipToY += 5;
+    doc.text(currentOrder.shippingAddress?.phone || "N/A", margin + columnWidth + 10, shipToY);
+    shipToY += 5;
+    doc.text(currentOrder.shippingAddress?.email || "N/A", margin + columnWidth + 10, shipToY);
+    shipToY += 5;
 
-      // Horizontal line
-      doc.line(margin, currentY, pageWidth - margin, currentY)
-      currentY += 15
+    const shipToAddress = [
+      currentOrder.shippingAddress?.address?.street || "",
+      currentOrder.shippingAddress?.address?.city || "",
+      `${currentOrder.shippingAddress?.address?.state || ""} ${currentOrder.shippingAddress?.address?.zip_code || ""}`,
+    ].filter(Boolean).join(", ");
+    doc.text(doc.splitTextToSize(shipToAddress, columnWidth), margin + columnWidth + 10, shipToY);
 
-      // Order details section (3 columns layout)
-      doc.setFontSize(10)
-      doc.setFont("helvetica", "normal")
+    currentY = Math.max(soldToY + 15, shipToY + 15);
+    doc.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 15;
 
-      const col1X = margin
-      const col2X = margin + contentWidth / 3
-      const col3X = margin + (2 * contentWidth) / 3
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
 
-      // Column 1
-      doc.text(`Order #: ${currentOrder.order_number || "N/A"}`, col1X, currentY)
-      doc.text(`Terms: ${currentOrder.payment?.notes || "Net 30"}`, col1X, currentY + 6)
-      doc.text(
-        `Due Date: ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}`,
-        col1X,
-        currentY + 12,
-      )
+    doc.text(`Order #: ${currentOrder.order_number || "N/A"}`, margin, currentY);
+    doc.text(`Terms: ${currentOrder.payment?.notes || "Net 30"}`, margin, currentY + 6);
+    doc.text(`Due Date: ${new Date(Date.now() + 30 * 86400000).toLocaleDateString()}`, margin, currentY + 12);
 
-      // Column 2
-      doc.text(`Transaction #: ${currentOrder.payment?.transactionId || "N/A"}`, col2X, currentY)
-      doc.text(`Ship via: ${currentOrder.shipping?.method || "Standard"}`, col2X, currentY + 6)
-      doc.text(`Tracking: ${currentOrder.shipping?.trackingNumber || "N/A"}`, col2X, currentY + 12)
+    const col2X = margin + contentWidth / 3;
+    doc.text(`Transaction #: ${currentOrder.payment?.transactionId || "N/A"}`, col2X, currentY);
+    doc.text(`Ship via: ${currentOrder.shipping?.method || "Standard"}`, col2X, currentY + 6);
+    doc.text(`Tracking: ${currentOrder.shipping?.trackingNumber || "N/A"}`, col2X, currentY + 12);
 
-      currentY += 25
+    currentY += 25;
+    doc.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 10;
 
-      // Horizontal line before table
-      doc.line(margin, currentY, pageWidth - margin, currentY)
-      currentY += 10
+    const tableHead = [["Item#", "Description", "Size", "UoM", "Price", "Qty", "Total"]];
+    const tableBody = [];
 
-      // Items table
-      const tableHead = [["Item#", "Description", "UoM", "Price", "Qty", "Total"]]
-      const tableBody =
-        currentOrder?.items?.map((item: any, index: number) => {
-          const itemNumber = (index + 1).toString()
-          const description = item.name || "N/A"
-          const unitOfMeasure = item.sizes?.map((s: any) => `${s.size_value}${s.size_unit}`).join(", ") || "Each"
-          const price = `$${Number(item.price || 0).toFixed(2)}`
-          const quantity = (item.quantity || 0).toString()
-          const total = `$${(Number(item.price )).toFixed(2)}`
-          return [itemNumber, description, unitOfMeasure, price, quantity, total]
-        }) || []
-        ; (doc as any).autoTable({
-          head: tableHead,
-          body: tableBody,
-          startY: currentY,
-          margin: { left: margin, right: margin },
-          styles: {
-            fontSize: 10,
-            cellPadding: 4,
-            lineColor: [0, 0, 0],
-            lineWidth: 0.1,
-          },
-          headStyles: {
-            fillColor: [240, 240, 240],
-            textColor: [0, 0, 0],
-            fontStyle: "bold",
-            lineWidth: 0.1,
-          },
-          columnStyles: {
-            0: { cellWidth: 20, halign: "center" }, // Item#
-            1: { cellWidth: "auto" }, // Description
-            2: { cellWidth: 25, halign: "center" }, // UoM
-            3: { cellWidth: 25, halign: "right" }, // Price
-            4: { cellWidth: 20, halign: "center" }, // Qty
-            5: { cellWidth: 30, halign: "right" }, // Total
-          },
-          theme: "grid",
-        })
+    currentOrder?.items?.forEach((item, itemIndex) => {
+      if (item.sizes && item.sizes.length > 0) {
+        item.sizes.forEach((size) => {
+          tableBody.push([
+            (itemIndex + 1).toString(),
+            item.name || "N/A",
+            `${size.size_value} ${size.size_unit}` || "",
+            "", // UoM empty
+            `$${Number(size.price || 0).toFixed(2)}`,
+            (size.quantity || 0).toString(),
+            `$${(Number(size.price) * Number(size.quantity)).toFixed(2)}`
+          ]);
+        });
+      } else {
+        tableBody.push([
+          (itemIndex + 1).toString(),
+          item.name || "N/A",
+          "",
+          "", // UoM empty
+          `$${Number(item.price || 0).toFixed(2)}`,
+          (item.quantity || 0).toString(),
+          `$${(Number(item.price) * Number(item.quantity)).toFixed(2)}`
+        ]);
+      }
+    });
 
-      currentY = (doc as any).lastAutoTable.finalY + 15
+    doc.autoTable({
+      head: tableHead,
+      body: tableBody,
+      startY: currentY,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 10, cellPadding: 4, lineColor: [0, 0, 0], lineWidth: 0.1 },
+      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: "bold" },
+      columnStyles: {
+        0: { cellWidth: 15, halign: "center" },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: 20, halign: "center" },
+        3: { cellWidth: 15, halign: "center" },
+        4: { cellWidth: 25, halign: "right" },
+        5: { cellWidth: 20, halign: "center" },
+        6: { cellWidth: 25, halign: "right" },
+      },
+      theme: "grid",
+    });
 
-      // Summary section (right-aligned)
-      const summaryWidth = 60
-      const summaryX = pageWidth - margin - summaryWidth
-      let summaryY = currentY
-
-      doc.setFontSize(10)
-      doc.setFont("helvetica", "normal")
-
-      // Calculate subtotal
-      const subtotal =
-        Number(currentOrder?.total || 0) -
-        Number(currentOrder?.tax_amount || 0) -
-        Number(currentOrder?.shipping_cost || 0)
-
-      // Sub Total
-      doc.text("Sub Total:", summaryX, summaryY)
-      doc.text(
-        `$${subtotal.toFixed(2)}`,
-        summaryX + summaryWidth - doc.getTextWidth(`$${subtotal.toFixed(2)}`),
-        summaryY,
-      )
-      summaryY += 6
-
-      // Misc
-      doc.text("Misc:", summaryX, summaryY)
-      doc.text("$0.00", summaryX + summaryWidth - doc.getTextWidth("$0.00"), summaryY)
-      summaryY += 6
-
-      // Shipping
-      doc.text("Shipping:", summaryX, summaryY)
-      const shippingCost = `$${Number(currentOrder?.shipping_cost || 0).toFixed(2)}`
-      doc.text(shippingCost, summaryX + summaryWidth - doc.getTextWidth(shippingCost), summaryY)
-      summaryY += 6
-
-      // Tax
-      doc.text("Tax:", summaryX, summaryY)
-      const taxAmount = `$${Number(currentOrder?.tax_amount || 0).toFixed(2)}`
-      doc.text(taxAmount, summaryX + summaryWidth - doc.getTextWidth(taxAmount), summaryY)
-      summaryY += 8
-
-      // Line before total
-      doc.setLineWidth(0.5)
-      doc.line(summaryX, summaryY - 2, summaryX + summaryWidth, summaryY - 2)
-
-      // Invoice Total
-      doc.setFont("helvetica", "bold")
-      doc.text("Invoice Total:", summaryX, summaryY)
-      const invoiceTotal = `$${Number(currentOrder?.total || 0).toFixed(2)}`
-      doc.text(invoiceTotal, summaryX + summaryWidth - doc.getTextWidth(invoiceTotal), summaryY)
-      summaryY += 8
-
-      // PrePayment
-      doc.setFont("helvetica", "normal")
-      const prepayment = currentOrder?.payment_status === "paid" ? Number(currentOrder?.total || 0).toFixed(2) : "0.00"
-      doc.text("PrePayment:", summaryX, summaryY)
-      doc.text(`$${prepayment}`, summaryX + summaryWidth - doc.getTextWidth(`$${prepayment}`), summaryY)
-      summaryY += 6
-
-      // Balance Due
-      const balanceDue = currentOrder?.payment_status === "paid" ? "0.00" : Number(currentOrder?.total || 0).toFixed(2)
-      doc.setFont("helvetica", "bold")
-      doc.text("Balance Due:", summaryX, summaryY)
-      doc.text(`$${balanceDue}`, summaryX + summaryWidth - doc.getTextWidth(`$${balanceDue}`), summaryY)
-
-      // Save the PDF
-      doc.save(`Invoice_${currentOrder.order_number || currentOrder.id}.pdf`)
-
-      toast({
-        title: "Success",
-        description: "Invoice downloaded successfully",
-      })
-    } catch (error) {
-      console.error("Error generating PDF:", error)
-      toast({
-        title: "Error",
-        description: "Failed to generate PDF. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsGeneratingPDF(false)
+    currentY = doc.lastAutoTable.finalY + 15;
+    if (currentY + 60 > pageHeight - margin) {
+      doc.addPage();
+      currentY = margin;
     }
+
+    const summaryX = pageWidth - margin - 60;
+    let summaryY = currentY;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    const subtotal = tableBody.reduce((sum, row) => sum + Number(row[6].replace('$', '')), 0);
+    const handling = Number(currentOrder?.po_handling_charges || 0);
+    const fred = Number(currentOrder?.po_fred_charges || 0);
+    const shipping = Number(currentOrder?.shipping_cost || 0);
+    const tax = Number(currentOrder?.tax_amount || 0);
+
+    doc.text("Sub Total:", summaryX, summaryY);
+    doc.text(`$${subtotal.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${subtotal.toFixed(2)}`), summaryY);
+    summaryY += 6;
+
+    doc.text("Handling Charges:", summaryX, summaryY);
+    doc.text(`$${handling.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${handling.toFixed(2)}`), summaryY);
+    summaryY += 6;
+
+    doc.text("Fred Charges:", summaryX, summaryY);
+    doc.text(`$${fred.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${fred.toFixed(2)}`), summaryY);
+    summaryY += 6;
+
+    doc.text("Shipping:", summaryX, summaryY);
+    doc.text(`$${shipping.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${shipping.toFixed(2)}`), summaryY);
+    summaryY += 6;
+
+    doc.text("Tax:", summaryX, summaryY);
+    doc.text(`$${tax.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${tax.toFixed(2)}`), summaryY);
+    summaryY += 8;
+
+    doc.setLineWidth(0.5);
+
+// Shift line up to stay above "Invoice Total"
+const lineY = summaryY - 4;
+doc.line(summaryX, lineY, summaryX + 60, lineY);
+
+doc.setFont("helvetica", "bold");
+
+    const totalAmount = subtotal + handling + fred + shipping + tax;
+    doc.text("Invoice Total:", summaryX, summaryY);
+    doc.text(`$${totalAmount.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${totalAmount.toFixed(2)}`), summaryY);
+    summaryY += 8;
+
+    doc.setFont("helvetica", "normal");
+    const isPaid = currentOrder?.payment_status === "paid";
+    doc.text("PrePayment:", summaryX, summaryY);
+    doc.text(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`, summaryX + 60 - doc.getTextWidth(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`), summaryY);
+    summaryY += 6;
+
+    doc.setFont("helvetica", "bold");
+    const balance = isPaid ? 0 : totalAmount;
+    doc.text("Balance Due:", summaryX, summaryY);
+    doc.text(`$${balance.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${balance.toFixed(2)}`), summaryY);
+
+    doc.save(`Invoice_${currentOrder.order_number || currentOrder.id}.pdf`);
+
+    toast({ title: "Success", description: "Invoice downloaded successfully" });
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    toast({ title: "Error", description: "Failed to generate PDF", variant: "destructive" });
+  } finally {
+    setIsGeneratingPDF(false);
   }
+};
+
+
 
 
 

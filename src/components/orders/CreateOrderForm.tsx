@@ -614,6 +614,7 @@ if(!poIs){for (const item of data.items) {
               isCus={isCus}
               isEditing={isEditing}
 
+              poIs={poIs}
             />
           </div>
           <ShippingSection form={form} />

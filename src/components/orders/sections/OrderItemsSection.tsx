@@ -9,10 +9,11 @@ interface OrderItemsSectionProps {
   orderItems: { id: number }[];
   form: UseFormReturn<OrderFormValues>;
   setIsCus?: React.Dispatch<React.SetStateAction<boolean>>;
+  poIs?: boolean;
   isCus?: boolean;
 }
 
-export function OrderItemsSection({ orderItems, form, setIsCus, isCus,isEditing }) {
+export function OrderItemsSection({ orderItems, form, setIsCus, isCus,isEditing,poIs }) {
   const [products, setProducts] = useState([]);
   const { toast } = useToast();
 

@@ -99,6 +99,8 @@ export const useOrderManagement = () => {
             void: order.void,
             voidReason: order.voidReason,
             poApproved: order.poApproved,
+            po_handling_charges: order.po_handling_charges,
+            po_fred_charges: order.po_fred_charges,
             customerInfo: order.customerInfo || {
               name:
                 profileData.first_name && profileData.last_name
