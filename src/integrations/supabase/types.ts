@@ -562,7 +562,8 @@ export type Database = {
           shipping_cost: number | null;
           size_unit: string;
           sku: any;
-
+unit?: boolean;
+  case?: boolean;
           size_value: string;
           stock: number;
           updated_at: string | null;
@@ -579,7 +580,8 @@ export type Database = {
           shipping_cost?: number | null;
           size_unit: string;
           sku: any;
-
+unit?: boolean;
+  case?: boolean;
           size_value: string;
           stock?: number;
           updated_at?: string | null;
@@ -597,7 +599,8 @@ export type Database = {
           size_unit?: string;
           size_value?: string;
           sku: any;
-
+unit?: boolean;
+  case?: boolean;
           stock?: number;
           updated_at?: string | null;
         };

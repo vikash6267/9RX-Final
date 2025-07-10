@@ -14,6 +14,8 @@ export interface NewSizeState {
   pricePerCase: string;
   sku?: any;
   sizeSquanence?: any;
+  unit?: boolean;
+  case?: boolean;
   price_per_case: string;
   stock: string;
   quantity_per_case: string;

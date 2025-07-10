@@ -26,6 +26,8 @@ interface ProductDialogProps {
   setSelectedSizesSKU: (sizeIds: string[]) => void
   selectedSizes: string[]
   selectedSizesSKU: string[]
+    selectedTypeBySize: { [sizeId: string]: "case" | "unit" };
+  setSelectedTypeBySize: React.Dispatch<React.SetStateAction<{ [sizeId: string]: "case" | "unit" }>>;
 }
 
 export const ProductDialog = ({
@@ -41,10 +43,14 @@ export const ProductDialog = ({
   selectedSizes,
   selectedSizesSKU,
   setSelectedSizesSKU,
+    selectedTypeBySize,
+  setSelectedTypeBySize
 }: ProductDialogProps) => {
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [selectedSizeImages, setSelectedSizeImages] = useState<string[]>([])
   const [currentSizeImage, setCurrentSizeImage] = useState<string | null>(null)
+
+
 
   // Load product images
   useEffect(() => {
@@ -163,9 +169,8 @@ export const ProductDialog = ({
                 {selectedSizeImages.map((imageUrl, index) => (
                   <button
                     key={index}
-                    className={`w-16 h-16 rounded-md border-2 flex-shrink-0 overflow-hidden ${
-                      imageUrl === currentSizeImage ? "border-primary" : "border-gray-200"
-                    }`}
+                    className={`w-16 h-16 rounded-md border-2 flex-shrink-0 overflow-hidden ${imageUrl === currentSizeImage ? "border-primary" : "border-gray-200"
+                      }`}
                     onClick={() => setCurrentSizeImage(imageUrl)}
                   >
                     <img
@@ -196,27 +201,27 @@ export const ProductDialog = ({
             ))}
           </div>
           <br />
-       
+
         </div>
 
         {/* Right Column - Product Details (Scrollable) */}
         <ScrollArea className="h-full pr-4 overflow-hidden">
           <div className="space-y-6">
             {/* Size Options */}
-               <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <span className="font-semibold block mb-1">SKU:</span>
-              {selectedSizesSKU.map((size, index) => (
-                <span key={index}>
-                  {size.split(" ")[0]} <br />
-                </span>
-              ))}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <span className="font-semibold block mb-1">SKU:</span>
+                {selectedSizesSKU.map((size, index) => (
+                  <span key={index}>
+                    {size.split(" ")[0]} <br />
+                  </span>
+                ))}
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <span className="font-semibold block mb-1">Category:</span>
+                <p className="text-gray-600">{product.category}</p>
+              </div>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <span className="font-semibold block mb-1">Category:</span>
-              <p className="text-gray-600">{product.category}</p>
-            </div>
-          </div>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Select Size(s)</h3>
               <ProductSizeOptions
@@ -228,6 +233,8 @@ export const ProductDialog = ({
                 onSizeSelect={setSelectedSizes}
                 selectedSizesSKU={selectedSizesSKU}
                 onSizeSelectSKU={setSelectedSizesSKU}
+                selectedTypeBySize={selectedTypeBySize}
+                setSelectedTypeBySize={setSelectedTypeBySize}
               />
             </div>
 

@@ -139,7 +139,7 @@ export const CartDrawer = () => {
                             <span className="font-medium">
                               Size: {size.size_value} {size.size_unit}
                             </span>
-                            <span>${size.price.toFixed(2)} / case</span>
+                            <span>${size.price.toFixed(2)} / {size.type as any}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2 mt-1">

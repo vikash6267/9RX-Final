@@ -378,7 +378,7 @@ const handleDownloadPDF = async () => {
             (itemIndex + 1).toString(),
             item.name || "N/A",
             `${size.size_value} ${size.size_unit}` || "",
-            "", // UoM empty
+            size.type || "case", // UoM empty
             `$${Number(size.price || 0).toFixed(2)}`,
             (size.quantity || 0).toString(),
             `$${(Number(size.price) * Number(size.quantity)).toFixed(2)}`
@@ -445,13 +445,13 @@ const handleDownloadPDF = async () => {
     doc.text(`$${fred.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${fred.toFixed(2)}`), summaryY);
     summaryY += 6;
 
-    doc.text("Shipping:", summaryX, summaryY);
-    doc.text(`$${shipping.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${shipping.toFixed(2)}`), summaryY);
-    summaryY += 6;
+    // doc.text("Shipping:", summaryX, summaryY);
+    // doc.text(`$${shipping.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${shipping.toFixed(2)}`), summaryY);
+    // summaryY += 6;
 
-    doc.text("Tax:", summaryX, summaryY);
-    doc.text(`$${tax.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${tax.toFixed(2)}`), summaryY);
-    summaryY += 8;
+    // doc.text("Tax:", summaryX, summaryY);
+    // doc.text(`$${tax.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${tax.toFixed(2)}`), summaryY);
+    // summaryY += 8;
 
     doc.setLineWidth(0.5);
 
@@ -468,9 +468,9 @@ doc.setFont("helvetica", "bold");
 
     doc.setFont("helvetica", "normal");
     const isPaid = currentOrder?.payment_status === "paid";
-    doc.text("PrePayment:", summaryX, summaryY);
-    doc.text(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`, summaryX + 60 - doc.getTextWidth(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`), summaryY);
-    summaryY += 6;
+    // doc.text("PrePayment:", summaryX, summaryY);
+    // doc.text(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`, summaryX + 60 - doc.getTextWidth(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`), summaryY);
+    // summaryY += 6;
 
     doc.setFont("helvetica", "bold");
     const balance = isPaid ? 0 : totalAmount;

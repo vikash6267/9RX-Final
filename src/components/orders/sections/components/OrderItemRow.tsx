@@ -60,15 +60,17 @@ const handleRemove = async() => {
       <div>
         <FormLabel className="text-gray-700 font-semibold">Sizes</FormLabel>
         <div className="text-gray-900 font-medium">
-          {Array.isArray(form.getValues(`items.${index}.sizes`))
-            ? form.getValues(`items.${index}.sizes`).map((size, i) => (
-                <div key={i} className="mb-1">
-                  {size.size_value}
-                  {size.size_unit?.toUpperCase()} ({size.quantity})
-                </div>
-              ))
-            : "N/A"}
+  {Array.isArray(form.getValues(`items.${index}.sizes`))
+    ? form.getValues(`items.${index}.sizes`).map((size, i) => (
+        <div key={i} className="mb-1">
+          {size.size_value}
+          {size.size_unit?.toUpperCase()} 
+          {" "}({size.quantity} {size.type === "unit" ? "unit" : ""})
         </div>
+      ))
+    : "N/A"}
+</div>
+
       </div>
 
       {/* Price (Read-only) */}

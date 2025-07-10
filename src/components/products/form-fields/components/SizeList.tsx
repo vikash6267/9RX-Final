@@ -21,6 +21,8 @@ interface Size {
   rolls_per_case?: number
   sizeSquanence?: number
   shipping_cost?: number
+  unit?: boolean
+  case?: boolean
 }
 
 interface SizeListProps {
@@ -235,6 +237,27 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                       />
                     </div>
                   )}
+
+                  {/* Sell Type Checkboxes */}
+<div className="col-span-2 flex items-center gap-4 mt-3">
+  <label className="flex items-center gap-2 text-xs text-gray-700">
+    <input
+      type="checkbox"
+      checked={!!size.unit}
+      onChange={(e) => onUpdateSize(index, "unit", e.target.checked)}
+    />
+    Sell by Unit
+  </label>
+  <label className="flex items-center gap-2 text-xs text-gray-700">
+    <input
+      type="checkbox"
+      checked={!!size.case}
+      onChange={(e) => onUpdateSize(index, "case", e.target.checked)}
+    />
+    Sell by Case
+  </label>
+</div>
+
                 </div>
 
                 {/* Image Uploader */}
@@ -256,6 +279,9 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                     }}
                   />
                 </div>
+
+
+                
               </div>
             )}
           </CardContent>

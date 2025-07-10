@@ -80,6 +80,8 @@ export const addProductService = async (data: ProductFormValues) => {
       sizeSquanence: Number(size.sizeSquanence) || 0,
       shipping_cost: Number(size.shipping_cost) || 15,
       quantity_per_case: size.quantity_per_case,
+      case: size.case ,
+      unit: size.unit ,
     }));
 
     const { error: sizesError } = await supabase
@@ -159,6 +161,8 @@ export const updateProductService = async (
           rolls_per_case: Number(size.rolls_per_case) || 1,
           sizeSquanence: Number(size.sizeSquanence) || 0,
           shipping_cost: size.shipping_cost,
+            case: size.case ,
+      unit: size.unit ,
         })));
     
       if (insertError) {
@@ -183,6 +187,8 @@ export const updateProductService = async (
           rolls_per_case: Number(size.rolls_per_case) || 1,
           sizeSquanence: Number(size.sizeSquanence) || 0,
           shipping_cost: size.shipping_cost,
+            case: size.case,
+      unit: size.unit ,
         })
         .eq("id", size.id);
     

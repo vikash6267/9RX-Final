@@ -4,6 +4,7 @@ import { ProductDetails } from "../../types/product.types";
 import { formatPrice } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface ProductSizeOptionsProps {
   product: ProductDetails;
@@ -14,6 +15,8 @@ interface ProductSizeOptionsProps {
   quantity: { [key: string]: number };
   onIncreaseQuantity: (id: string) => void;
   onDecreaseQuantity: (id: string) => void;
+   selectedTypeBySize: { [sizeId: string]: "case" | "unit" };
+  setSelectedTypeBySize: React.Dispatch<React.SetStateAction<{ [sizeId: string]: "case" | "unit" }>>;
 }
 
 export const ProductSizeOptions = ({
@@ -25,9 +28,13 @@ export const ProductSizeOptions = ({
   onSizeSelect,
   selectedSizesSKU = [],
   onSizeSelectSKU,
+  selectedTypeBySize,
+  setSelectedTypeBySize
 }: ProductSizeOptionsProps) => {
   const handleSizeToggle = (sizeId: string, stock: number) => {
     if (stock <= 0) return; // Prevent selection of out-of-stock items
+
+
 
     if (selectedSizes.includes(sizeId)) {
       onSizeSelect?.(selectedSizes.filter((s) => s !== sizeId));
@@ -35,6 +42,7 @@ export const ProductSizeOptions = ({
       onSizeSelect?.([...selectedSizes, sizeId]);
     }
   };
+
 
   const handleSizeToggleSKU = (sizeSKU: string, stock: number) => {
     if (stock <= 0) return; // Prevent selection of out-of-stock items
@@ -45,15 +53,24 @@ export const ProductSizeOptions = ({
       onSizeSelectSKU?.([...selectedSizesSKU, sizeSKU]);
     }
   };
-
+  const handleToggleType = (sizeId: string, type: "case" | "unit") => {
+    setSelectedTypeBySize(prev => ({ ...prev, [sizeId]: type }))
+  }
+  console.log(product)
   return (
     <div className="space-y-3">
       {product.sizes.map((size, index) => {
         const sizeId = `${size.size_value}-${size.size_unit}`;
         const sizeSKU = `${size.sku} - ${size.id}` || "";
-        const totalPrice = size.price * (quantity[size.id] || 1);
         const isOutOfStock = size.stock <= 0;
-        const isMaxReached = quantity[size.id] >= size.stock; // Prevent exceeding stock
+        const isMaxReached = quantity[size.id] >= size.stock;
+
+        // 🆕 Default to "case" if not set
+        const selectedType = selectedTypeBySize[sizeId] || "case";
+
+        // 🆕 Use size.price or size.price_per_unit
+        const unitPrice = selectedType === "case" ? size.price : size.price_per_case;
+        const totalPrice = unitPrice * (quantity[size.id] || 1);
 
         return (
           <Card
@@ -79,12 +96,12 @@ export const ProductSizeOptions = ({
                         {size.size_value} {size.size_unit}
                       </span>
                       <span className={`text-sm font-medium ${isOutOfStock ? "text-red-500" : "text-green-600"}`}>
-                      {isOutOfStock 
-  ? "Out of Stock" 
-  : size.stock < 5 
-    ? `In Stock (${size.stock} available)` 
-    : "In Stock"
-}
+                        {isOutOfStock
+                          ? "Out of Stock"
+                          : size.stock < 5
+                            ? `In Stock (${size.stock} available)`
+                            : "In Stock"
+                        }
 
                       </span>
                     </div>
@@ -115,6 +132,23 @@ export const ProductSizeOptions = ({
                   </div>
                 </div>
               </Label>
+            </div>
+            <div className="flex gap-2 items-center text-sm">
+              <span className="font-medium">Type:</span>
+            {size.case &&  <Button
+                variant={selectedType === "case" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleToggleType(sizeId, "case")}
+              >
+                Case
+              </Button>}
+             {size.unit && <Button
+                variant={selectedType === "unit" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleToggleType(sizeId, "unit")}
+              >
+                Unit
+              </Button>}
             </div>
 
             {/* Quantity Controls */}

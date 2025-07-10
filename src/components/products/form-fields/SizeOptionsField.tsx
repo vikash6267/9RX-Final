@@ -28,6 +28,8 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
     shipping_cost: "0",
     image: "",
     sizeSquanence: "",
+      unit: false, // default selected
+  case: true,
   })
 
   const handleAddSize = () => {
@@ -56,6 +58,8 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
       price_per_case: Number.parseFloat(PPC) || 0,
       rolls_per_case: Number.parseInt(newSize.rolls_per_case) || 0,
       shipping_cost: Number.parseFloat(newSize.shipping_cost) || 15,
+        unit: newSize.unit || false,
+  case: newSize.case || false,
     } as const
 
     if (!sizeToAdd.size_value || !sizeToAdd.size_unit) {
