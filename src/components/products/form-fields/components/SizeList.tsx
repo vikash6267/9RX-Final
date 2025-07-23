@@ -1,39 +1,45 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { X, Edit3, Package, DollarSign, Warehouse, BarChart3 } from "lucide-react"
-import { CATEGORY_CONFIGS } from "../../schemas/productSchema"
-import { SizeImageUploader } from "../SizeImageUploader"
-import { Card, CardContent } from "@/components/ui/card"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { X, Edit3, Package, DollarSign, Warehouse, BarChart3, Printer } from "lucide-react"; // Added Printer icon
+import { CATEGORY_CONFIGS } from "../../schemas/productSchema";
+import { SizeImageUploader } from "../SizeImageUploader";
+import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import { generateSingleProductLabelPDF } from "@/utils/size-lable-download";
+// Import the new single label generator
 
 interface Size {
-  size_value: string
-  size_unit: string
-  price: number
-  sku?: any
-  pricePerCase?: any
-  price_per_case?: number
-  stock: number
-  quantity_per_case: number
-  rolls_per_case?: number
-  sizeSquanence?: number
-  shipping_cost?: number
+  size_value: string;
+  size_unit: string;
+  price: number;
+  sku?: string; // Changed to string for consistency with barcode
+  pricePerCase?: any;
+  price_per_case?: number;
+  stock: number;
+  quantity_per_case: number;
+  rolls_per_case?: number;
+  sizeSquanence?: number;
+  shipping_cost?: number;
 }
 
 interface SizeListProps {
-  sizes: Size[]
-  onRemoveSize: (index: number) => void
-  setNewSize: (boolean) => void
-  onUpdateSize: (index: number, field: string, value: string | number) => void
-  category: string
+  sizes: Size[];
+  onRemoveSize: (index: number) => void;
+  setNewSize: (boolean: boolean) => void;
+  onUpdateSize: (index: number, field: string, value: string | number) => void;
+  category: string;
+  form?: any; // Assuming 'form' is passed from react-hook-form
 }
 
-export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, setNewSize }: SizeListProps) => {
-  const categoryConfig = CATEGORY_CONFIGS[category as keyof typeof CATEGORY_CONFIGS] || CATEGORY_CONFIGS.OTHER
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, setNewSize, form }: SizeListProps) => {
+  const categoryConfig = CATEGORY_CONFIGS[category as keyof typeof CATEGORY_CONFIGS] || CATEGORY_CONFIGS.OTHER;
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // Get the product name once from the form
+  const productName = form?.getValues("name") || "Product"; // Use optional chaining for safety
 
   if (sizes.length === 0) {
     return (
@@ -42,7 +48,7 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
         <p className="text-sm">No size variations added yet</p>
         <p className="text-xs text-gray-400">Add your first size variation above</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -52,6 +58,7 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
           <BarChart3 className="h-4 w-4" />
           Size Variations ({sizes.length})
         </h4>
+        {/* No global download button needed here anymore for individual labels */}
       </div>
 
       {sizes.map((size, index) => (
@@ -64,7 +71,7 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 flex-1">
                 {/* Size Badge */}
-                <Badge className="bg-gradient-to-r  text-white px-3 py-1 text-sm font-medium text-black">
+                <Badge className="bg-gradient-to-r text-white px-3 py-1 text-sm font-medium text-black">
                   {size.size_value} {size.size_unit}
                 </Badge>
 
@@ -99,6 +106,27 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
 
               {/* Actions */}
               <div className="flex items-center gap-2">
+                {/* NEW: Download Label Button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      await generateSingleProductLabelPDF(productName, size);
+                      // Optional: Add a success toast
+                      console.log(`Label for ${size.sku || size.size_value} downloaded!`);
+                    } catch (error) {
+                      console.error("Failed to download label:", error);
+                      // Optional: Add an error toast
+                    }
+                  }}
+                  className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                  title="Download Label"
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+
                 <Button
                   type="button"
                   variant="ghost"
@@ -244,15 +272,15 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                     indexValue={index}
                     onUpdateSize={onUpdateSize}
                     validateImage={(file) => {
-                      const maxSize = 5 * 1024 * 1024
+                      const maxSize = 5 * 1024 * 1024;
                       if (file.size > maxSize) {
-                        return "Image size should be less than 5MB"
+                        return "Image size should be less than 5MB";
                       }
-                      const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
+                      const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
                       if (!allowedTypes.includes(file.type)) {
-                        return "Only JPG, PNG and GIF images are allowed"
+                        return "Only JPG, PNG and GIF images are allowed";
                       }
-                      return null
+                      return null;
                     }}
                   />
                 </div>
@@ -262,5 +290,5 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
         </Card>
       ))}
     </div>
-  )
-}
+  );
+};

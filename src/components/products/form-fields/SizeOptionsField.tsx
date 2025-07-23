@@ -200,6 +200,7 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
                 onUpdateSize={handleUpdateSize}
                 category={category}
                 setNewSize={setNewSize}
+                form={form}
               />
               <FormMessage />
             </FormItem>

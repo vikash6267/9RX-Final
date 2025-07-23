@@ -74,7 +74,7 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
             name="sku"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">Product Number *</FormLabel>
+                <FormLabel className="text-sm font-semibold text-gray-700">Product Code *</FormLabel>
                 <FormControl>
                   <Input placeholder="Auto-generated SKU" className="h-11 font-mono" {...field} />
                 </FormControl>

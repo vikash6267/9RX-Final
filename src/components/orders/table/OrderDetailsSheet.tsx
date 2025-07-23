@@ -259,234 +259,203 @@ export const OrderDetailsSheet = ({
 
 
 
-const handleDownloadPDF = async () => {
-  console.log(currentOrder)
-  setIsGeneratingPDF(true);
-  try {
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
 
-    doc.setFont("helvetica");
+    try {
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-    const contentWidth = pageWidth - margin * 2;
-    let currentY = margin;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
 
-    const barcodeData = currentOrder.order_number || "123456789";
-    const barcodeImage = generateBarcode(barcodeData);
 
-    const barcodeWidth = 40;
-    const barcodeHeight = 15;
-    doc.addImage(barcodeImage, "PNG", pageWidth - margin - barcodeWidth, currentY, barcodeWidth, barcodeHeight);
 
-    doc.setFontSize(24);
-    doc.setFont("helvetica", "bold");
-    doc.text("PURCHASE ORDER", margin, currentY + 15);
 
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    const dateString = new Date(currentOrder.date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-    doc.text(`Date: ${dateString}`, pageWidth - margin - doc.getTextWidth(`Date: ${dateString}`), currentY + 25);
 
-    currentY += 35;
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(margin, currentY, pageWidth - margin, currentY);
-    currentY += 15;
 
-    const infoStartY = currentY;
-    const columnWidth = (contentWidth - 10) / 2;
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("SOLD TO", margin, infoStartY);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
 
-    let soldToY = infoStartY + 8;
-    doc.text(currentOrder.customerInfo?.name || "N/A", margin, soldToY);
-    soldToY += 5;
-    doc.text(currentOrder.customerInfo?.phone || "N/A", margin, soldToY);
-    soldToY += 5;
-    doc.text(currentOrder.customerInfo?.email || "N/A", margin, soldToY);
-    soldToY += 5;
 
-    const soldToAddress = [
-      currentOrder.customerInfo?.address?.street || "",
-      currentOrder.customerInfo?.address?.city || "",
-      `${currentOrder.customerInfo?.address?.state || ""} ${currentOrder.customerInfo?.address?.zip_code || ""}`,
-    ].filter(Boolean).join(", ");
-    doc.text(doc.splitTextToSize(soldToAddress, columnWidth), margin, soldToY);
+      // Add Logo (Left side)
+      const logo = new Image();
+      logo.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
+      await new Promise((resolve) => (logo.onload = resolve));
+      const logoHeight = 25;
+      const logoWidth = (logo.width / logo.height) * logoHeight;
+      doc.addImage(logo, "PNG", margin, margin, logoWidth, logoHeight);
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("SHIP TO", margin + columnWidth + 10, infoStartY);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
+      // Set Fonts
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
 
-    let shipToY = infoStartY + 8;
-    doc.text(currentOrder.shippingAddress?.fullName || "N/A", margin + columnWidth + 10, shipToY);
-    shipToY += 5;
-    doc.text(currentOrder.shippingAddress?.phone || "N/A", margin + columnWidth + 10, shipToY);
-    shipToY += 5;
-    doc.text(currentOrder.shippingAddress?.email || "N/A", margin + columnWidth + 10, shipToY);
-    shipToY += 5;
+      // Top Info Line (All in one row, top line)
+      const topInfo = [
+        "Tax ID : 99-0540972",
+        "936 Broad River Ln, Charlotte, NC 28211",
+        "info@9rx.com",
+        "www.9rx.com"
+      ].join("     |     ");
+      doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
 
-    const shipToAddress = [
-      currentOrder.shippingAddress?.address?.street || "",
-      currentOrder.shippingAddress?.address?.city || "",
-      `${currentOrder.shippingAddress?.address?.state || ""} ${currentOrder.shippingAddress?.address?.zip_code || ""}`,
-    ].filter(Boolean).join(", ");
-    doc.text(doc.splitTextToSize(shipToAddress, columnWidth), margin + columnWidth + 10, shipToY);
+      // Centered Phone Number (under logo)
+      doc.setFontSize(10);
+      doc.text("+1 800 969 6295", pageWidth / 2, margin + logoHeight / 2 + 5, { align: "center" });
 
-    currentY = Math.max(soldToY + 15, shipToY + 15);
-    doc.line(margin, currentY, pageWidth - margin, currentY);
-    currentY += 15;
+      // PURCHASE ORDER TITLE (right side)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("PURCHASE ORDER", pageWidth - margin - 10, margin + 10, { align: "right" });
 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`ORDER - ${currentOrder.order_number}`, pageWidth - margin - 10, margin + 15, { align: "right" });
+      doc.text(`Date - ${formattedDate}`, pageWidth - margin - 10, margin + 20, { align: "right" });
 
-    doc.text(`Order #: ${currentOrder.order_number || "N/A"}`, margin, currentY);
-    doc.text(`Terms: ${currentOrder.payment?.notes || "Net 30"}`, margin, currentY + 6);
-    doc.text(`Due Date: ${new Date(Date.now() + 30 * 86400000).toLocaleDateString()}`, margin, currentY + 12);
+      // Divider line
+      doc.setDrawColor(200);
+      doc.line(margin, margin + 26, pageWidth - margin, margin + 26);
 
-    const col2X = margin + contentWidth / 3;
-    doc.text(`Transaction #: ${currentOrder.payment?.transactionId || "N/A"}`, col2X, currentY);
-    doc.text(`Ship via: ${currentOrder.shipping?.method || "Standard"}`, col2X, currentY + 6);
-    doc.text(`Tracking: ${currentOrder.shipping?.trackingNumber || "N/A"}`, col2X, currentY + 12);
+      // Addresses
+      const infoStartY = margin + 35;
+      doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
+      doc.setFont("helvetica", "normal").setFontSize(9);
+      doc.text("9RX", margin, infoStartY + 5);
+      doc.text(currentOrder.customerInfo?.name || "N/A", margin, infoStartY + 10);
+      doc.text(currentOrder.customerInfo?.phone || "N/A", margin, infoStartY + 15);
+      doc.text(currentOrder.customerInfo?.email || "N/A", margin, infoStartY + 20);
+      doc.text(
+        `${currentOrder.customerInfo?.address?.street || ""} ${currentOrder.customerInfo?.address?.city || ""}, ${currentOrder.customerInfo?.address?.state || ""} ${currentOrder.customerInfo?.address?.zip_code || ""}`,
+        margin,
+        infoStartY + 25,
+        { maxWidth: contentWidth / 2 }
+      );
 
-    currentY += 25;
-    doc.line(margin, currentY, pageWidth - margin, currentY);
-    currentY += 10;
 
-    const tableHead = [["Item#", "Description", "Size", "UoM", "Price", "Qty", "Total"]];
-    const tableBody = [];
 
-    currentOrder?.items?.forEach((item, itemIndex) => {
-      if (item.sizes && item.sizes.length > 0) {
+
+
+
+
+
+
+
+
+
+
+
+      doc.setFont("helvetica", "bold").setFontSize(11).text("Ship To", pageWidth / 2, infoStartY);
+      doc.setFont("helvetica", "normal").setFontSize(9);
+      doc.text("9RX", pageWidth / 2, infoStartY + 5);
+      doc.text(currentOrder.shippingAddress?.fullName || "N/A", pageWidth / 2, infoStartY + 10);
+      doc.text(currentOrder.shippingAddress?.phone || "N/A", pageWidth / 2, infoStartY + 15);
+      doc.text(currentOrder.shippingAddress?.email || "N/A", pageWidth / 2, infoStartY + 20);
+      doc.text(
+        `${currentOrder.shippingAddress?.address?.street || ""} ${currentOrder.shippingAddress?.address?.city || ""}, ${currentOrder.shippingAddress?.address?.state || ""} ${currentOrder.shippingAddress?.address?.zip_code || ""}`,
+        pageWidth / 2,
+        infoStartY + 25,
+        { maxWidth: contentWidth / 2 }
+      );
+
+      doc.line(margin, infoStartY + 35, pageWidth - margin, infoStartY + 35);
+
+      // Items Table
+      const tableStartY = infoStartY + 45;
+      const tableHead = [["Description", "Size", "Qty", "Price/Unit", "Total"]];
+
+      const tableBody = [];
+      currentOrder.items.forEach((item) => {
+        // Add a separate row for the product name (spanning all columns)
+        tableBody.push([
+          { content: item.name, colSpan: 5, styles: { fontStyle: 'bold', halign: 'left', fillColor: [245, 245, 245] } }
+        ]);
+
         item.sizes.forEach((size) => {
+          const sizeValueUnit = `${size.size_value} ${size.size_unit}`;
+          const quantity = size.quantity.toString();
+          const pricePerUnit = `$${Number(size.price).toFixed(2)}`;
+          const totalPerSize = `$${(size.quantity * size.price).toFixed(2)}`;
+
           tableBody.push([
-            (itemIndex + 1).toString(),
-            item.name || "N/A",
-            `${size.size_value} ${size.size_unit}` || "",
-            "", // UoM empty
-            `$${Number(size.price || 0).toFixed(2)}`,
-            (size.quantity || 0).toString(),
-            `$${(Number(size.price) * Number(size.quantity)).toFixed(2)}`
+            "", // Description column empty (since we show name in separate row)
+            sizeValueUnit,
+            quantity,
+            pricePerUnit,
+            totalPerSize,
           ]);
         });
-      } else {
-        tableBody.push([
-          (itemIndex + 1).toString(),
-          item.name || "N/A",
-          "",
-          "", // UoM empty
-          `$${Number(item.price || 0).toFixed(2)}`,
-          (item.quantity || 0).toString(),
-          `$${(Number(item.price) * Number(item.quantity)).toFixed(2)}`
-        ]);
-      }
-    });
+      });
+      (doc as any).autoTable({
+        head: tableHead,
+        body: tableBody,
+        startY: tableStartY,
+        styles: { fontSize: 9 },
+        theme: "grid",
+        headStyles: { fillColor: [230, 230, 230], textColor: 0, fontStyle: "bold" },
+        columnStyles: {
+          2: { halign: "right" },
+          3: { halign: "right" },
+          4: { halign: "right" },
+        },
+      });
 
-    doc.autoTable({
-      head: tableHead,
-      body: tableBody,
-      startY: currentY,
-      margin: { left: margin, right: margin },
-      styles: { fontSize: 10, cellPadding: 4, lineColor: [0, 0, 0], lineWidth: 0.1 },
-      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: "bold" },
-      columnStyles: {
-        0: { cellWidth: 15, halign: "center" },
-        1: { cellWidth: "auto" },
-        2: { cellWidth: 20, halign: "center" },
-        3: { cellWidth: 15, halign: "center" },
-        4: { cellWidth: 25, halign: "right" },
-        5: { cellWidth: 20, halign: "center" },
-        6: { cellWidth: 25, halign: "right" },
-      },
-      theme: "grid",
-    });
+      const finalY = (doc as any).lastAutoTable.finalY + 10;
 
-    currentY = doc.lastAutoTable.finalY + 15;
-    if (currentY + 60 > pageHeight - margin) {
-      doc.addPage();
-      currentY = margin;
+      // Summary Calculations
+      const subtotal = currentOrder.items.reduce((sum, item) => {
+        return sum + item.sizes.reduce((sizeSum, size) => sizeSum + (size.quantity * size.price), 0);
+      }, 0);
+      const handling = Number(currentOrder?.po_handling_charges || 0);
+      const fred = Number(currentOrder?.po_fred_charges || 0);
+      const shipping = Number(currentOrder?.shipping_cost || 0);
+      const tax = Number(currentOrder?.tax_amount || 0);
+      const total = subtotal + handling + fred + shipping + tax;
+
+      const summaryX = pageWidth - margin; // Align summary to the right
+      let summaryY = finalY;
+
+      doc.setFont("helvetica", "bold").setFontSize(10);
+      doc.text("Order Summary", summaryX, summaryY, { align: "right" });
+      summaryY += 6;
+
+      const summaryRows = [
+        ["Sub Total", subtotal],
+        ["Handling Charges", handling],
+        ["Freight Charges", fred],
+        ["Shipping", shipping],
+        ["Tax", tax],
+        ["Total", total],
+      ];
+
+      doc.setFont("helvetica", "normal").setFontSize(9);
+      summaryRows.forEach(([label, value]) => {
+        doc.text(label, summaryX - 40, summaryY, { align: "right" }); // Adjust position for label
+        doc.text(`$${value.toFixed(2)}`, summaryX, summaryY, { align: "right" });
+        summaryY += 5;
+      });
+
+      // Save PDF
+      doc.save(`Invoice_${currentOrder.order_number}.pdf`);
+
+      toast({
+        title: "Success",
+        description: "Invoice downloaded successfully",
+      });
+    } catch (error) {
+      console.error("PDF Error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
     }
+  };
 
-    const summaryX = pageWidth - margin - 60;
-    let summaryY = currentY;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-
-    const subtotal = tableBody.reduce((sum, row) => sum + Number(row[6].replace('$', '')), 0);
-    const handling = Number(currentOrder?.po_handling_charges || 0);
-    const fred = Number(currentOrder?.po_fred_charges || 0);
-    const shipping = Number(currentOrder?.shipping_cost || 0);
-    const tax = Number(currentOrder?.tax_amount || 0);
-
-    doc.text("Sub Total:", summaryX, summaryY);
-    doc.text(`$${subtotal.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${subtotal.toFixed(2)}`), summaryY);
-    summaryY += 6;
-
-    doc.text("Handling Charges:", summaryX, summaryY);
-    doc.text(`$${handling.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${handling.toFixed(2)}`), summaryY);
-    summaryY += 6;
-
-    doc.text("Fred Charges:", summaryX, summaryY);
-    doc.text(`$${fred.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${fred.toFixed(2)}`), summaryY);
-    summaryY += 6;
-
-    doc.text("Shipping:", summaryX, summaryY);
-    doc.text(`$${shipping.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${shipping.toFixed(2)}`), summaryY);
-    summaryY += 6;
-
-    doc.text("Tax:", summaryX, summaryY);
-    doc.text(`$${tax.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${tax.toFixed(2)}`), summaryY);
-    summaryY += 8;
-
-    doc.setLineWidth(0.5);
-
-// Shift line up to stay above "Invoice Total"
-const lineY = summaryY - 4;
-doc.line(summaryX, lineY, summaryX + 60, lineY);
-
-doc.setFont("helvetica", "bold");
-
-    const totalAmount = subtotal + handling + fred + shipping + tax;
-    doc.text("Invoice Total:", summaryX, summaryY);
-    doc.text(`$${totalAmount.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${totalAmount.toFixed(2)}`), summaryY);
-    summaryY += 8;
-
-    doc.setFont("helvetica", "normal");
-    const isPaid = currentOrder?.payment_status === "paid";
-    doc.text("PrePayment:", summaryX, summaryY);
-    doc.text(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`, summaryX + 60 - doc.getTextWidth(`$${isPaid ? totalAmount.toFixed(2) : "0.00"}`), summaryY);
-    summaryY += 6;
-
-    doc.setFont("helvetica", "bold");
-    const balance = isPaid ? 0 : totalAmount;
-    doc.text("Balance Due:", summaryX, summaryY);
-    doc.text(`$${balance.toFixed(2)}`, summaryX + 60 - doc.getTextWidth(`$${balance.toFixed(2)}`), summaryY);
-
-    doc.save(`Invoice_${currentOrder.order_number || currentOrder.id}.pdf`);
-
-    toast({ title: "Success", description: "Invoice downloaded successfully" });
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    toast({ title: "Error", description: "Failed to generate PDF", variant: "destructive" });
-  } finally {
-    setIsGeneratingPDF(false);
-  }
-};
 
 
 
@@ -538,109 +507,109 @@ doc.setFont("helvetica", "bold");
 
   const [chargesOpen, setChargesOpen] = useState(false);
 
- const handleApprove = async () => {
-  setChargesOpen(true);
-};
+  const handleApprove = async () => {
+    setChargesOpen(true);
+  };
 
 
-const submitCharges = async (handling, fred) => {
-  try {
-    Swal.fire({
-      title: 'Approving Order...',
-      text: 'Please wait while we update the stock.',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => Swal.showLoading(),
-    });
+  const submitCharges = async (handling, fred) => {
+    try {
+      Swal.fire({
+        title: 'Approving Order...',
+        text: 'Please wait while we update the stock.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+      });
 
-    await updateSizeQuantities(order.items, true);
+      await updateSizeQuantities(order.items, true);
 
-    await supabase
-      .from("orders")
-      .update({
-        poApproved: true,
-        po_handling_charges: handling,
-        po_fred_charges: fred,
-      })
-      .eq("id", order.id);
+      await supabase
+        .from("orders")
+        .update({
+          poApproved: true,
+          po_handling_charges: handling,
+          po_fred_charges: fred,
+        })
+        .eq("id", order.id);
 
-    onOpenChange(false);
-    Swal.close();
+      onOpenChange(false);
+      Swal.close();
 
-    Swal.fire({
-      title: 'Order Approved ✅',
-      icon: 'success',
-    }).then(() => window.location.reload());
-  } catch (error) {
-    Swal.close();
-    Swal.fire({
-      title: 'Error',
-      text: 'Approval failed',
-      icon: 'error',
-    });
-  }
-};
+      Swal.fire({
+        title: 'Order Approved ✅',
+        icon: 'success',
+      }).then(() => window.location.reload());
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        title: 'Error',
+        text: 'Approval failed',
+        icon: 'error',
+      });
+    }
+  };
 
 
 
   const handleReject = async () => {
-  try {
-    Swal.fire({
-      title: 'Rejecting Order...',
-      text: 'Please wait while we update the stock.',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-      background: '#f9fafb',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-        title: 'text-lg font-semibold',
-      },
-    });
+    try {
+      Swal.fire({
+        title: 'Rejecting Order...',
+        text: 'Please wait while we update the stock.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+        background: '#f9fafb',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+          title: 'text-lg font-semibold',
+        },
+      });
 
-    await updateSizeQuantities(order.items, false);
-    await supabase
-      .from("orders")
-      .update({
-        poApproved: false,
-        po_handling_charges: 0,  // ✅ set to 0
-        po_fred_charges: 0,      // ✅ set to 0
-      })
-      .eq("id", order.id);
+      await updateSizeQuantities(order.items, false);
+      await supabase
+        .from("orders")
+        .update({
+          poApproved: false,
+          po_handling_charges: 0,  // ✅ set to 0
+          po_fred_charges: 0,      // ✅ set to 0
+        })
+        .eq("id", order.id);
 
-    onOpenChange(false);
-    Swal.close();
+      onOpenChange(false);
+      Swal.close();
 
-    Swal.fire({
-      title: 'Order Rejected ❌',
-      text: 'Stock has been reduced successfully!',
-      icon: 'warning',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#f59e0b',
-      background: '#fff7ed',
-      color: '#78350f',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-      },
-    }).then(() => {
-      window.location.reload();
-    });
-  } catch (error) {
-    Swal.close();
-    Swal.fire({
-      title: 'Error',
-      text: 'Something went wrong while rejecting the order.',
-      icon: 'error',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#ef4444',
-      customClass: {
-        popup: 'z-[99999] rounded-xl shadow-lg',
-      },
-    });
-  }
-};
+      Swal.fire({
+        title: 'Order Rejected ❌',
+        text: 'Stock has been reduced successfully!',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#f59e0b',
+        background: '#fff7ed',
+        color: '#78350f',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+        },
+      }).then(() => {
+        window.location.reload();
+      });
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        title: 'Error',
+        text: 'Something went wrong while rejecting the order.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#ef4444',
+        customClass: {
+          popup: 'z-[99999] rounded-xl shadow-lg',
+        },
+      });
+    }
+  };
 
 
 
@@ -813,10 +782,10 @@ const submitCharges = async (handling, fred) => {
 
 
         <ChargesDialog
-  open={chargesOpen}
-  onOpenChange={setChargesOpen}
-  onSubmit={submitCharges}
-/>
+          open={chargesOpen}
+          onOpenChange={setChargesOpen}
+          onSubmit={submitCharges}
+        />
 
 
       </SheetContent>

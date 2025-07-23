@@ -1,76 +1,76 @@
-import jsPDF from "jspdf"
-import JsBarcode from "jsbarcode"
+import jsPDF from "jspdf";
+import JsBarcode from "jsbarcode"; // Keeping JsBarcode import as it was present in your previous full code
 
 interface WorkOrderData {
-  id: string
-  invoice_number: string
-  order_id: string
-  status: string
-  amount: number
-  tax_amount: number
-  total_amount: number
-  due_date: string
-  created_at: string
+  id: string;
+  invoice_number: string;
+  order_id: string;
+  status: string;
+  amount: number;
+  tax_amount: number;
+  total_amount: number;
+  due_date: string;
+  created_at: string;
   items: Array<{
-    name: string
-    price: number
-    quantity: number
+    name: string;
+    price: number;
+    quantity: number; // This is the overall item quantity, not per size
     sizes: Array<{
-      id: string
-      sku: string
-      size_value: string
-      size_unit: string
-      quantity: number
-      price: number
-      quantity_per_case: number
-    }>
-  }>
+      id: string;
+      sku: string;
+      size_value: string;
+      size_unit: string;
+      quantity: number; // This is the quantity per specific size (Shipped QTY)
+      price: number;
+      quantity_per_case: number; // This is QTY/CS
+    }>;
+  }>;
   customer_info: {
-    name: string
-    type: string
-    email: string
-    phone: string
+    name: string;
+    type: string;
+    email: string;
+    phone: string;
     address: {
-      street: string
-      city: string
-      state: string
-      zip_code: string
-    }
-  }
+      street: string;
+      city: string;
+      state: string;
+      zip_code: string;
+    };
+  };
   shipping_info: {
-    fullName: string
-    email: string
-    phone: string
+    fullName: string;
+    email: string;
+    phone: string;
     address: {
-      street: string
-      city: string
-      state: string
-      zip_code: string
-    }
-  }
+      street: string;
+      city: string;
+      state: string;
+      zip_code: string;
+    };
+  };
   orders: {
-    order_number: string
-  }
+    order_number: string;
+  };
   profiles: {
-    first_name: string
-    last_name: string
-    company_name: string
-    email: string
-  }
+    first_name: string;
+    last_name: string;
+    company_name: string;
+    email: string;
+  };
 }
 
 interface PackingSlipData {
-  shipVia: string
-  notes: string
-  cartons: string
-  masterCases: string
-  weight: string
-  shippingClass: string
+  shipVia: string;
+  notes: string;
+  cartons: string;
+  masterCases: string;
+  weight: string;
+  shippingClass: string;
 }
 
 // Generate barcode as base64 image
 const generateBarcode = (text: string): string => {
-  const canvas = document.createElement("canvas")
+  const canvas = document.createElement("canvas");
   JsBarcode(canvas, text, {
     format: "CODE128",
     width: 1.5,
@@ -78,216 +78,218 @@ const generateBarcode = (text: string): string => {
     displayValue: true,
     fontSize: 8,
     textMargin: 2,
-  })
-  return canvas.toDataURL("image/png")
-}
+  });
+  return canvas.toDataURL("image/png");
+};
 
-export const generateWorkOrderPDF = (workOrderData: WorkOrderData, packingData: PackingSlipData) => {
-  const doc = new jsPDF()
-  const pageWidth = doc.internal.pageSize.width
-  const pageHeight = doc.internal.pageSize.height
-  let yPosition = 25 // Increased top margin
 
-  const currentDate = new Date().toLocaleDateString()
-
-  // RIGHT SIDE TOP SECTION
-  doc.setFontSize(12)
-  doc.setFont("helvetica", "bold")
-  doc.text("Packing Slip / Bill Of Landing", pageWidth - 15, yPosition, { align: "right" })
-
-  let rightYPosition = yPosition + 8
-  doc.setFontSize(9)
-  doc.setFont("helvetica", "normal")
-  doc.text(`Date: ${currentDate}`, pageWidth - 15, rightYPosition, { align: "right" })
-  rightYPosition += 5
-  doc.text(`Packing Slip #: PS-${workOrderData.orders.order_number}`, pageWidth - 15, rightYPosition, {
-    align: "right",
-  })
-  rightYPosition += 5
-  doc.text(`Invoice #: ${workOrderData.invoice_number}`, pageWidth - 15, rightYPosition, { align: "right" })
-  rightYPosition += 8
-
-  // BARCODE - Right side
+export const generateWorkOrderPDF = async (workOrderData: WorkOrderData, packingData: PackingSlipData) => {
   try {
-    const barcodeData = generateBarcode(workOrderData.orders.order_number)
-    doc.addImage(barcodeData, "PNG", pageWidth - 65, rightYPosition, 45, 12)
-    rightYPosition += 15
-  } catch (error) {
-    console.error("Barcode generation failed:", error)
-    doc.text(`Barcode: ${workOrderData.orders.order_number}`, pageWidth - 15, rightYPosition, { align: "right" })
-    rightYPosition += 10
-  }
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
 
-  // ADD PROPER GAP AFTER HEADER
-  yPosition = yPosition + 35 // Increased gap after header
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    const contentWidth = pageWidth - margin * 2;
 
-  // FROM Section - Left side
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(10)
-  doc.text("FROM", 15, yPosition)
-  yPosition += 6
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.text("9RX LLC", 15, yPosition)
-  yPosition += 5
-  doc.text("724 Montana drive,", 15, yPosition)
-  yPosition += 5
-  doc.text("Ste A - 1", 15, yPosition)
-  yPosition += 5
-  doc.text("Charlotte, NC 28216", 15, yPosition)
-  yPosition += 15
+    // Add Logo (Left side) - Same as PO
+    const logo = new Image();
+    logo.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
+    await new Promise((resolve) => (logo.onload = resolve));
+    const logoHeight = 25;
+    const logoWidth = (logo.width / logo.height) * logoHeight;
+    doc.addImage(logo, "PNG", margin, margin, logoWidth, logoHeight);
 
-  // TO Section - Right side (starting from same level as FROM)
-  let toYPosition = yPosition - 35 // Start TO at same level as FROM
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(10)
-  doc.text("TO", pageWidth - 85, toYPosition)
-  toYPosition += 6
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.text(workOrderData.customer_info.name, pageWidth - 85, toYPosition)
-  toYPosition += 5
-  if (workOrderData.profiles.company_name) {
-    doc.text(workOrderData.profiles.company_name, pageWidth - 85, toYPosition)
-    toYPosition += 5
-  }
-  doc.text(workOrderData.shipping_info.address.street, pageWidth - 85, toYPosition)
-  toYPosition += 5
-  doc.text(
-    `${workOrderData.shipping_info.address.city}, ${workOrderData.shipping_info.address.state} ${workOrderData.shipping_info.address.zip_code}`,
-    pageWidth - 85,
-    toYPosition,
-  )
+    // Set Fonts
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
 
-  // Use the maximum yPosition from both sides
-  yPosition = Math.max(yPosition, toYPosition + 15)
+    // Top Info Line (All in one row, top line) - Same as PO
+    const topInfo = [
+      "Tax ID : 99-0540972",
+      "936 Broad River Ln, Charlotte, NC 28211",
+      "info@9rx.com",
+      "www.9rx.com"
+    ].join("     |     ");
+    doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
 
-  // Ship Via Section
-  doc.setFontSize(9)
-  doc.text(`Ship Via: ${packingData.shipVia}`, 15, yPosition)
-  yPosition += 15
+    // Centered Phone Number (under logo) - Same as PO
+    doc.setFontSize(10);
+    doc.text("+1 800 969 6295", pageWidth / 2, margin + logoHeight / 2 + 5, { align: "center" });
 
-  // TABLE SECTION - ONLY FOR ITEMS
-  const tableStartY = yPosition
-  const tableStartX = 15
-  const tableWidth = pageWidth - 30
-  const rowHeight = 8
+    // PACKING SLIP TITLE (right side) - CHANGED from "PURCHASE ORDER"
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text("PACKING SLIP", pageWidth - margin - 10, margin + 10, { align: "right" });
 
-  // Table headers and column widths
-  const headers = ["ITEMS", "DESCRIPTION", "QTY/CS", "Shipped QTY", "IN CASE"]
-  const colWidths = [25, 85, 20, 25, 20]
-  const colPositions = [tableStartX]
+    // Order Number and Date - Using workOrderData
+    doc.setFontSize(10);
+    const orderNumber = workOrderData?.orders?.order_number || workOrderData?.order_id || "N/A";
+    const formattedDate = new Date(workOrderData?.created_at || new Date()).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    doc.text(`ORDER - ${orderNumber}`, pageWidth - margin - 10, margin + 15, { align: "right" });
+    doc.text(`Date - ${formattedDate}`, pageWidth - margin - 10, margin + 20, { align: "right" });
 
-  // Calculate column positions
-  for (let i = 0; i < colWidths.length - 1; i++) {
-    colPositions.push(colPositions[i] + colWidths[i])
-  }
+    // Divider line - Same as PO
+    doc.setDrawColor(200);
+    doc.line(margin, margin + 26, pageWidth - margin, margin + 26);
 
-  // Draw table header background
-  doc.setFillColor(240, 240, 240)
-  doc.rect(tableStartX, yPosition - 2, tableWidth, rowHeight, "F")
+    // Addresses - "Bill To" and "Ship To" side-by-side, like PO
+    const infoStartY = margin + 35;
 
-  // Draw table header text
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(9)
-  headers.forEach((header, index) => {
-    doc.text(header, colPositions[index] + 2, yPosition + 4)
-  })
+    // Bill To Section - Populated from workOrderData.customer_info and profiles
+    doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
+    doc.setFont("helvetica", "normal").setFontSize(9);
+    doc.text(workOrderData?.profiles?.company_name || "9RX", margin, infoStartY + 5);
+    doc.text(workOrderData?.customer_info?.name || "N/A", margin, infoStartY + 10);
+    doc.text(workOrderData?.customer_info?.phone || "N/A", margin, infoStartY + 15);
+    doc.text(workOrderData?.customer_info?.email || "N/A", margin, infoStartY + 20);
+    doc.text(
+      `${workOrderData?.customer_info?.address?.street || ""} ${workOrderData?.customer_info?.address?.city || ""}, ${workOrderData?.customer_info?.address?.state || ""} ${workOrderData?.customer_info?.address?.zip_code || ""}`,
+      margin,
+      infoStartY + 25,
+      { maxWidth: contentWidth / 2 }
+    );
 
-  // Draw header border
-  doc.setDrawColor(0, 0, 0)
-  doc.setLineWidth(0.5)
-  doc.rect(tableStartX, yPosition - 2, tableWidth, rowHeight)
+    // Ship To Section - Populated from workOrderData.shipping_info and profiles
+    doc.setFont("helvetica", "bold").setFontSize(11).text("Ship To", pageWidth / 2, infoStartY);
+    doc.setFont("helvetica", "normal").setFontSize(9);
+    doc.text(workOrderData?.profiles?.company_name || "9RX", pageWidth / 2, infoStartY + 5);
+    doc.text(workOrderData?.shipping_info?.fullName || "N/A", pageWidth / 2, infoStartY + 10);
+    doc.text(workOrderData?.shipping_info?.phone || "N/A", pageWidth / 2, infoStartY + 15);
+    doc.text(workOrderData?.shipping_info?.email || "N/A", pageWidth / 2, infoStartY + 20);
+    doc.text(
+      `${workOrderData?.shipping_info?.address?.street || ""} ${workOrderData?.shipping_info?.address?.city || ""}, ${workOrderData?.shipping_info?.address?.state || ""} ${workOrderData?.shipping_info?.address?.zip_code || ""}`,
+      pageWidth / 2,
+      infoStartY + 25,
+      { maxWidth: contentWidth / 2 }
+    );
 
-  // Draw vertical lines for header
-  colPositions.forEach((pos, index) => {
-    if (index > 0) {
-      doc.line(pos, yPosition - 2, pos, yPosition + 6)
-    }
-  })
+    doc.line(margin, infoStartY + 35, pageWidth - margin, infoStartY + 35);
 
-  yPosition += rowHeight
+    // Items Table - Now with specific headers: ITEMS, DESCRIPTION, QTY/CS, Shipped QTY, IN CASE
+    const tableStartY = infoStartY + 45;
+    const tableHead = [["ITEMS", "DESCRIPTION", "QTY/CS", "Shipped QTY", "IN CASE"]]; // Updated headers
 
-  // Items data - only actual items, no extra rows
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(8)
+    const tableBody = [];
 
-  let rowCount = 0
-  workOrderData.items.forEach((item) => {
-    item.sizes.forEach((size) => {
-      // Check if we need a new page
-      if (yPosition + rowHeight > pageHeight - 40) {
-        doc.addPage()
-        yPosition = 25
-      }
+    // Use workOrderData.items for the packing slip items
+    if (workOrderData && workOrderData.items && Array.isArray(workOrderData.items)) {
+      workOrderData.items.forEach((item) => {
+        if (item && item.sizes && Array.isArray(item.sizes)) {
+          item.sizes.forEach((size) => {
+            const itemSku = size.sku || "N/A";
+            const description = `${item.name || "N/A"} - ${size.size_value || ""} ${size.size_unit || ""}`;
+            const quantityPerCase = (size.quantity_per_case !== undefined && size.quantity_per_case !== null) ? size.quantity_per_case.toString() : "N/A";
+            const shippedQuantity = (size.quantity !== undefined && size.quantity !== null) ? size.quantity.toString() : "N/A";
+            const inCase = "_____"; // As per your example, a placeholder for manual entry
 
-      // Draw row background (alternating)
-      if (rowCount % 2 === 1) {
-        doc.setFillColor(250, 250, 250)
-        doc.rect(tableStartX, yPosition, tableWidth, rowHeight, "F")
-      }
-
-      // Draw row border
-      doc.setDrawColor(0, 0, 0)
-      doc.rect(tableStartX, yPosition, tableWidth, rowHeight)
-
-      // Draw vertical lines
-      colPositions.forEach((pos, index) => {
-        if (index > 0) {
-          doc.line(pos, yPosition, pos, yPosition + rowHeight)
+            tableBody.push([
+              itemSku,
+              description,
+              quantityPerCase,
+              shippedQuantity,
+              inCase,
+            ]);
+          });
         }
-      })
+      });
+    } else {
+      console.warn("Work Order data items are missing or not an array. Packing slip will have no items.");
+      tableBody.push(["No items found for this packing slip.", "", "", "", ""]); // Ensure 5 columns for 'No items'
+    }
 
-      // Add data to cells
-      const rowData = [
-        size.sku,
-        `${item.name} - ${size.size_value} ${size.size_unit}`,
-        size.quantity_per_case.toString(),
-        size.quantity.toString(),
-        "_____",
-      ]
+    (doc as any).autoTable({
+      head: tableHead,
+      body: tableBody,
+      startY: tableStartY,
+      styles: { fontSize: 9 },
+      theme: "grid",
+      headStyles: { fillColor: [230, 230, 230], textColor: 0, fontStyle: "bold" },
+      columnStyles: {
+        // Adjust column indices for the new headers:
+        // ITEMS (0), DESCRIPTION (1), QTY/CS (2), Shipped QTY (3), IN CASE (4)
+        2: { halign: "right" }, // QTY/CS
+        3: { halign: "right" }, // Shipped QTY
+        4: { halign: "center" }, // IN CASE
+      },
+      didDrawPage: function(data: any) {
+        // This function will be triggered for each page drawn by autoTable.
+        // It's useful for repeating headers/footers on multi-page tables if autoTable's
+        // default header repetition isn't sufficient.
+      }
+    });
 
-      rowData.forEach((data, index) => {
-        const cellWidth = colWidths[index] - 4
-        const lines = doc.splitTextToSize(data, cellWidth)
-        doc.text(lines, colPositions[index] + 2, yPosition + 5)
-      })
+    // Get the final Y position after the autoTable.
+    let currentYPosition = (doc as any).lastAutoTable.finalY + 10;
 
-      yPosition += rowHeight
-      rowCount++
-    })
-  })
+    // Helper function to add sections safely, handling page breaks
+    const addSectionSafely = (textFunction: () => void, requiredHeight: number) => {
+        if (currentYPosition + requiredHeight > pageHeight - margin) { // Check if new page is needed
+            doc.addPage();
+            currentYPosition = margin + 10; // Reset Y for new page, with some top margin
+        }
+        textFunction();
+    };
 
-  yPosition += 15
+    // --- Add packingData specific sections here ---
 
-  // NOTES Section - SIMPLE TEXT (NO TABLE)
-  if (packingData.notes) {
-    doc.setFont("helvetica", "bold")
-    doc.setFontSize(9)
-    doc.text("NOTES:", 15, yPosition)
-    yPosition += 8
+    // Ship Via Section
+    addSectionSafely(() => {
+        doc.setFont("helvetica", "bold").setFontSize(9);
+        doc.text(`Ship Via:`, margin, currentYPosition);
+        doc.setFont("helvetica", "normal").setFontSize(9);
+        doc.text(packingData.shipVia || "N/A", margin + 20, currentYPosition); // Adjust X for value
+        currentYPosition += 8;
+    }, 10);
 
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(8)
-    const notesLines = doc.splitTextToSize(packingData.notes, pageWidth - 30)
-    doc.text(notesLines, 15, yPosition)
-    yPosition += notesLines.length * 5 + 15
+
+    // Notes Section
+    if (packingData.notes) {
+      addSectionSafely(() => {
+        doc.setFont("helvetica", "bold").setFontSize(9);
+        doc.text("NOTES:", margin, currentYPosition);
+        currentYPosition += 6;
+
+        doc.setFont("helvetica", "normal").setFontSize(8);
+        const notesLines = doc.splitTextToSize(packingData.notes, contentWidth);
+        doc.text(notesLines, margin, currentYPosition);
+        currentYPosition += notesLines.length * 4;
+        currentYPosition += 10;
+      }, (packingData.notes.length / 50) * 4 + 20);
+    }
+
+    // Bottom section (Cartons, Master cases, Weight, Shipping class)
+    addSectionSafely(() => {
+        doc.setFont("helvetica", "normal").setFontSize(9);
+        doc.text(`Cartons: ${packingData.cartons || "N/A"}`, margin, currentYPosition);
+        doc.text(`Master cases: ${packingData.masterCases || "N/A"}`, pageWidth / 2, currentYPosition);
+        currentYPosition += 8;
+        doc.text(`Weight: ${packingData.weight || "N/A"}`, margin, currentYPosition);
+        doc.text(`Shipping class: ${packingData.shippingClass || "N/A"}`, pageWidth / 2, currentYPosition);
+        currentYPosition += 20;
+    }, 30);
+
+    // Signature section
+    addSectionSafely(() => {
+        doc.text("Signature: _________________________________", margin, currentYPosition);
+        doc.text("Date: _______________", pageWidth / 2, currentYPosition);
+        currentYPosition += 10;
+    }, 15);
+
+
+    // Save the PDF
+    doc.save(`Packing_Slip_${orderNumber}.pdf`);
+
+  } catch (error) {
+    console.error("Packing Slip PDF Error:", error);
+    throw error;
   }
-
-  // Bottom section - SIMPLE TEXT (NO TABLE)
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.text(`Cartons: ${packingData.cartons}`, 15, yPosition)
-  doc.text(`Master cases: ${packingData.masterCases}`, 100, yPosition)
-  yPosition += 8
-  doc.text(`Weight: ${packingData.weight}`, 15, yPosition)
-  doc.text(`Shipping class: ${packingData.shippingClass}`, 100, yPosition)
-  yPosition += 20
-
-  // Signature section
-  doc.text("Signature: _________________________________", 15, yPosition)
-  doc.text("Date: _______________", 130, yPosition)
-
-  // Save the PDF
-  doc.save(`PackingSlip_${workOrderData.orders.order_number}_${workOrderData.invoice_number}.pdf`)
-}
+};

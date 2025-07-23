@@ -1,9 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Calendar, Search, Trash2, Banknote, ArrowDownUp, Filter, Download, DollarSign, Receipt, BarChart3, PieChart, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+"use client"
+
+import { useState, useEffect } from "react"
+import {
+  PlusCircle,
+  Calendar,
+  Trash2,
+  Banknote,
+  ArrowDownUp,
+  Filter,
+  Download,
+  DollarSign,
+  Receipt,
+  BarChart3,
+  PieChart,
+  Clock,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -11,150 +25,115 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/date-picker';
-import { format, startOfMonth, endOfMonth, parseISO, isValid } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import DashboardLayout from '@/components/DashboardLayout';
-import { CSVLink } from "react-csv";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
+  DialogTrigger, // Added DialogTrigger
+} from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import { DatePicker } from "@/components/ui/date-picker"
+import { format, parseISO, isValid } from "date-fns"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
+import DashboardLayout from "@/components/DashboardLayout"
+import { CSVLink } from "react-csv"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Badge } from "@/components/ui/badge"
 
 export interface Expense {
-  id: string;
-  name: string;
-  amount: number;
-  description?: string;
-  date: string;
-  created_at: string;
+  id: string
+  name: string
+  amount: number
+  description?: string
+  date: string
+  created_at: string
 }
 
 // Get all expenses
 export const getAllExpenses = async (): Promise<Expense[]> => {
   try {
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('*')
-      .order('date', { ascending: false });
-
-    if (error) throw error;
-
-    return data || [];
+    const { data, error } = await supabase.from("expenses").select("*").order("date", { ascending: false })
+    if (error) throw error
+    return data || []
   } catch (error) {
-    console.error('Error fetching expenses:', error);
-    return [];
+    console.error("Error fetching expenses:", error)
+    return []
   }
-};
+}
 
 // Add a new expense
 export const addExpense = async (expense: Partial<Expense>): Promise<Expense | null> => {
   try {
     const { data, error } = await supabase
-      .from('expenses')
-      .insert([{
-        name: expense.name,
-        amount: expense.amount,
-        description: expense.description,
-        date: expense.date
-      }])
+      .from("expenses")
+      .insert([
+        {
+          name: expense.name,
+          amount: expense.amount,
+          description: expense.description,
+          date: expense.date,
+        },
+      ])
       .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
+      .single()
+    if (error) throw error
+    return data
   } catch (error) {
-    console.error('Error adding expense:', error);
-    throw error;
+    console.error("Error adding expense:", error)
+    throw error
   }
-};
+}
 
 // Delete an expense
 export const deleteExpense = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('expenses')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    const { error } = await supabase.from("expenses").delete().eq("id", id)
+    if (error) throw error
   } catch (error) {
-    console.error('Error deleting expense:', error);
-    throw error;
+    console.error("Error deleting expense:", error)
+    throw error
   }
-};
+}
 
-const mapToExpenses = (data: any[]): any[] => {
+const mapToExpenses = (data: any[]): Expense[] => {
   if (!Array.isArray(data)) {
-    console.error('Expected array for expenses mapping, got:', data);
-    return [];
+    console.error("Expected array for expenses mapping, got:", data)
+    return []
   }
-
-  return data.map(item => ({
+  return data.map((item) => ({
     id: item.id,
     name: item.name,
     amount: item.amount,
     description: item.description,
     date: item.date,
-    created_at: item.created_at
-  }));
-};
+    created_at: item.created_at,
+  }))
+}
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [showAddExpense, setShowAddExpense] = useState(false)
+  const [showFilterDialog, setShowFilterDialog] = useState(false) // State for filter dialog
   const [newExpense, setNewExpense] = useState<Partial<Expense>>({
-    name: '',
+    name: "",
     amount: 0,
-    description: '',
+    description: "",
     date: new Date().toISOString(),
-  });
-  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
-  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
-  const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  })
+  // Initializing startDate and endDate to undefined to show all expenses by default
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [viewMode, setViewMode] = useState<"daily" | "monthly">("daily")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const { toast } = useToast()
 
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  // Local states for filter dialog inputs
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm)
+  const [localStartDate, setLocalStartDate] = useState<Date | undefined>(startDate)
+  const [localEndDate, setLocalEndDate] = useState<Date | undefined>(endDate)
 
   const headers = [
     { label: "ID", key: "id" },
@@ -163,191 +142,195 @@ const Expenses = () => {
     { label: "Description", key: "description" },
     { label: "Date", key: "date" },
     { label: "Created At", key: "created_at" },
-  ];
+  ]
 
   const fetchExpenses = async () => {
     try {
-      setLoading(true);
-      const allExpenses = await getAllExpenses();
-      console.log(allExpenses);
-      // Map to properly typed expenses
-      const typedExpenses = mapToExpenses(allExpenses);
-      setExpenses(typedExpenses);
+      setLoading(true)
+      const allExpenses = await getAllExpenses()
+      const typedExpenses = mapToExpenses(allExpenses)
+      setExpenses(typedExpenses)
     } catch (error) {
-      console.error('Error fetching expenses:', error);
+      console.error("Error fetching expenses:", error)
       toast({
-        title: 'Error',
-        description: 'Failed to load expenses',
-        variant: 'destructive',
-      });
+        title: "Error",
+        description: "Failed to load expenses",
+        variant: "destructive",
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    fetchExpenses()
+  }, [])
+
+  // Sync local filter states with global states when dialog opens
+  useEffect(() => {
+    if (showFilterDialog) {
+      setLocalSearchTerm(searchTerm)
+      setLocalStartDate(startDate)
+      setLocalEndDate(endDate)
+    }
+  }, [showFilterDialog, searchTerm, startDate, endDate])
+
+  const handleApplyFilters = () => {
+    setSearchTerm(localSearchTerm)
+    setStartDate(localStartDate)
+    setEndDate(localEndDate)
+    setShowFilterDialog(false)
+  }
+
+  const handleClearFilters = () => {
+    setLocalSearchTerm("")
+    setLocalStartDate(undefined)
+    setLocalEndDate(undefined)
+    setSearchTerm("")
+    setStartDate(undefined)
+    setEndDate(undefined)
+    setShowFilterDialog(false)
+  }
 
   const handleAddExpense = async () => {
     if (!newExpense.name) {
       toast({
-        title: 'Missing fields',
-        description: 'Please provide a name for the expense',
-        variant: 'destructive',
-      });
-      return;
+        title: "Missing fields",
+        description: "Please provide a name for the expense",
+        variant: "destructive",
+      })
+      return
     }
-
     if (!newExpense.amount || newExpense.amount <= 0) {
       toast({
-        title: 'Invalid amount',
-        description: 'Please provide a valid amount for the expense',
-        variant: 'destructive',
-      });
-      return;
+        title: "Invalid amount",
+        description: "Please provide a valid amount for the expense",
+        variant: "destructive",
+      })
+      return
     }
-
     try {
-      await addExpense(newExpense);
-
+      await addExpense(newExpense)
       toast({
-        title: 'Success',
-        description: 'Expense added successfully',
-      });
-
-      setShowAddExpense(false);
+        title: "Success",
+        description: "Expense added successfully",
+      })
+      setShowAddExpense(false)
       setNewExpense({
-        name: '',
+        name: "",
         amount: 0,
-        description: '',
+        description: "",
         date: new Date().toISOString(),
-      });
-
-      fetchExpenses();
+      })
+      fetchExpenses()
     } catch (error) {
-      console.error('Error adding expense:', error);
+      console.error("Error adding expense:", error)
       toast({
-        title: 'Error',
-        description: 'Failed to add expense',
-        variant: 'destructive',
-      });
+        title: "Error",
+        description: "Failed to add expense",
+        variant: "destructive",
+      })
     }
-  };
+  }
 
   const handleDeleteExpense = async (id: string) => {
     try {
-      await deleteExpense(id);
-
+      await deleteExpense(id)
       toast({
-        title: 'Success',
-        description: 'Expense deleted successfully',
-      });
-
-      fetchExpenses();
+        title: "Success",
+        description: "Expense deleted successfully",
+      })
+      fetchExpenses()
     } catch (error) {
-      console.error('Error deleting expense:', error);
+      console.error("Error deleting expense:", error)
       toast({
-        title: 'Error',
-        description: 'Failed to delete expense',
-        variant: 'destructive',
-      });
+        title: "Error",
+        description: "Failed to delete expense",
+        variant: "destructive",
+      })
     }
-  };
-
-  const handleDateChange = (date: Date | undefined, type: 'start' | 'end') => {
-    if (type === 'start') {
-      setStartDate(date);
-    } else {
-      setEndDate(date);
-    }
-  };
+  }
 
   const filteredExpenses = expenses
-    .filter(expense => {
-      const matchesSearch = expense.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (expense.description && expense.description.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      if (!matchesSearch) return false;
+    .filter((expense) => {
+      const matchesSearch =
+        expense.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (expense.description && expense.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      if (!matchesSearch) return false
 
       if (startDate || endDate) {
-        const expenseDate = parseISO(expense.date);
-        if (!isValid(expenseDate)) return false;
+        const expenseDate = parseISO(expense.date)
+        if (!isValid(expenseDate)) return false
 
-        if (startDate && expenseDate < startDate) return false;
+        if (startDate && expenseDate < startDate) return false
         if (endDate) {
-          const endOfDay = new Date(endDate);
-          endOfDay.setHours(23, 59, 59, 999);
-          if (expenseDate > endOfDay) return false;
+          const endOfDay = new Date(endDate)
+          endOfDay.setHours(23, 59, 59, 999)
+          if (expenseDate > endOfDay) return false
         }
       }
-
-      return true;
+      return true
     })
     .sort((a, b) => {
-      const dateA = parseISO(a.date);
-      const dateB = parseISO(b.date);
-      
-      if (sortOrder === 'asc') {
-        return dateA.getTime() - dateB.getTime();
-      } else {
-        return dateB.getTime() - dateA.getTime();
-      }
-    });
+      const dateA = parseISO(a.date)
+      const dateB = parseISO(b.date)
 
-  const totalFilteredExpenses = filteredExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+      if (sortOrder === "asc") {
+        return dateA.getTime() - dateB.getTime()
+      } else {
+        return dateB.getTime() - dateA.getTime()
+      }
+    })
+
+  const totalFilteredExpenses = filteredExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
 
   // For monthly grouping
-  const groupedExpenses = filteredExpenses.reduce((groups, expense) => {
-    const date = parseISO(expense.date);
-    if (!isValid(date)) return groups;
-
-    const monthYear = format(date, 'MMMM yyyy');
-
-    if (!groups[monthYear]) {
-      groups[monthYear] = {
-        expenses: [],
-        total: 0
-      };
-    }
-
-    groups[monthYear].expenses.push(expense);
-    groups[monthYear].total += Number(expense.amount);
-
-    return groups;
-  }, {} as Record<string, { expenses: Expense[], total: number }>);
+  const groupedExpenses = filteredExpenses.reduce(
+    (groups, expense) => {
+      const date = parseISO(expense.date)
+      if (!isValid(date)) return groups
+      const monthYear = format(date, "MMMM yyyy")
+      if (!groups[monthYear]) {
+        groups[monthYear] = {
+          expenses: [],
+          total: 0,
+        }
+      }
+      groups[monthYear].expenses.push(expense)
+      groups[monthYear].total += Number(expense.amount)
+      return groups
+    },
+    {} as Record<string, { expenses: Expense[]; total: number }>,
+  )
 
   // Calculate statistics
-  const currentMonthExpenses = expenses.filter(expense => {
-    const expenseDate = parseISO(expense.date);
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    return isValid(expenseDate) && 
-           expenseDate.getMonth() === currentMonth && 
-           expenseDate.getFullYear() === currentYear;
-  });
+  const currentMonthExpenses = expenses.filter((expense) => {
+    const expenseDate = parseISO(expense.date)
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+    return isValid(expenseDate) && expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear
+  })
+  const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
 
-  const currentMonthTotal = currentMonthExpenses.reduce(
-    (sum, expense) => sum + Number(expense.amount), 0
-  );
+  const previousMonthExpenses = expenses.filter((expense) => {
+    const expenseDate = parseISO(expense.date)
+    const now = new Date()
+    const previousMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1
+    const previousMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    return (
+      isValid(expenseDate) &&
+      expenseDate.getMonth() === previousMonth &&
+      expenseDate.getFullYear() === previousMonthYear
+    )
+  })
+  const previousMonthTotal = previousMonthExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0)
 
-  const previousMonthExpenses = expenses.filter(expense => {
-    const expenseDate = parseISO(expense.date);
-    const now = new Date();
-    const previousMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-    const previousMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-    return isValid(expenseDate) && 
-           expenseDate.getMonth() === previousMonth && 
-           expenseDate.getFullYear() === previousMonthYear;
-  });
-
-  const previousMonthTotal = previousMonthExpenses.reduce(
-    (sum, expense) => sum + Number(expense.amount), 0
-  );
-
-  const monthOverMonthChange = previousMonthTotal === 0 
-    ? 100 
-    : ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100;
+  const monthOverMonthChange =
+    previousMonthTotal === 0
+      ? currentMonthTotal > 0
+        ? 100
+        : 0 // If previous month was 0, and current is > 0, it's a 100% increase, else 0
+      : ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100
 
   return (
     <DashboardLayout role="admin">
@@ -372,7 +355,54 @@ const Expenses = () => {
           </div>
 
           {/* Stats Cards */}
-     
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="shadow-sm border-gray-200 dark:border-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Expenses (Filtered)</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalFilteredExpenses.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Based on current filters</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-gray-200 dark:border-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Current Month Expenses</CardTitle>
+                <Banknote className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${currentMonthTotal.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Total for {format(new Date(), "MMMM yyyy")}</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-gray-200 dark:border-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Previous Month Expenses</CardTitle>
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${previousMonthTotal.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  Total for {format(new Date(new Date().setMonth(new Date().getMonth() - 1)), "MMMM yyyy")}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-gray-200 dark:border-gray-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Month-over-Month Change</CardTitle>
+                <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div
+                  className={`text-2xl font-bold ${monthOverMonthChange >= 0 ? "text-emerald-600" : "text-red-600"}`}
+                >
+                  {monthOverMonthChange.toFixed(2)}%
+                </div>
+                <p className="text-xs text-muted-foreground">vs. previous month</p>
+              </CardContent>
+            </Card>
+          </div>
 
           <Tabs defaultValue="list" className="w-full">
             <TabsList className="grid grid-cols-2 mb-6 w-full max-w-md mx-auto">
@@ -385,47 +415,67 @@ const Expenses = () => {
                 Analytics
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="list">
               <Card className="shadow-lg border-gray-200 dark:border-gray-700">
                 <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    {/* Search Input */}
-                    <div className="col-span-1 flex items-center relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        type="text"
-                        placeholder="Search expenses..."
-                        className="pl-10 py-2 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 text-sm rounded-md w-full"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">All Expenses</h2>
+                    <div className="flex space-x-2">
+                      {/* Filter Dialog Trigger */}
+                      <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="flex items-center gap-2 bg-transparent">
+                            <Filter className="h-4 w-4" />
+                            Filter
+                            {(searchTerm || startDate || endDate) && (
+                              <Badge className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white">Active</Badge>
+                            )}
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Filter Expenses</DialogTitle>
+                            <DialogDescription>Apply filters to narrow down your expense list.</DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="filter-search">Search</Label>
+                              <Input
+                                id="filter-search"
+                                placeholder="Search by name or description..."
+                                value={localSearchTerm}
+                                onChange={(e) => setLocalSearchTerm(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Date Range</Label>
+                              <div className="flex flex-col sm:flex-row gap-2">
+                                <DatePicker
+                                  date={localStartDate}
+                                  setDate={setLocalStartDate}
+                                  placeholder="Start Date"
+                                />
+                                <DatePicker date={localEndDate} setDate={setLocalEndDate} placeholder="End Date" />
+                              </div>
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={handleClearFilters}>
+                              Clear Filters
+                            </Button>
+                            <Button
+                              onClick={handleApplyFilters}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              Apply Filters
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
 
-                    {/* Date Pickers */}
-                    <div className="flex items-center justify-start space-x-2 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                        <DatePicker 
-                          date={startDate} 
-                          setDate={(date) => handleDateChange(date, 'start')} 
-                        />
-                        to
-                         <DatePicker 
-                        date={endDate} 
-                        setDate={(date) => handleDateChange(date, 'end')} 
-                      />
-                      </div>
-                      
-                     
-                    </div>
-
-                    {/* View Controls */}
-                    <div className="flex space-x-2 justify-end">
-                      <Select 
-                        value={viewMode} 
-                        onValueChange={(value) => setViewMode(value as 'daily' | 'monthly')}
-                      >
+                      {/* View Mode and Sort Controls (remain outside filter dialog) */}
+                      <Select value={viewMode} onValueChange={(value) => setViewMode(value as "daily" | "monthly")}>
                         <SelectTrigger className="w-[140px]">
                           <SelectValue placeholder="View Mode" />
                         </SelectTrigger>
@@ -434,27 +484,27 @@ const Expenses = () => {
                           <SelectItem value="monthly">Monthly View</SelectItem>
                         </SelectContent>
                       </Select>
-                      
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="icon"
-                              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                             >
-                              <ArrowDownUp className={`h-4 w-4 ${sortOrder === 'desc' ? 'text-emerald-500' : 'text-gray-500'}`} />
+                              <ArrowDownUp
+                                className={`h-4 w-4 ${sortOrder === "desc" ? "text-emerald-500" : "text-gray-500"}`}
+                              />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Sort by date: {sortOrder === 'asc' ? 'Oldest first' : 'Newest first'}</p>
+                            <p>Sort by date: {sortOrder === "asc" ? "Oldest first" : "Newest first"}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </div>
                   </div>
                 </CardHeader>
-
                 <CardContent className="p-0">
                   {loading ? (
                     <div className="p-8 text-center">
@@ -463,7 +513,7 @@ const Expenses = () => {
                     </div>
                   ) : (
                     <>
-                      {viewMode === 'daily' ? (
+                      {viewMode === "daily" ? (
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
@@ -487,13 +537,9 @@ const Expenses = () => {
                                     <div className="flex flex-col items-center">
                                       <Receipt className="h-12 w-12 text-gray-300 mb-2" />
                                       <p>No expenses found for the selected period</p>
-                                      <Button 
-                                        variant="link" 
-                                        onClick={() => {
-                                          setStartDate(undefined);
-                                          setEndDate(undefined);
-                                          setSearchTerm('');
-                                        }}
+                                      <Button
+                                        variant="link"
+                                        onClick={handleClearFilters} // Use the new clear filters handler
                                         className="mt-2 text-emerald-500"
                                       >
                                         Clear filters
@@ -503,25 +549,31 @@ const Expenses = () => {
                                 </TableRow>
                               ) : (
                                 filteredExpenses.map((expense) => (
-                                  <TableRow key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                  <TableRow
+                                    key={expense.id}
+                                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                  >
                                     <TableCell className="font-medium">
                                       <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                        <Badge
+                                          variant="outline"
+                                          className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-700"
+                                        >
                                           {expense.name.charAt(0).toUpperCase()}
                                         </Badge>
                                         {expense.name}
                                       </div>
                                     </TableCell>
                                     <TableCell className="text-emerald-600 dark:text-emerald-400 font-medium">
-                                      ${parseFloat(expense.amount as any).toLocaleString()}
+                                      ${Number.parseFloat(expense.amount as any).toLocaleString()}
                                     </TableCell>
                                     <TableCell>
-                                      {isValid(parseISO(expense.date)) ?
-                                        format(parseISO(expense.date), 'dd MMM yyyy') :
-                                        'Invalid date'}
+                                      {isValid(parseISO(expense.date))
+                                        ? format(parseISO(expense.date), "dd MMM yyyy")
+                                        : "Invalid date"}
                                     </TableCell>
                                     <TableCell className="text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                                      {expense.description || '-'}
+                                      {expense.description || "-"}
                                     </TableCell>
                                     <TableCell className="text-right">
                                       <TooltipProvider>
@@ -555,13 +607,9 @@ const Expenses = () => {
                               <div className="flex flex-col items-center">
                                 <PieChart className="h-12 w-12 text-gray-300 mb-2" />
                                 <p>No expenses found for the selected period</p>
-                                <Button 
-                                  variant="link" 
-                                  onClick={() => {
-                                    setStartDate(undefined);
-                                    setEndDate(undefined);
-                                    setSearchTerm('');
-                                  }}
+                                <Button
+                                  variant="link"
+                                  onClick={handleClearFilters} // Use the new clear filters handler
                                   className="mt-2 text-emerald-500"
                                 >
                                   Clear filters
@@ -570,7 +618,10 @@ const Expenses = () => {
                             </div>
                           ) : (
                             Object.entries(groupedExpenses).map(([month, data]) => (
-                              <div key={month} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+                              <div
+                                key={month}
+                                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm"
+                              >
                                 <div className="bg-gray-50 dark:bg-gray-800 p-4 flex justify-between items-center">
                                   <h3 className="font-medium text-lg flex items-center gap-2">
                                     <Calendar className="h-4 w-4 text-gray-500" />
@@ -596,25 +647,31 @@ const Expenses = () => {
                                     </TableHeader>
                                     <TableBody>
                                       {data.expenses.map((expense) => (
-                                        <TableRow key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <TableRow
+                                          key={expense.id}
+                                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                        >
                                           <TableCell className="font-medium">
                                             <div className="flex items-center gap-2">
-                                              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                              <Badge
+                                                variant="outline"
+                                                className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-700"
+                                              >
                                                 {expense.name.charAt(0).toUpperCase()}
                                               </Badge>
                                               {expense.name}
                                             </div>
                                           </TableCell>
                                           <TableCell className="text-emerald-600 dark:text-emerald-400 font-medium">
-                                            ${parseFloat(expense.amount as any).toLocaleString()}
+                                            ${Number.parseFloat(expense.amount as any).toLocaleString()}
                                           </TableCell>
                                           <TableCell>
-                                            {isValid(parseISO(expense.date)) ?
-                                              format(parseISO(expense.date), 'dd MMM yyyy') :
-                                              'Invalid date'}
+                                            {isValid(parseISO(expense.date))
+                                              ? format(parseISO(expense.date), "dd MMM yyyy")
+                                              : "Invalid date"}
                                           </TableCell>
                                           <TableCell className="text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                                            {expense.description || '-'}
+                                            {expense.description || "-"}
                                           </TableCell>
                                           <TableCell className="text-right">
                                             <TooltipProvider>
@@ -648,14 +705,11 @@ const Expenses = () => {
                     </>
                   )}
                 </CardContent>
-
                 <CardFooter className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   {/* Expense Count */}
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {filteredExpenses.length}{" "}
-                    {filteredExpenses.length === 1 ? "expense" : "expenses"} found
+                    {filteredExpenses.length} {filteredExpenses.length === 1 ? "expense" : "expenses"} found
                   </span>
-
                   {/* Right Side Controls */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 w-full sm:w-auto">
                     {/* CSV Download Button */}
@@ -668,12 +722,9 @@ const Expenses = () => {
                       <Download className="h-4 w-4" />
                       Export CSV
                     </CSVLink>
-
                     {/* Total Display */}
                     <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Total:
-                      </span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total:</span>
                       <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                         ${totalFilteredExpenses.toLocaleString()}
                       </span>
@@ -682,14 +733,12 @@ const Expenses = () => {
                 </CardFooter>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="analytics">
               <Card className="shadow-lg border-gray-200 dark:border-gray-700">
                 <CardHeader>
                   <CardTitle>Expense Analytics</CardTitle>
-                  <CardDescription>
-                    Visualize your spending patterns and trends
-                  </CardDescription>
+                  <CardDescription>Visualize your spending patterns and trends</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -703,7 +752,7 @@ const Expenses = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                       <h3 className="text-lg font-medium mb-4">Expense Categories</h3>
                       <div className="h-64 flex items-center justify-center">
@@ -726,9 +775,7 @@ const Expenses = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Expense</DialogTitle>
-              <DialogDescription>
-                Enter the details of the expense you want to add.
-              </DialogDescription>
+              <DialogDescription>Enter the details of the expense you want to add.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
@@ -749,7 +796,7 @@ const Expenses = () => {
                   min="0"
                   step="0.01"
                   value={newExpense.amount}
-                  onChange={(e) => setNewExpense({ ...newExpense, amount: parseFloat(e.target.value) })}
+                  onChange={(e) => setNewExpense({ ...newExpense, amount: Number.parseFloat(e.target.value) })}
                   placeholder="Enter amount"
                   className="focus:border-emerald-500 focus:ring-emerald-500"
                 />
@@ -758,14 +805,16 @@ const Expenses = () => {
                 <Label htmlFor="date">Date</Label>
                 <DatePicker
                   date={newExpense.date ? parseISO(newExpense.date) : undefined}
-                  setDate={(date) => setNewExpense({ ...newExpense, date: date ? date.toISOString() : new Date().toISOString() })}
+                  setDate={(date) =>
+                    setNewExpense({ ...newExpense, date: date ? date.toISOString() : new Date().toISOString() })
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
                   id="description"
-                  value={newExpense.description || ''}
+                  value={newExpense.description || ""}
                   onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
                   placeholder="Add additional details"
                   rows={3}
@@ -785,7 +834,7 @@ const Expenses = () => {
         </Dialog>
       </div>
     </DashboardLayout>
-  );
-};
+  )
+}
 
-export default Expenses;
+export default Expenses
