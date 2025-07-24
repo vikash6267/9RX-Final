@@ -15,9 +15,11 @@ import { number } from "zod";
 export interface ProductShowcaseProps {
 
   groupShow?: boolean;
+  isEditing?: boolean;
+  form?: any;
 
 }
-const ProductShowcase = ({ groupShow }: ProductShowcaseProps) => {
+const ProductShowcase = ({ groupShow,isEditing=false,form={} }: ProductShowcaseProps) => {
   const { toast } = useToast();
   const [products, setProducts] = useState<ProductDetails[]>([]);
   const [searchQuery, setSearchQuery] = useState("");

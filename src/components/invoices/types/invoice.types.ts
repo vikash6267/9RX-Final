@@ -131,6 +131,8 @@ export const isInvoice = (invoice: unknown): invoice is Invoice => {
 // Extended to include related data
 interface RelatedOrder {
   order_number: string;
+  payment_status?: string;
+  void?: string;
 }
 
 interface RelatedProfile {

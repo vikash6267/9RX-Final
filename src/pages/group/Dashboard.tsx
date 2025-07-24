@@ -156,15 +156,21 @@ const GroupDashboard = () => {
           </p>
         </div>
 
-        <div className="mt-4 md:mt-0 flex space-x-3">
-                        <Button
-                          onClick={() => setIsAddPharmacyOpen(true)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add Location
-                        </Button>
-                      </div>
+       <div className="mt-4 md:mt-0 flex space-x-3">
+  {/* 
+  <Button
+    onClick={() => setIsAddPharmacyOpen(true)}
+    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+  >
+    <PlusCircle className="mr-2 h-4 w-4" />
+    Add Location
+  </Button> 
+  */}
+  <div className="text-sm text-gray-600 bg-yellow-100 border border-yellow-300 px-4 py-2 rounded">
+    To add a new location, please contact the administrator.
+  </div>
+</div>
+
     </div>
 
         {/* <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

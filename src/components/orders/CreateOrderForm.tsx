@@ -25,6 +25,7 @@ import CreateOrderPaymentForm from "../CreateOrderPayment";
 import { pid } from "process";
 import CartItemsPricing from "../CartItemsPricing";
 import CustomProductForm from "./Customitems";
+import ProductShowcase from "../pharmacy/ProductShowcase";
 
 export interface CreateOrderFormProps {
   initialData?: Partial<OrderFormValues>;
@@ -157,37 +158,37 @@ export function CreateOrderForm({
   }, [form, validateForm]);
 
 
-function cleanCartItems(cartItems) {
-  const cleanedItems = cartItems.map(item => {
-    const updatedSizes = item.sizes.map(size => ({
-      ...size,
-      quantity: Number(size.quantity),
-      price: Number(size.price)
-    }));
+  function cleanCartItems(cartItems) {
+    const cleanedItems = cartItems.map(item => {
+      const updatedSizes = item.sizes.map(size => ({
+        ...size,
+        quantity: Number(size.quantity),
+        price: Number(size.price)
+      }));
 
-    const updatedPrice = updatedSizes.reduce(
-      (sum, size) => sum + size.quantity * size.price,
-      0
-    );
+      const updatedPrice = updatedSizes.reduce(
+        (sum, size) => sum + size.quantity * size.price,
+        0
+      );
 
-    const updatedQuantity = updatedSizes.reduce(
-      (sum, size) => sum + size.quantity,
-      0
-    );
+      const updatedQuantity = updatedSizes.reduce(
+        (sum, size) => sum + size.quantity,
+        0
+      );
 
-    return {
-      ...item,
-      price: parseFloat(updatedPrice.toFixed(2)),
-      quantity: updatedQuantity,
-      sizes: updatedSizes,
-    };
-  });
+      return {
+        ...item,
+        price: parseFloat(updatedPrice.toFixed(2)),
+        quantity: updatedQuantity,
+        sizes: updatedSizes,
+      };
+    });
 
-  // ✅ Save to localStorage
-  localStorage.setItem("cartItems", JSON.stringify(cleanedItems));
+    // ✅ Save to localStorage
+    localStorage.setItem("cartItems", JSON.stringify(cleanedItems));
 
-  return cleanedItems;
-}
+    return cleanedItems;
+  }
 
 
 
@@ -203,7 +204,7 @@ function cleanCartItems(cartItems) {
       console.log("Starting order submission:", data);
       const taxper = sessionStorage.getItem("taxper")
 
-const cleanedCartItems = cleanCartItems(cartItems); // ✅ fixed items
+      const cleanedCartItems = cleanCartItems(cartItems); // ✅ fixed items
       // Validate order items
       validateOrderItems(data.items);
 
@@ -220,10 +221,10 @@ const cleanedCartItems = cleanCartItems(cartItems); // ✅ fixed items
 
 
 
-console.log(cleanedCartItems)
+      console.log(cleanedCartItems)
       console.log(calculatedTotal + newtax)
-     
-     
+
+
       if (userProfile?.id == null) {
         toast({
           title: "User profile not found",
@@ -256,7 +257,7 @@ console.log(cleanedCartItems)
       sessionStorage.getItem('userType') === "group" ? profileID = pId : userProfile?.id
       console.log(profileID)
 
-   
+
       const orderData = {
         order_number: orderNumber,
         profile_id: profileID,
@@ -455,38 +456,40 @@ console.log(cleanedCartItems)
         }
       }
 
-if(!poIs){for (const item of data.items) {
-  if (item.sizes && item.sizes.length > 0) {
-    for (const size of item.sizes) {
-      // Step 1: Fetch current size
-      const { data: currentSize, error: fetchError } = await supabase
-        .from("product_sizes")
-        .select("stock")
-        .eq("id", size.id)
-        .single();
+      if (!poIs) {
+        for (const item of data.items) {
+          if (item.sizes && item.sizes.length > 0) {
+            for (const size of item.sizes) {
+              // Step 1: Fetch current size
+              const { data: currentSize, error: fetchError } = await supabase
+                .from("product_sizes")
+                .select("stock")
+                .eq("id", size.id)
+                .single();
 
-      if (fetchError || !currentSize) {
-        console.warn(`⚠️ Size not found in Supabase for ID: ${size.id}, skipping...`);
-        continue; // ✅ Skip this size if not found
+              if (fetchError || !currentSize) {
+                console.warn(`⚠️ Size not found in Supabase for ID: ${size.id}, skipping...`);
+                continue; // ✅ Skip this size if not found
+              }
+
+              const newQuantity = currentSize.stock - size.quantity;
+
+              // Step 2: Update with new quantity
+              const { error: updateError } = await supabase
+                .from("product_sizes")
+                .update({ stock: newQuantity })
+                .eq("id", size.id);
+
+              if (updateError) {
+                console.error(`❌ Failed to update size quantity for ID: ${size.id}`, updateError);
+                throw new Error(`Failed to update size quantity`);
+              } else {
+                console.log(`✅ Updated size quantity for ID: ${size.id}`);
+              }
+            }
+          }
+        }
       }
-
-      const newQuantity = currentSize.stock - size.quantity;
-
-      // Step 2: Update with new quantity
-      const { error: updateError } = await supabase
-        .from("product_sizes")
-        .update({ stock: newQuantity })
-        .eq("id", size.id);
-
-      if (updateError) {
-        console.error(`❌ Failed to update size quantity for ID: ${size.id}`, updateError);
-        throw new Error(`Failed to update size quantity`);
-      } else {
-        console.log(`✅ Updated size quantity for ID: ${size.id}`);
-      }
-    }
-  }
-}}
 
       // Reset form and local state
       window.location.reload();
@@ -500,22 +503,22 @@ if(!poIs){for (const item of data.items) {
 
 
 
-         const logsData = {
-            user_id: newOrder.profile_id,
-            order_id: orderNumber,
-            action: 'order_created',
-            details: {
-              message: `Order Created : ${orderNumber}`,
-              items: cleanedCartItems,
-              orderCreateBY:userProfile
-            },
-          };
-          try {
-            await axios.post("/logs/create", logsData);
-            console.log("LOGS STORED SUCCESSFULLYY");
-          } catch (apiError) {
-            console.error("Failed to store logs:", apiError);
-          }
+      const logsData = {
+        user_id: newOrder.profile_id,
+        order_id: orderNumber,
+        action: 'order_created',
+        details: {
+          message: `Order Created : ${orderNumber}`,
+          items: cleanedCartItems,
+          orderCreateBY: userProfile
+        },
+      };
+      try {
+        await axios.post("/logs/create", logsData);
+        console.log("LOGS STORED SUCCESSFULLYY");
+      } catch (apiError) {
+        console.error("Failed to store logs:", apiError);
+      }
 
 
       form.reset();
@@ -562,6 +565,7 @@ if(!poIs){for (const item of data.items) {
   }, []);
 
 
+  const [isOpen, setIsOpen] = useState(false);
 
   const [isCustom, setIsCustom] = useState(false)
   return (
@@ -592,7 +596,7 @@ if(!poIs){for (const item of data.items) {
               </p>
 
               <div>
-                <p onClick={() => setIsCustom(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
+                <p onClick={() => setIsOpen(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
                   Add Items
                 </p>
 
@@ -607,6 +611,23 @@ if(!poIs){for (const item of data.items) {
               isPriceChange && <CartItemsPricing />
             }
 
+            {isOpen && (
+              <div className="fixed -inset-4 flex items-center justify-center bg-black bg-opacity-50 h-screen z-[50]">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] md:w-[50%] relative h-[80vh] overflow-y-scroll">
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="absolute top-3 right-3 text-gray-600 hover:text-black text-lg"
+                  >
+                    ✖
+                  </button>
+
+                  {/* Modal Content */}
+
+                  <ProductShowcase groupShow={true} isEditing={isEditing} form={form} />
+                </div>
+              </div>
+            )}
             <OrderItemsSection
               orderItems={form.getValues('items') || cartItems}
               form={form}

@@ -50,7 +50,7 @@ export function InvoiceTableContainer({ filterStatus }: DataTableProps) {
       .select(`
         *,
         payment_status,
-        orders (order_number),
+        orders (id, order_number, payment_status, void, customerInfo, total_amount),
         profiles (first_name, last_name, email, company_name)
       `)
       .order("created_at", { ascending: false });

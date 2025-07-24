@@ -68,18 +68,18 @@ const defaultValues: VendorFormData = {
   workPhone: "",
   mobilePhone: "",
   billingAddress: {
-    attention: "",
-    countryRegion: "",
-    street1: "",
+    attention: "9RX",
+    countryRegion: "USA",
+    street1: "936 Broad River Ln",
     street2: "",
-    city: "",
-    state: "",
-    zip_code: "",
-    phone: "",
+    city: "Charlotte",
+    state: "NC",
+    zip_code: "28211",
+    phone: "1 800 969 6295",
     faxNumber: "",
   },
   shippingAddress: {
-    attention: "",
+    attention: "9RX",
     countryRegion: "USA",
     street1: "936 Broad River Ln",
     street2: "",
@@ -244,19 +244,19 @@ export default function VendorDialogForm({ vendor, mode = "add", onSubmit }: Ven
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="basic" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Basic Info
                 </TabsTrigger>
-                <TabsTrigger value="billing" className="flex items-center gap-2">
+                {/* <TabsTrigger value="billing" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Billing
                 </TabsTrigger>
                 <TabsTrigger value="shipping" className="flex items-center gap-2">
                   <Truck className="h-4 w-4" />
                   Shipping
-                </TabsTrigger>
+                </TabsTrigger> */}
               
               </TabsList>
 

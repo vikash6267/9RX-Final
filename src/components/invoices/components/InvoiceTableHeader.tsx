@@ -13,7 +13,7 @@ export const InvoiceTableHeader = ({ onSort, sortConfig }: InvoiceTableHeaderPro
     { key: "orderNumber", label: "Order Number", sortable: true },
     { key: "customerName", label: "Customer", sortable: true },
     { key: "amount", label: "Amount", sortable: true },
-    { key: "status", label: "Status", sortable: true },
+    { key: "status", label: "Payment Status", sortable: true },
     { key: "date", label: "Date", sortable: true },
     { key: "actions", label: "Actions", sortable: false },
   ];

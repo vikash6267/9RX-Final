@@ -36,6 +36,8 @@ export function InvoiceRowActions({ invoice, onPreview, onActionComplete }: Invo
   const [workOrderData, setWorkOrderData] = useState<any>({})
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const { toast } = useToast()
+console.log(invoice)
+
 
   // Packing slip form data
   const [packingData, setPackingData] = useState({
@@ -54,7 +56,18 @@ export function InvoiceRowActions({ invoice, onPreview, onActionComplete }: Invo
 
   useEffect(() => {
     console.log(workOrderData)
-  }, [workOrderData])
+    // Calculate total quantity for cartons when workOrderData changes
+    if (workOrderData && workOrderData.items) {
+      const totalCartons = workOrderData.items.reduce((sum: number, item: any) => {
+        // Sum the 'quantity' from each item
+        return sum + (item.quantity || 0);
+      }, 0);
+      setPackingData((prev) => ({
+        ...prev,
+        cartons: totalCartons.toString(), // Convert to string as the input value expects a string
+      }));
+    }
+  }, [workOrderData]);
 
   const generatePaymentLink = async () => {
     setIsGeneratingLink(true)
@@ -210,6 +223,7 @@ export function InvoiceRowActions({ invoice, onPreview, onActionComplete }: Invo
                       value={packingData.cartons}
                       onChange={(e) => handleInputChange("cartons", e.target.value)}
                       placeholder="Number of cartons"
+                      disabled
                     />
                   </div>
                   <div>

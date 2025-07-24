@@ -401,7 +401,7 @@ const fetchUsers = async () => {
   useEffect(() => {
     setSelectedPharmacy("");
     setOrderData(null);
-    setPharmacy();
+    // setPharmacy();
   }, [isCreateOrderOpen]);
 
 
