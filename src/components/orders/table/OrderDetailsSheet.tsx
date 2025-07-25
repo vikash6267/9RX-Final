@@ -431,7 +431,7 @@ export const OrderDetailsSheet = ({
       const summaryRows = [
         ["Sub Total", subtotal],
         ["Handling-Shipping", handling],
-        ["Freight Charges", fred],
+        ["Tax", fred],
         ["Total", total],
       ];
 

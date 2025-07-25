@@ -200,10 +200,10 @@ export function CustomerInfoFields({ form, readOnly = false,poIs = false }: Cust
       {/* Shipping Info Fields */}
       <div className="flex items-center justify-between mt-6 mb-2">
         <h2 className="text-lg font-semibold">  Address</h2>
-        <div className="flex items-center space-x-2">
+       {!poIs && <div className="flex items-center space-x-2">
           <Switch id="same-as-customer" checked={sameAsCustomer} onCheckedChange={handleToggle} />
           <Label htmlFor="same-as-customer" className="cursor-pointer">Same as Billing Address</Label>
-        </div>
+        </div>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -36,14 +36,15 @@ export function ChargesDialog({ open, onOpenChange, onSubmit }: {
           <div className="space-y-2">
             <input
               type="number"
-              placeholder="Handling Charges"
+              placeholder="Handling Shipping Charges"
               className="w-full border rounded p-2"
               value={handling}
               onChange={(e) => setHandling(e.target.value)}
             />
             <input
               type="number"
-              placeholder="Fred Charges"
+// Freight Charges
+              placeholder="Tax"
               className="w-full border rounded p-2"
               value={fred}
               onChange={(e) => setFred(e.target.value)}

@@ -119,14 +119,14 @@ export function CustomerSelectionField({ form ,initialData,locationId,poIs=false
 
       // Map data to the customerInfo schema
       const shippingInfo = {
-        fullName: initialData?.customerInfo?.name || `${data.first_name} ${data.last_name}`,
-        email:initialData?.customerInfo?.email || data.email || "",
-        phone: initialData?.customerInfo?.phone || data.shipping_address.phone || data.mobile_phone || "",
+        fullName: poIs ? "9RX" : initialData?.customerInfo?.name || `${data.first_name} ${data.last_name}`,
+        email:poIs ? "info@9rx.com" :initialData?.customerInfo?.email || data.email || "",
+        phone:poIs ? "18009696295" : initialData?.customerInfo?.phone || data.shipping_address.phone || data.mobile_phone || "",
           address: {
-          street:  `${data.shipping_address.street1} , ${data.shipping_address.street2}` || "N/A",
-          city:  data.shipping_address.city || "N/A", // Populate with relevant field if available
-          state:  data.shipping_address.state || "N/A", // Populate with relevant field if available
-          zip_code: data.shipping_address.zip_code ||"00000", // Replace with actual data if available
+          street: poIs ? "936 Broad River Ln" : `${data.shipping_address.street1} , ${data.shipping_address.street2}` || "N/A",
+          city:  poIs ? "Charlotte" :data.shipping_address.city || "N/A", // Populate with relevant field if available
+          state:  poIs ? "NC" :data.shipping_address.state || "N/A", // Populate with relevant field if available
+          zip_code: poIs ? "28211" :data.shipping_address.zip_code ||"00000", // Replace with actual data if available
         },
       };
 
