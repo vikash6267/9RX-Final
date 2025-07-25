@@ -59,35 +59,48 @@ export const ProductCard = ({ product, isEditing = false, form = {} }: ProductCa
     }
   };
 
-  const handleAddToCart = async () => {
-    setIsAddingToCart(true);
-    console.log(product);
+ const handleAddToCart = async () => {
+  setIsAddingToCart(true);
 
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      if (product.stock < 1) {
-        throw new Error("Product is out of stock");
-      }
+    if (!session) {
+      navigate("/login");
+      return;
+    }
 
-      const imageUrl = product.images[0] || product.image_url;
-      console.log("Selected Sizes:", selectedSizes);
+    if (product.stock < 1) {
+      throw new Error("Product is out of stock");
+    }
 
-      const updatedSizes = product.sizes
-        .filter((size) =>
-          selectedSizes.includes(`${size.size_value}-${size.size_unit}`)
-        )
-        .map((size) => ({
+    const imageUrl = product.images[0] || product.image_url;
+
+    // 🔥 Get all selected sizes
+    const updatedSizes = product.sizes
+      .filter((size) =>
+        selectedSizes.includes(`${size.size_value}-${size.size_unit}`)
+      )
+      .map((size) => {
+        const quantityValue = quantity[size.id] || 1;
+        const type = selectedTypeBySize[`${size.size_value}-${size.size_unit}`] || "case";
+        console.log(type)
+        const price =
+          type === "unit" && size.price_per_case
+            ? size.price_per_case
+            : size.price;
+
+        return {
           ...size,
-          quantity: quantity[size.id] || 1,
-        }))
-        .filter((size) => size.quantity > 0);
+          quantity: quantityValue,
+          type: type, // ✅ Include selected type
+          price: price,   // ✅ Add calculated unit price
+          total_price: price * quantityValue, // ✅ Precalculate
+        };
+      })
+      .filter((size) => size.quantity > 0);
 
       console.log(updatedSizes)
       const totalPrice = updatedSizes.reduce(
@@ -216,6 +229,8 @@ export const ProductCard = ({ product, isEditing = false, form = {} }: ProductCa
         setSelectedSizesSKU={setSelectedSizesSKU}
         selectedSizes={selectedSizes}
         selectedSizesSKU={selectedSizesSKU}
+         selectedTypeBySize={selectedTypeBySize}
+                setSelectedTypeBySize={setSelectedTypeBySize}
       />
     </Dialog>
   );

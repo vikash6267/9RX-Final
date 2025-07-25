@@ -291,13 +291,19 @@ const fetchUsers = async () => {
               // Fetch fresh size info from Supabase
               const { data: sizeFetch, error: fetchSizeError } = await supabase
                 .from("product_sizes")
-                .select("size_value, price")
+                .select("size_value, price, price_per_case")
                 .eq("id", size.id);
 
               if (fetchSizeError) throw fetchSizeError;
 
-              let newPrice = sizeFetch?.[0]?.price || size.price;
+              let newPrice = sizeFetch?.price || size.price;
 
+        // 👇 Handle pricing based on selected_type
+        if (size.selected_type === "case") {
+          newPrice = sizeFetch?.price || size.price;
+        } else if (size.selected_type === "unit") {
+          newPrice = sizeFetch?.price_per_case ;
+        }
               await handlePriceChange(item.productId, size.id, newPrice);
 
               // Check for applicable group pricing

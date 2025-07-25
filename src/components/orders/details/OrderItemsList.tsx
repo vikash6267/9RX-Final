@@ -30,7 +30,7 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
                       <strong>Size:</strong> {size.size_value} {size.size_unit}
                     </p>
                     <p>
-                      <strong>Quantity:</strong> {size.quantity}
+                      <strong>Quantity:</strong> {size.quantity} {size.type === "unit" ? "unit" : ""}
                     </p>
                  
                     <p>

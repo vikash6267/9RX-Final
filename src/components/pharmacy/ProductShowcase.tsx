@@ -131,8 +131,9 @@ const ProductShowcase = ({ groupShow,isEditing=false,form={} }: ProductShowcaseP
                 price_per_case: size.price_per_case,
                 stock: size.stock,
                 image: size.image || "",
-                shipping_cost:Number(size.shipping_cost)
-                
+                shipping_cost:Number(size.shipping_cost),
+                case:size.case,
+                unit:size.unit,
               };
             })
             .sort((a, b) => a.sizeSquanence - b.sizeSquanence) || [], // Sorting by sizeSquanence

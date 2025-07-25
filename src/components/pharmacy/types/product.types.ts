@@ -25,7 +25,8 @@ export interface ProductSize {
   size_unit: string;
   price: number;
   quantity_per_case: number;
-
+  unit?: boolean;
+  case?: boolean;
   price_per_case: number;
   pricePerCase: any;
   stock: number;
