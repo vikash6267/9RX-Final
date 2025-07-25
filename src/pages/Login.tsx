@@ -106,15 +106,10 @@ const Login = () => {
           {/* Mobile Branding (visible only on smaller screens) */}
           <div className="lg:hidden text-center mb-10">
             <div className="flex items-center justify-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                <Stethoscope className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900">
-                  9RX
-                </h1>
-                <p className="text-gray-700 text-lg">Healthcare Platform</p>
-              </div>
+             
+               <div className="h-24 w-28 mr-4 flex-shrink-0">
+              <img src="/final.png" alt="9RX Logo" className="h-full w-full object-contain" />
+            </div>
             </div>
           </div>
 
