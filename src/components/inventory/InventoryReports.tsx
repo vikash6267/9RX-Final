@@ -61,7 +61,7 @@ export const InventoryReports = ({ inventoryData }: InventoryReportsProps) => {
   const exportAllProductsToCsv = () => {
     const headers = [
       "Product Name",
-      "Product SKU",
+      "Product Code",
       "Size Value",
       "Size Unit",
       "Price",

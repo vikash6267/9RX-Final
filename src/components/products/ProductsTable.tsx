@@ -50,7 +50,7 @@ export const ProductsTable = ({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-gray-900 mb-1">{product.name}</CardTitle>
-            <p className="text-sm text-gray-600 mb-2">SKU: {product.sku}</p>
+            <p className="text-sm text-gray-600 mb-2">Product Code: {product.sku}</p>
             <Badge variant="secondary" className="bg-gray-100 text-gray-700">
               {product.category}
             </Badge>
@@ -97,7 +97,7 @@ export const ProductsTable = ({
               <TableHeader className="sticky top-0 bg-white z-10 border-b">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="font-semibold text-gray-900">Product</TableHead>
-                  <TableHead className="font-semibold text-gray-900">SKU</TableHead>
+                  <TableHead className="font-semibold text-gray-900">Product Code</TableHead>
                   <TableHead className="font-semibold text-gray-900">Sizes & Prices</TableHead>
                   {groupId && <TableHead className="font-semibold text-gray-900">Group Price</TableHead>}
                   <TableHead className="font-semibold text-gray-900">Category</TableHead>

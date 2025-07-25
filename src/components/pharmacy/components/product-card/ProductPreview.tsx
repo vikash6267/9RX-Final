@@ -34,7 +34,7 @@ export const ProductPreview = ({ product }: ProductPreviewProps) => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">SKU</label>
+                  <label className="text-sm font-medium text-gray-500">Product Code</label>
                   <p className="text-lg font-mono bg-gray-100 px-3 py-1 rounded">{product.sku}</p>
                 </div>
                 <div>

@@ -247,8 +247,8 @@ export function CreateOrderForm({
         return `PO-${timestamp}${random}`; // Total 8 digits after 'PO-'
       };
 
-      // const orderNumber = "DEV-TEST123";
-      const orderNumber = poIs ? generateUniqueOrderNumber() : await generateOrderId();
+      const orderNumber = "DEV-TEST123";
+      // const orderNumber = poIs ? generateUniqueOrderNumber() : await generateOrderId();
 
       if (!userProfile?.id) return
       let profileID = userProfile?.id
@@ -321,8 +321,8 @@ export function CreateOrderForm({
         }
 
 
-        const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
-        // const invoiceNumber = "DEV-TEST123";
+        // const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
+        const invoiceNumber = "DEV-TEST123";
 
 
 
@@ -584,7 +584,7 @@ export function CreateOrderForm({
 
           <div className="">
 
-            {!isEditing &&  userTypeRole === "admin" && <div className="flex justify-end w-full gap-5">
+            { userTypeRole === "admin" && <div className="flex justify-end w-full gap-5">
               <p
                 onClick={(e) => {
                   e.preventDefault(); // Form submit hone se rokne ke liye
@@ -595,7 +595,7 @@ export function CreateOrderForm({
                 { isPriceChange ? "Close Edit Price" : "Edit Price"}
               </p>
 
-              {!isEditing && <div>
+              { <div>
                 <p onClick={() => setIsOpen(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
                   Add Items
                 </p>

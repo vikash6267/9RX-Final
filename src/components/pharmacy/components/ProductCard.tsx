@@ -36,7 +36,9 @@ export const ProductCard = ({ product, isEditing = false, form = {} }: ProductCa
   const navigate = useNavigate();
 
   const formItems = isEditing ? form.getValues()?.items || [] : cartItems;
-
+  const [selectedTypeBySize, setSelectedTypeBySize] = useState<{
+    [sizeId: string]: "case" | "unit"
+  }>({})
   const isInCart = formItems.some(
     (item: any) => item.productId?.toString() === product.id?.toString()
   );

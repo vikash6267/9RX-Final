@@ -23,7 +23,7 @@ const generateBarcode = (text: string): string => {
     format: "CODE128",
     width: 1, // Reduced width for smaller labels
     height: 20, // Reduced height for smaller labels
-    displayValue: true,
+    displayValue: false,
     fontSize: 7, // Smaller font for display value
     textMargin: 1,
   });
@@ -66,41 +66,54 @@ export const generateSingleProductLabelPDF = async (productName: string, size: S
   yPos += 8;
 
   // product.name (Product Name)
-  doc.setFontSize(10);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   const productNameLines = doc.splitTextToSize(productName || "Product Name", labelWidth - 10);
   doc.text(productNameLines, xCenter, yPos, { align: "center" });
   yPos += productNameLines.length * 4.5;
 
   // size.value size.unit (e.g., "110mm x 74m (4.33\" x243') unit")
-  doc.setFontSize(12);
+  doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.text(`${size.size_value || "N/A"} ${size.size_unit || ""}`, xCenter, yPos, { align: "center" });
   yPos += 8;
 
   // quantity_per_case /case (e.g., "72 /case")
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
   doc.text(`${size.quantity_per_case !== undefined && size.quantity_per_case !== null ? size.quantity_per_case : "N/A"} /case`, xCenter, yPos, { align: "center" });
-  yPos += 6;
+  yPos += 3;
 
-  // Barcode for SKU
-  if (size.sku) {
-    try {
-      const barcodeData = generateBarcode(String(size.sku));
-      const barcodeWidth = 45;
-      const barcodeHeight = 12;
-      const barcodeX = (labelWidth - barcodeWidth) / 2;
-      doc.addImage(barcodeData, "PNG", barcodeX, yPos, barcodeWidth, barcodeHeight);
-    } catch (error) {
-      console.error(`Error generating barcode for SKU ${size.sku}:`, error);
-      doc.setFontSize(6);
-      doc.text(`SKU: ${size.sku}`, xCenter, yPos + 6, { align: "center" });
-    }
-  } else {
+if (size.sku) {
+  try {
+    const barcodeData = generateBarcode(String(size.sku));
+
+    const barcodeWidth = 45;
+    const barcodeHeight = 12;
+    const barcodeX = (labelWidth - barcodeWidth) / 2;
+
+    // Add barcode image at current yPos
+    doc.addImage(barcodeData, "PNG", barcodeX, yPos, barcodeWidth, barcodeHeight);
+
+    // ✅ Move yPos down for the SKU text
+    yPos += barcodeHeight + 1;
+
+    // ✅ Add the SKU text below barcode
     doc.setFontSize(8);
-    doc.text("SKU: N/A", xCenter, yPos + 6, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    doc.text(String(size.sku), labelWidth / 2, yPos, { align: "center" });
+
+  } catch (error) {
+    console.error(`Error generating barcode for SKU ${size.sku}:`, error);
+    doc.setFontSize(6);
+    doc.text(`SKU: ${size.sku}`, xCenter, yPos + 6, { align: "center" });
   }
+} else {
+  doc.setFontSize(8);
+  doc.text("SKU: N/A", xCenter, yPos + 6, { align: "center" });
+}
+
+
 
   // Sanitize product and SKU names for filename
   const fileNameProductName = productName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30); // Max 30 chars
