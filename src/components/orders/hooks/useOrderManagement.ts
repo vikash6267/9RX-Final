@@ -373,7 +373,7 @@ const handleDeleteOrder = async (orderId: string, reason: string): Promise<void>
   };
 
   const handleConfirmOrder = async (orderId: string) => {
-    return updateOrderStatus(orderId, "pending");
+    return updateOrderStatus(orderId, "processing");
   };
 
   return {

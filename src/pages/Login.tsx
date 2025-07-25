@@ -68,14 +68,11 @@ const Login = () => {
 
         <div className="relative z-10 p-12 flex flex-col justify-between h-full">
           {/* Logo and Branding */}
-          <div className="flex items-center mb-12">
-            <div className="h-16 w-14 mr-4 flex-shrink-0">
-              <img src="/logo.png" alt="9RX Logo" className="h-full w-full object-contain" />
+          <div className="flex items-center mb-8">
+            <div className="h-24 w-28 mr-4 flex-shrink-0">
+              <img src="/final.png" alt="9RX Logo" className="h-full w-full object-contain" />
             </div>
-            <div>
-              <h2 className="text-4xl font-extrabold text-gray-800 leading-tight">RX</h2>
-              
-            </div>
+            
           </div>
 
           {/* Marketing Message */}

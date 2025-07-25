@@ -438,9 +438,9 @@ console.log(orders)
               <TableHead className="font-semibold text-center border-gray-300">
                 Status
               </TableHead>
-              <TableHead className="font-semibold text-center border-gray-300">
+              {/* <TableHead className="font-semibold text-center border-gray-300">
                 Payment Status
-              </TableHead>
+              </TableHead> */}
               <TableHead className="font-semibold text-center border-gray-300">
                 Tracking
               </TableHead>
@@ -531,7 +531,7 @@ console.log(orders)
                       {order.status.toUpperCase() || "pending"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-center border-gray-300">
+                  {/* <TableCell className="text-center border-gray-300">
                     <div className="flex items-center justify-center gap-2">
                       <Badge variant="secondary" className={getStatusColor(order?.payment_status || "")}>
                         {order?.payment_status.toUpperCase() || "UNPAID"}
@@ -549,7 +549,7 @@ console.log(orders)
                         </button>
                       )}
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell className="text-center border-gray-300">
                     {order.shipping?.trackingNumber && order?.shipping.method !== "custom" ? (
                       <Button
@@ -592,8 +592,8 @@ console.log(orders)
 
                         }}
                         onConfirmOrder={async (id) => {
-                          await handleStatusChange(id, "pending");
-                          setOrderStatus("pending")
+                          await handleStatusChange(id, "processing");
+                          setOrderStatus("processing")
                         }}
                         onDeleteOrder={onDeleteOrder}
                       />

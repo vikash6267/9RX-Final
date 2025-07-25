@@ -26,7 +26,7 @@ export const Navbar =() =>{
           <div className="absolute inset-0  rounded-full blur-lg transform scale-150"></div>
 
           <img
-            src="/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png"
+            src="/final.png"
             alt="9rx Logo"
             className=" h-14 relative z-10  "
           />

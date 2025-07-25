@@ -16,17 +16,17 @@ export const SidebarHeader = () => {
       {isCollapsed ? (
         // 👇 Collapsed state: only small logo or icon
         <img
-          src="/logook.png" // Replace with your collapsed version logo or symbol image
+          src="/logolook.png" // Replace with your collapsed version logo or symbol image
           alt="Compact Logo"
-          className="h-10 w-10 object-contain"
+          className="h-14 w-16 object-contain"
         />
       ) : (
         // 👇 Expanded state: full logo and username
         <div className="flex items-center gap-3 w-full">
           <img
-            src="/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png"
+            src="/final.png"
             alt="Full Logo"
-            className="h-10 w object-cover"
+            className="h-16 w object-cover"
           />
           <p className="text-sm font-semibold text-gray-900 dark:text-white whitespace-nowrap">
             {userName}

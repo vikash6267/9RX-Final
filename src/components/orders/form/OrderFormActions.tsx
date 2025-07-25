@@ -35,113 +35,194 @@ export function OrderFormActions({
   const userType = sessionStorage.getItem("order_pay");
   const userRole = sessionStorage.getItem('userType');
 console.log(orderData)
-  const onSubmit = async () => {
-    console.log(orderData)
 
-    const calculatedTotal = calculateOrderTotal(
-      orderData.items,
-      orderData.shipping.cost
-    );
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("taxPercantage")
-      .eq("id", orderData.customer)
+const onSubmit = async () => {
+  console.log(orderData);
+
+  const calculatedTotal = calculateOrderTotal(
+    orderData.items,
+    orderData.shipping.cost
+  );
+
+  const { data: profileTax, error: profileError } = await supabase
+    .from("profiles")
+    .select("taxPercantage")
+    .eq("id", orderData.customer)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error("🚨 Supabase Fetch Error:", profileError);
+    return;
+  }
+
+  if (!profileTax) {
+    console.warn("⚠️ No user found for this customer.");
+    return;
+  }
+
+  const newtax = (calculatedTotal * Number(profileTax.taxPercantage)) / 100;
+
+  const updatedData = orderData;
+  const orderId = updatedData.id;
+
+  try {
+    // Step 1: Fetch old order to reverse inventory
+    const { data: oldOrderData, error: oldOrderError } = await supabase
+      .from("orders")
+      .select("items")
+      .eq("id", orderId)
       .maybeSingle();
 
-    if (error) {
-      console.error("🚨 Supabase Fetch Error:", error);
-      return;
+    if (oldOrderError || !oldOrderData) {
+      console.error("⚠️ Failed to fetch old order for stock reversal", oldOrderError);
+      throw new Error("Could not fetch previous order to reverse inventory");
     }
 
-    if (!data) {
-      console.warn("⚠️ No user found for this email.");
-      return;
-    }
+    for (const item of oldOrderData.items || []) {
+      if (item.sizes && item.sizes.length > 0) {
+        for (const size of item.sizes) {
+          const { data: currentSize, error: fetchError } = await supabase
+            .from("product_sizes")
+            .select("stock")
+            .eq("id", size.id)
+            .single();
 
-    console.log(orderData)
+          if (fetchError || !currentSize) {
+            console.warn(`⚠️ Size not found for reverse: ${size.id}`);
+            continue;
+          }
 
-    const newtax = (calculatedTotal * Number(data.taxPercantage)) / 100;
-    console.log(newtax)
+          const newQuantity = currentSize.stock + size.quantity;
 
+          const { error: updateError } = await supabase
+            .from("product_sizes")
+            .update({ stock: newQuantity })
+            .eq("id", size.id);
 
-    const updatedData = orderData;
-    const orderId = orderData.id;
-    try {
-      const { data:newOrder, error } = await supabase
-        .from("orders")
-        .update({
-          profile_id: updatedData.customer || null, // Ensure profile_id is valid
-          customerInfo: updatedData.customerInfo || null,
-          updated_at: new Date().toISOString(),
-          items: updatedData.items || [], // Ensure it's a valid JSON array
-          total_amount: calculatedTotal + newtax || 0,
-          tax_amount: newtax || 0,
-
-        })
-        .eq("id", orderId)
-        .select("*").maybeSingle();
-
-      if (error) {
-        console.error("Error updating order:", error);
-        throw error;
+          if (updateError) {
+            console.error(`❌ Failed to reverse stock for size ID ${size.id}`, updateError);
+            throw new Error("Failed to reverse stock update");
+          } else {
+            console.log(`🔄 Reversed stock for size ID ${size.id}`);
+          }
+        }
       }
+    }
 
+    // Step 2: Update order record
+    const { data: newOrder, error: updateOrderError } = await supabase
+      .from("orders")
+      .update({
+        profile_id: updatedData.customer || null,
+        customerInfo: updatedData.customerInfo || null,
+        updated_at: new Date().toISOString(),
+        items: updatedData.items || [],
+        total_amount: calculatedTotal + newtax || 0,
+        tax_amount: newtax || 0,
+      })
+      .eq("id", orderId)
+      .select("*")
+      .maybeSingle();
 
+    if (updateOrderError) {
+      console.error("Error updating order:", updateOrderError);
+      throw updateOrderError;
+    }
 
-      const { error:Inerror } = await supabase
+    // Step 3: Update invoice
+    const { error: invoiceUpdateError } = await supabase
       .from("invoices")
       .update({
-        profile_id: updatedData.customer || null, // Ensure profile_id is valid
+        profile_id: updatedData.customer || null,
         customer_info: updatedData.customerInfo || null,
         updated_at: new Date().toISOString(),
-        items: updatedData.items || [], // Ensure it's a valid JSON array
+        items: updatedData.items || [],
         amount: calculatedTotal + newtax || 0,
         subtotal: calculatedTotal + newtax || 0,
         total_amount: calculatedTotal + newtax || 0,
         tax_amount: newtax || 0,
-
       })
       .eq("order_id", orderId);
 
-    if (Inerror) {
-      console.error("Error updating order:", Inerror);
-      throw error;
+    if (invoiceUpdateError) {
+      console.error("Error updating invoice:", invoiceUpdateError);
+      throw invoiceUpdateError;
     }
 
-      console.log("Order updated successfully!");
-      toast({
-        title: "Order Status !",
-        description: "Order updated successfully!",
-      });
+    // Step 4: Apply new inventory changes
+    for (const item of updatedData.items || []) {
+      if (item.sizes && item.sizes.length > 0) {
+        for (const size of item.sizes) {
+          const { data: currentSize, error: fetchError } = await supabase
+            .from("product_sizes")
+            .select("stock")
+            .eq("id", size.id)
+            .single();
 
+          if (fetchError || !currentSize) {
+            console.warn(`⚠️ Size not found during apply: ${size.id}`);
+            continue;
+          }
 
-          const logsData = {
-                  user_id: orderData.customer,
-                  order_id: orderData.order_number,
-                  action: 'order_edited',
-                  details: {
-                    message: `Order Edited : ${orderData.order_number}`,
-                    oldOrder: orderData,
-                    updateOrder:newOrder
-                  },
-                };
-                try {
-                  await axios.post("/logs/create", logsData);
-                  console.log("LOGS STORED SUCCESSFULLYY");
-                } catch (apiError) {
-                  console.error("Failed to store logs:", apiError);
-                }
+          const newQuantity = currentSize.stock - size.quantity;
 
-      setTimeout(() => {
-        window.location.href = "/admin/orders"; // Option 2: Redirect with refresh
-      }, 500);
-      return { success: true };
-    } catch (error) {
-      console.error("Update order error:", error);
-      return { success: false, error };
+          const { error: updateError } = await supabase
+            .from("product_sizes")
+            .update({ stock: newQuantity })
+            .eq("id", size.id);
+
+          if (updateError) {
+            console.error(`❌ Failed to apply new stock for size ID ${size.id}`, updateError);
+            throw new Error("Failed to apply new inventory");
+          } else {
+            console.log(`✅ Updated inventory for size ID ${size.id}`);
+          }
+        }
+      }
     }
-  };
+
+    // Step 5: Success Toast & Logs
+    toast({
+      title: "Order Status",
+      description: "Order updated successfully!",
+    });
+
+    const logsData = {
+      user_id: updatedData.customer,
+      order_id: updatedData.order_number,
+      action: 'order_edited',
+      details: {
+        message: `Order Edited : ${updatedData.order_number}`,
+        oldOrder: oldOrderData,
+        updateOrder: newOrder
+      },
+    };
+
+    try {
+      await axios.post("/logs/create", logsData);
+      console.log("📝 Order edit logs stored successfully");
+    } catch (apiError) {
+      console.error("❌ Failed to store logs:", apiError);
+    }
+
+    // Step 6: Redirect
+    setTimeout(() => {
+      window.location.href = "/admin/orders";
+    }, 500);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Update order error:", error);
+    toast({
+      title: "Error Updating Order",
+      description: error.message || "Something went wrong while updating the order.",
+      variant: "destructive",
+    });
+    return { success: false, error };
+  }
+};
+
 
   useEffect(() => {
     const storedOrderPay = sessionStorage.getItem("order_pay");

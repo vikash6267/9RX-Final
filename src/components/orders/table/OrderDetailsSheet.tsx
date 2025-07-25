@@ -91,7 +91,7 @@ export const OrderDetailsSheet = ({
         case "confirm":
           if (onConfirmOrder) {
             await onConfirmOrder(currentOrder.id);
-            setCurrentOrder((prev) => ({ ...prev, status: "pending" }));
+            setCurrentOrder((prev) => ({ ...prev, status: "processing" }));
           }
           break;
       }
@@ -283,11 +283,12 @@ export const OrderDetailsSheet = ({
 
       // Add Logo (Left side)
       const logo = new Image();
-      logo.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
+      logo.src = "/final.png";
       await new Promise((resolve) => (logo.onload = resolve));
-      const logoHeight = 25;
+      const logoHeight = 23;
       const logoWidth = (logo.width / logo.height) * logoHeight;
-      doc.addImage(logo, "PNG", margin, margin, logoWidth, logoHeight);
+      // Logo (center aligned)
+      doc.addImage(logo, "PNG", pageWidth / 2 - logoWidth / 2, margin, logoWidth, logoHeight);
 
       // Set Fonts
       doc.setFont("helvetica", "normal");
@@ -303,21 +304,35 @@ export const OrderDetailsSheet = ({
       doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
 
       // Centered Phone Number (under logo)
-      doc.setFontSize(10);
-      doc.text("+1 800 969 6295", pageWidth / 2, margin + logoHeight / 2 + 5, { align: "center" });
+      // Phone number (left aligned, vertically center of logo)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("+1 800 969 6295", margin, margin + 10);
 
       // PURCHASE ORDER TITLE (right side)
       doc.setFont("helvetica", "bold");
       doc.setFontSize(15);
-      doc.text("PURCHASE ORDER", pageWidth - margin - 10, margin + 10, { align: "right" });
+      doc.text("PURCHASE ORDER", pageWidth - margin - 5, margin + 10, { align: "right" });
 
       doc.setFontSize(10);
-      doc.text(`ORDER - ${currentOrder.order_number}`, pageWidth - margin - 10, margin + 15, { align: "right" });
-      doc.text(`Date - ${formattedDate}`, pageWidth - margin - 10, margin + 20, { align: "right" });
+      doc.text(`ORDER - ${currentOrder.order_number}`, pageWidth - margin - 5, margin + 15, { align: "right" });
+      doc.text(`Date - ${formattedDate}`, pageWidth - margin - 5, margin + 20, { align: "right" });
 
       // Divider line
       doc.setDrawColor(200);
       doc.line(margin, margin + 26, pageWidth - margin, margin + 26);
+
+
+
+
+
+
+
+
+
+
+
+
 
       // Addresses
       const infoStartY = margin + 35;
@@ -333,17 +348,6 @@ export const OrderDetailsSheet = ({
         infoStartY + 25,
         { maxWidth: contentWidth / 2 }
       );
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -400,6 +404,8 @@ export const OrderDetailsSheet = ({
           3: { halign: "right" },
           4: { halign: "right" },
         },
+        margin: { left: margin },
+        tableWidth: 'auto',
       });
 
       const finalY = (doc as any).lastAutoTable.finalY + 10;
@@ -414,7 +420,8 @@ export const OrderDetailsSheet = ({
       const tax = Number(currentOrder?.tax_amount || 0);
       const total = subtotal + handling + fred + shipping + tax;
 
-      const summaryX = pageWidth - margin; // Align summary to the right
+      const summaryBoxWidth = 60; // adjust as needed
+      const summaryX = pageWidth - margin - 6; // right edge
       let summaryY = finalY;
 
       doc.setFont("helvetica", "bold").setFontSize(10);
@@ -423,17 +430,19 @@ export const OrderDetailsSheet = ({
 
       const summaryRows = [
         ["Sub Total", subtotal],
-        ["Handling Charges", handling],
+        ["Handling-Shipping", handling],
         ["Freight Charges", fred],
-        ["Shipping", shipping],
-        ["Tax", tax],
         ["Total", total],
       ];
 
       doc.setFont("helvetica", "normal").setFontSize(9);
       summaryRows.forEach(([label, value]) => {
-        doc.text(label, summaryX - 40, summaryY, { align: "right" }); // Adjust position for label
+        // Label aligned to left of summaryBox
+        doc.text(label, summaryX - summaryBoxWidth, summaryY, { align: "left" });
+
+        // Value aligned to right edge
         doc.text(`$${value.toFixed(2)}`, summaryX, summaryY, { align: "right" });
+
         summaryY += 5;
       });
 

@@ -40,14 +40,14 @@ export const OrderConfirmAction = ({ order, onConfirmOrder }: OrderConfirmAction
       const { error } = await supabase
         .from('orders')
         .update({ 
-          status: 'pending',
+          status: 'processing',
           updated_at: new Date().toISOString()
         })
         .eq('id', order.id);
 
       if (error) throw error;
 
-      setCurrentStatus('pending');
+      setCurrentStatus('processing');
       
       toast({
         title: "Success",

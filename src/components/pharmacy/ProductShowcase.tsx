@@ -187,7 +187,7 @@ const ProductShowcase = ({ groupShow,isEditing=false,form={} }: ProductShowcaseP
       />
       {
         products.length > 0 ? (
-          <ProductGrid products={filteredProducts} />
+          <ProductGrid products={filteredProducts} isEditing={isEditing} form={form}  />
         ) : (
           <div className="flex justify-center items-center h-40">
             <Loader2 className="animate-spin text-gray-500" size={32} />

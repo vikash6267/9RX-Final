@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 
 interface ProductGridProps {
   products: ProductDetails[];
+   isEditing?: boolean;
+  form?: any;
 }
 
-export const ProductGrid = ({ products }: ProductGridProps) => {
+export const ProductGrid = ({ products,isEditing=false,form={}  }: ProductGridProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export const ProductGrid = ({ products }: ProductGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} isEditing={isEditing} form={form}  />
       ))}
     </div>
   );

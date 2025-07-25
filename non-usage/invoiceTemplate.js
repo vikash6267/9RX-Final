@@ -16,7 +16,7 @@ const handleDownloadPDF = async () => {
 
     // Logo
     const logo = new Image();
-    logo.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
+    logo.src = "/final.png";
     await new Promise((resolve) => (logo.onload = resolve));
     const logoHeight = 25;
     const logoWidth = (logo.width / logo.height) * logoHeight;
@@ -193,7 +193,7 @@ currentOrder.items.forEach((item) => {
 
     // Logo
     const logo = new Image();
-    logo.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
+    logo.src = "/final.png";
     await new Promise((resolve) => (logo.onload = resolve));
     const logoHeight = 25;
     const logoWidth = (logo.width / logo.height) * logoHeight;
@@ -367,7 +367,7 @@ currentOrder.items.forEach((item) => {
 
       // Add Logo (Left side)
       const logo = new Image();
-      logo.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
+      logo.src = "/final.png";
       await new Promise((resolve) => (logo.onload = resolve));
       const logoHeight = 25;
       const logoWidth = (logo.width / logo.height) * logoHeight;

@@ -96,47 +96,59 @@ export const generateWorkOrderPDF = async (workOrderData: WorkOrderData, packing
     const margin = 10;
     const contentWidth = pageWidth - margin * 2;
 
-    // Add Logo (Left side) - Same as PO
-    const logo = new Image();
-    logo.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png";
-    await new Promise((resolve) => (logo.onload = resolve));
-    const logoHeight = 25;
-    const logoWidth = (logo.width / logo.height) * logoHeight;
-    doc.addImage(logo, "PNG", margin, margin, logoWidth, logoHeight);
 
-    // Set Fonts
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
 
-    // Top Info Line (All in one row, top line) - Same as PO
-    const topInfo = [
-      "Tax ID : 99-0540972",
-      "936 Broad River Ln, Charlotte, NC 28211",
-      "info@9rx.com",
-      "www.9rx.com"
-    ].join("     |     ");
-    doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
 
-    // Centered Phone Number (under logo) - Same as PO
-    doc.setFontSize(10);
-    doc.text("+1 800 969 6295", pageWidth / 2, margin + logoHeight / 2 + 5, { align: "center" });
 
-    // PACKING SLIP TITLE (right side) - CHANGED from "PURCHASE ORDER"
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
-    doc.text("PACKING SLIP", pageWidth - margin - 10, margin + 10, { align: "right" });
 
-    // Order Number and Date - Using workOrderData
-    doc.setFontSize(10);
-    const orderNumber = workOrderData?.orders?.order_number || workOrderData?.order_id || "N/A";
+
+   
+      // Add Logo (Left side)
+      const logo = new Image();
+      logo.src = "/final.png";
+      await new Promise((resolve) => (logo.onload = resolve));
+      const logoHeight = 23;
+      const logoWidth = (logo.width / logo.height) * logoHeight;
+      // Logo (center aligned)
+      doc.addImage(logo, "PNG", pageWidth / 2 - logoWidth / 2, margin, logoWidth, logoHeight);
+
+      // Set Fonts
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+
+      // Top Info Line (All in one row, top line)
+      const topInfo = [
+        "Tax ID : 99-0540972",
+        "936 Broad River Ln, Charlotte, NC 28211",
+        "info@9rx.com",
+        "www.9rx.com"
+      ].join("     |     ");
+      doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
+
+      // Centered Phone Number (under logo)
+      // Phone number (left aligned, vertically center of logo)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("+1 800 969 6295", margin, margin + 10);
+
+      // PACKING SLIP TITLE (right side)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("PACKING SLIP", pageWidth - margin , margin + 10, { align: "right" });
+
+      const orderNumber = workOrderData?.orders?.order_number || workOrderData?.order_id || "N/A";
     const formattedDate = new Date(workOrderData?.created_at || new Date()).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-    doc.text(`ORDER - ${orderNumber}`, pageWidth - margin - 10, margin + 15, { align: "right" });
-    doc.text(`Date - ${formattedDate}`, pageWidth - margin - 10, margin + 20, { align: "right" });
+      doc.setFontSize(10);
+      doc.text(`ORDER - ${workOrderData?.orders?.order_number || workOrderData?.order_id}`, pageWidth - margin , margin + 15, { align: "right" });
+      doc.text(`Date - ${formattedDate}`, pageWidth - margin , margin + 20, { align: "right" });
 
+
+
+   
     // Divider line - Same as PO
     doc.setDrawColor(200);
     doc.line(margin, margin + 26, pageWidth - margin, margin + 26);
@@ -220,6 +232,8 @@ export const generateWorkOrderPDF = async (workOrderData: WorkOrderData, packing
         3: { halign: "right" }, // Shipped QTY
         4: { halign: "center" }, // IN CASE
       },
+      margin: { left: margin, right: margin }, // full width
+  tableWidth: 'auto', // stretch to margins
       didDrawPage: function(data: any) {
         // This function will be triggered for each page drawn by autoTable.
         // It's useful for repeating headers/footers on multi-page tables if autoTable's

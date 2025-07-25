@@ -118,7 +118,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
   useEffect(() => {
     fetchUser()
   }, [invoice])
-  
+
   const formattedDate = new Date(invoice.created_at).toLocaleDateString("en-US", {
     year: "numeric",
     month: "2-digit",
@@ -134,89 +134,84 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
     try {
       // Create a new PDF document
       const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      })
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+          });
+    
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const margin = 10;
+          const contentWidth = pageWidth - margin * 2;
 
 
- 
+      // Barcode value
+      const barcodeCanvas = document.createElement("canvas");
+      const barcodeValue = `${invoice.invoice_number}`;
 
-      // Set font
-      doc.setFont("helvetica")
+      JsBarcode(barcodeCanvas, barcodeValue, {
+        displayValue: false,
+      });
 
-      // Page dimensions
-      const pageWidth = doc.internal.pageSize.getWidth()
-      const pageHeight = doc.internal.pageSize.getHeight()
-      const margin = 10
-      const contentWidth = pageWidth - margin * 2
+      // Convert to image
+      const barcodeImage = barcodeCanvas.toDataURL("image/png");
 
+      // Set barcode dimensions
+      const barcodeWidth = 40;
+      const barcodeHeight = 12;
 
-
-   // Barcode value
-const barcodeCanvas = document.createElement("canvas");
-const barcodeValue = `${invoice.invoice_number}`;
-
-JsBarcode(barcodeCanvas, barcodeValue, {
-  displayValue: false,
-});
-
-// Convert to image
-const barcodeImage = barcodeCanvas.toDataURL("image/png");
-
-// Set barcode dimensions
-const barcodeWidth = 40;
-const barcodeHeight = 12;
-
-// Align barcode to right side (same as text)
-const barcodeX = pageWidth - margin - 42; // right-aligned
-const barcodeY = margin + 26; // just below the "Date - ..." text
+      // Align barcode to right side (same as text)
+      const barcodeX = pageWidth - margin - 42; // right-aligned
+      const barcodeY = margin + 26; // just below the "Date - ..." text
 
 
 
-      // Add company logo
-      if (true) {
-        const img = new Image()
-        img.crossOrigin = "anonymous"
-        img.src = "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png"
+    // Add Logo (Left side)
+      const logo = new Image();
+      logo.src = "/final.png";
+      await new Promise((resolve) => (logo.onload = resolve));
+      const logoHeight = 23;
+      const logoWidth = (logo.width / logo.height) * logoHeight;
+      // Logo (center aligned)
+      doc.addImage(logo, "PNG", pageWidth / 2 - logoWidth / 2, margin, logoWidth, logoHeight);
 
-        await new Promise((resolve) => {
-          img.onload = resolve
-        })
+      // Set Fonts
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
 
-        // Calculate logo dimensions (max height 20mm)
-        const logoHeight = 25
-        const logoWidth = (img.width / img.height) * logoHeight
+      // Top Info Line (All in one row, top line)
+      const topInfo = [
+        "Tax ID : 99-0540972",
+        "936 Broad River Ln, Charlotte, NC 28211",
+        "info@9rx.com",
+        "www.9rx.com"
+      ].join("     |     ");
+      doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
 
-        // Position logo at top center
-        doc.addImage(img, "PNG", pageWidth / 2 - logoWidth / 2, margin, logoWidth, logoHeight)
-      }
+      // Centered Phone Number (under logo)
+      // Phone number (left aligned, vertically center of logo)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("+1 800 969 6295", margin, margin + 10);
 
-      // Add invoice title and details
-      doc.setFontSize(20)
-      doc.text("INVOICE", pageWidth - margin - 40, margin + 10)
+      // PURCHASE ORDER TITLE (right side)
+   doc.setFont("helvetica", "bold");
+doc.setFontSize(15);
+doc.text("INVOICE", pageWidth - margin, margin + 10, { align: "right" });
 
-      doc.setFontSize(10)
-      doc.text(`INVOICE - ${invoice.invoice_number}`, pageWidth - margin - 40, margin + 15)
-      doc.text(`ORDER - ${invoice.order_number}`, pageWidth - margin - 40, margin + 20)
-      doc.text(`Date - ${formattedDate}`, pageWidth - margin - 40, margin + 25)
-doc.addImage(barcodeImage, "PNG", barcodeX, barcodeY, barcodeWidth, barcodeHeight);
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
 
-      // Company details
-      doc.setFontSize(9)
-      doc.text("Tax ID : 99-0540972", margin, margin + 5)
-      doc.text("936 Broad River Ln,", margin, margin + 10)
-      doc.text("Charlotte, NC 28211", margin, margin + 15)
-      doc.text("+1 800 969 6295", margin, margin + 20)
-      doc.text("info@9rx.com", margin, margin + 25)
-      doc.text("www.9rx.com", margin, margin + 30)
+// Compact spacing: 4pt gap per line
+doc.text(`ORDER - ${invoice.order_number}`, pageWidth - margin, margin + 15, { align: "right" });
+doc.text(`INVOICE - ${invoice.invoice_number}`, pageWidth - margin, margin + 20, { align: "right" });
+doc.text(`Date - ${formattedDate}`, pageWidth - margin, margin + 25, { align: "right" });
 
-      // Horizontal line
-      doc.setDrawColor(200, 200, 200)
-      doc.line(margin, margin + 40, pageWidth - margin, margin + 40)
+      // Divider line
+      doc.setDrawColor(200);
+      doc.line(margin, margin + 29, pageWidth - margin, margin + 29);
 
       // Customer and shipping info
-      const infoStartY = margin + 50
+      const infoStartY = margin + 37
 
       // Bill To
       doc.setFontSize(11)
@@ -262,30 +257,52 @@ doc.addImage(barcodeImage, "PNG", barcodeX, barcodeY, barcodeWidth, barcodeHeigh
 
       // Prepare table data
       const tableHead = [["Description", "Sizes", "Qty", "Amount"]]
-      const tableBody =
-        invoice?.items?.map((item) => [
-          item.name,
-          item.sizes?.map((size) => `${size.size_value} ${size.size_unit}`).join(", "),
-          item.quantity.toString(),
-          `$${item.price}`,
-        ]) || []
+      const tableBody = [];
+      invoice.items.forEach((item) => {
+        // Add a separate row for the product name (spanning all columns)
+        tableBody.push([
+          { content: item.name, colSpan: 5, styles: { fontStyle: 'bold', halign: 'left', fillColor: [245, 245, 245] } }
+        ]);
 
-        // Add table
-        ; (doc as any).autoTable({
-          head: tableHead,
-          body: tableBody,
-          startY: tableStartY,
-          margin: { left: margin, right: margin },
-          styles: { fontSize: 9, cellPadding: 3 },
-          headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-          columnStyles: {
-            0: { cellWidth: "auto" },
-            1: { cellWidth: "auto" },
-            2: { cellWidth: 20, halign: "right" },
-            3: { cellWidth: 30, halign: "right" },
-          },
-          theme: "grid",
-        })
+        item.sizes.forEach((size) => {
+          const sizeValueUnit = `${size.size_value} ${size.size_unit}`;
+          const quantity = size.quantity.toString();
+          const pricePerUnit = `$${Number(size.price).toFixed(2)}`;
+          const totalPerSize = `$${(size.quantity * size.price).toFixed(2)}`;
+
+          tableBody.push([
+            "", // Description column empty (since we show name in separate row)
+            sizeValueUnit,
+            quantity,
+            pricePerUnit,
+            totalPerSize,
+          ]);
+        });
+      });
+      (doc as any).autoTable({
+  head: [["Description", "Size", "Qty", "Unit Price", "Amount"]],
+  body: tableBody,
+  startY: tableStartY,
+  styles: {
+    fontSize: 9,
+    cellPadding: { top: 2, bottom: 2, left: 2, right: 2 },
+  },
+  theme: "grid",
+  headStyles: {
+    fillColor: [230, 230, 230],
+    textColor: 0,
+    fontStyle: "bold",
+  },
+  columnStyles: {
+    2: { halign: "right", cellWidth: 20 },
+    3: { halign: "right", cellWidth: 25 },
+    4: { halign: "right", cellWidth: 30 },
+  },
+  margin: { left: margin, right: margin }, // full width
+  tableWidth: 'auto', // stretch to margins
+});
+
+
 
       // Get the final Y position after the table
       const finalY = (doc as any).lastAutoTable.finalY + 10
@@ -293,8 +310,9 @@ doc.addImage(barcodeImage, "PNG", barcodeX, barcodeY, barcodeWidth, barcodeHeigh
       // Payment status and summary section
       const paymentStatusX = margin
       const paymentStatusWidth = contentWidth / 3
-      const summaryX = margin + paymentStatusWidth + 10
-      const summaryWidth = contentWidth - paymentStatusWidth - 10
+  const summaryWidth = contentWidth * 0.45; // make it 45% of full width
+const summaryX = pageWidth - margin - summaryWidth; // align right
+
 
       // Payment status box
       doc.setFillColor(240, 240, 240)
@@ -413,7 +431,7 @@ doc.addImage(barcodeImage, "PNG", barcodeX, barcodeY, barcodeWidth, barcodeHeigh
   }
 
 
- 
+
   return (
     <SheetContent className="w-full sm:max-w-[600px] md:max-w-[800px] lg:max-w-[900px] overflow-y-auto p-2 sm:p-6">
       {/* Visible invoice preview - responsive */}
@@ -435,7 +453,7 @@ doc.addImage(barcodeImage, "PNG", barcodeX, barcodeY, barcodeWidth, barcodeHeigh
 
             <div className=" ">
               <img
-                src={settings.logo || "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png" || "/placeholder.svg"}
+                src={settings.logo || "/final.png" || "/placeholder.svg"}
                 alt="Company Logo"
                 className="h-16 sm:h-16 md:h-[6rem] relative z-10 contrast-200"
               />
@@ -602,7 +620,7 @@ doc.addImage(barcodeImage, "PNG", barcodeX, barcodeY, barcodeWidth, barcodeHeigh
 
               <div className=" ">
                 <img
-                  src={settings.logo || "/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png" || "/placeholder.svg"}
+                  src={settings.logo || "/final.png" || "/placeholder.svg"}
                   alt="Company Logo"
                   className="h-16 sm:h-16 md:h-[6rem] relative z-10 contrast-200"
                 />

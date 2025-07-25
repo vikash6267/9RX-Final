@@ -15,9 +15,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ProductCardProps {
   product: ProductDetails;
+  isEditing?: boolean;
+  form?: any;
 }
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, isEditing = false, form = {} }: ProductCardProps) => {
   const { toast } = useToast();
   const { addToCart, cartItems } = useCart();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -33,8 +35,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const [quantity, setQuantity] = useState<{ [key: string]: number }>({});
   const navigate = useNavigate();
 
-  const isInCart = cartItems.some(
-    (item) => item.productId === product.id.toString()
+  const formItems = isEditing ? form.getValues()?.items || [] : cartItems;
+
+  const isInCart = formItems.some(
+    (item: any) => item.productId?.toString() === product.id?.toString()
   );
   const stockStatus =
     product.stock && product.stock < 10 ? "Low Stock" : "In Stock";
@@ -85,17 +89,17 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         }))
         .filter((size) => size.quantity > 0);
 
-        console.log(updatedSizes)
+      console.log(updatedSizes)
       const totalPrice = updatedSizes.reduce(
         (sum, size) => sum + size.price * size.quantity,
         0
       );
-     
+
       const highestShippingCost = updatedSizes.reduce(
         (max, size) => (size.shipping_cost > max ? size.shipping_cost : max),
         0
       );
-      
+
       console.log(highestShippingCost)
       const cartItem = {
         productId: product.id.toString(),
@@ -114,27 +118,46 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
       console.log("Cart Item:", cartItem);
 
-      
-      const success = await addToCart(cartItem);
 
-      if (success) {
+      if (isEditing && form) {
+        const currentItems = form.getValues("items") || [];
+        form.setValue("items", [...currentItems, cartItem]);
+
         toast({
-          title: "Added to Cart",
+          title: "Item Added",
           description: (
-            <Alert className="border-emerald-500 bg-emerald-50">
-              <Check className="h-4 w-4 text-emerald-500" />
+            <Alert className="border-blue-500 bg-blue-50">
+              <Check className="h-4 w-4 text-blue-500" />
               <AlertDescription className="ml-2">
-                {product.name} has been added to your cart successfully!
+                {product.name} has been added to the order successfully!
               </AlertDescription>
             </Alert>
           ),
         });
 
-        // Close the dialog after successfully adding to cart
         setDialogOpen(false);
       } else {
-        throw new Error("Failed to add to cart");
+        const success = await addToCart(cartItem);
+
+        if (success) {
+          toast({
+            title: "Added to Cart",
+            description: (
+              <Alert className="border-emerald-500 bg-emerald-50">
+                <Check className="h-4 w-4 text-emerald-500" />
+                <AlertDescription className="ml-2">
+                  {product.name} has been added to your cart successfully!
+                </AlertDescription>
+              </Alert>
+            ),
+          });
+
+          setDialogOpen(false);
+        } else {
+          throw new Error("Failed to add to cart");
+        }
       }
+
     } catch (error: any) {
       console.error("Error adding to cart:", error);
       toast({

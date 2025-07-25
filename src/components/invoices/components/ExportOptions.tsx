@@ -77,7 +77,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({ invoices }) => {
   return (
     <div className="flex items-center gap-2">
  
-      <InvoiceExport invoices={invoices} companyName="9RX" logoUrl="/lovable-uploads/0b13fa53-b941-4c4c-9dc4-7d20221c2770.png" />
+      <InvoiceExport invoices={invoices} companyName="9RX" logoUrl="/final.png" />
     </div>
   );
 };

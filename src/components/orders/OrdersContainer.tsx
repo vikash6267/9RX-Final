@@ -433,11 +433,11 @@ const fetchUsers = async () => {
           {/* Move StatusFilter right here */}
           {!poIs && (
             <>
-              <StatusFilter
+              {/* <StatusFilter
               value={statusFilter}
               onValueChange={setStatusFilter}
               type="status"
-            />
+            /> */}
               <StatusFilter
               value={statusFilter2}
               onValueChange={setStatusFilter2}
