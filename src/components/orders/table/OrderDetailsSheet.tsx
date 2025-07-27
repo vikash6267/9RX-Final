@@ -687,7 +687,7 @@ export const OrderDetailsSheet = ({
               <span className="text-sm md:text-base">
                 Order Number: {currentOrder.order_number}
               </span>
-              {userRole === "admin" && (
+              {userRole === "admin" && currentOrder.status !== "cancelled" && !currentOrder.void && (
                 <Button
                   onClick={() => setIsEditing(true)}
                   variant="outline"

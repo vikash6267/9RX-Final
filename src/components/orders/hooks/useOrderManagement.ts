@@ -98,6 +98,7 @@ export const useOrderManagement = () => {
             tax_amount: order.tax_amount,
             void: order.void,
             voidReason: order.voidReason,
+            cancelReason: order.cancelReason,
             poApproved: order.poApproved,
             po_handling_charges: order.po_handling_charges,
             po_fred_charges: order.po_fred_charges,
@@ -312,6 +313,91 @@ const handleDeleteOrder = async (orderId: string, reason: string): Promise<void>
   }
 };
 
+const handleCancelOrder = async (orderId: string, reason: string): Promise<void> => {
+  try {
+    console.log("Cancel Reason:", reason);
+
+    // Step 1: Update the invoices table
+    const { error: invoiceUpdateError } = await supabase
+      .from("invoices")
+      .update({ status: "cancelled", cancelReason: reason })
+      .eq("order_id", orderId);
+    if (invoiceUpdateError) throw invoiceUpdateError;
+
+    // Step 2: Update the orders table
+    const { data: orderData, error: orderUpdateError } = await supabase
+      .from("orders")
+      .update({ status: "cancelled", cancelReason: reason })
+      .eq("id", orderId)
+      .select()
+      .single();
+    if (orderUpdateError) throw orderUpdateError;
+
+    // Step 3: Restore product-level stock
+    const { data: orderItems, error: itemsError } = await supabase
+      .from("order_items")
+      .select("product_id, quantity")
+      .eq("order_id", orderId);
+    if (itemsError) throw itemsError;
+
+    for (const item of orderItems) {
+      const { error: stockRestoreError } = await supabase.rpc("increment_stock", {
+        product_id: item.product_id,
+        quantity: item.quantity,
+      });
+      if (stockRestoreError) {
+        console.error(`❌ Error restoring stock for product ${item.product_id}:`, stockRestoreError);
+      }
+    }
+
+    // Step 4: Restore size-level stock (if applicable)
+    const sizes = orderData.items?.flatMap((item) => item.sizes || []) || [];
+    for (const size of sizes) {
+      const { data: currentSize, error: fetchError } = await supabase
+        .from("product_sizes")
+        .select("stock")
+        .eq("id", size.id)
+        .single();
+      if (fetchError || !currentSize) {
+        console.warn(`⚠️ Size not found for ID: ${size.id}`);
+        continue;
+      }
+
+      const newQuantity = currentSize.stock + size.quantity;
+      const { error: updateError } = await supabase
+        .from("product_sizes")
+        .update({ stock: newQuantity })
+        .eq("id", size.id);
+      if (updateError) {
+        console.error(`❌ Failed to restore stock for size ID: ${size.id}`, updateError);
+      }
+    }
+
+    // Step 5: Update UI
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === orderId ? { ...order, status: "cancelled", cancelReason: reason } : order
+      )
+    );
+
+    toast({
+      title: "Order Cancelled",
+      description: "Order has been cancelled and stock restored.",
+    });
+
+    if (selectedOrder?.id === orderId) {
+      setIsSheetOpen(false);
+      setSelectedOrder(null);
+    }
+  } catch (error) {
+    console.error("❌ Error cancelling order:", error);
+    toast({
+      title: "Error",
+      description: "Failed to cancel order",
+      variant: "destructive",
+    });
+  }
+};
 
 
 
@@ -392,5 +478,6 @@ const handleDeleteOrder = async (orderId: string, reason: string): Promise<void>
     handleConfirmOrder,
     handleDeleteOrder,
     loadOrders,
+    handleCancelOrder
   };
 };

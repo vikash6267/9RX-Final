@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { OrderFormValues } from "../schemas/orderSchema";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, LoaderCircle } from "lucide-react";
+import { ExternalLink, LoaderCircle, MoreHorizontal } from "lucide-react"; // Import MoreHorizontal for the three dots
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTrackingUrl } from "../utils/shippingUtils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,13 +20,35 @@ import { getCustomerName, formatTotal } from "../utils/customerUtils";
 import { getStatusColor } from "../utils/statusUtils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/supabaseClient";
-import { Clipboard, ClipboardCheck } from "lucide-react";
+import { Clipboard, ClipboardCheck, Ban } from "lucide-react";
 import { useState } from "react";
 import PaymentForm from "@/components/PaymentModal";
 import axios from "../../../../axiosconfig";
-import { InvoiceStatus, PaymentMethod } from "@/components/invoices/types/invoice.types";
-import { Ban } from "lucide-react"
+import {
+  InvoiceStatus,
+  PaymentMethod,
+} from "@/components/invoices/types/invoice.types";
 import { useCart } from "@/hooks/use-cart";
+
+// Import UI components for the cancel dialog
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface OrdersListProps {
   orders: OrderFormValues[];
@@ -37,7 +59,8 @@ interface OrdersListProps {
   onProcessOrder?: (orderId: string) => void;
   onShipOrder?: (orderId: string) => void;
   onConfirmOrder?: (orderId: string) => void;
-  onDeleteOrder?: (orderId: string, reason?: string) => Promise<void>
+  onDeleteOrder?: (orderId: string, reason?: string) => Promise<void>;
+  onCancelOrder?: (orderId: string, reason: string) => Promise<void>; // New prop for cancel function
 
   isLoading?: boolean;
   poIs?: boolean;
@@ -57,12 +80,13 @@ export function OrdersList({
   onShipOrder,
   onConfirmOrder,
   onDeleteOrder,
+  onCancelOrder, // Destructure new prop
   isLoading = false,
   userRole = "pharmacy",
   selectedOrders = [],
   onOrderSelect,
   setOrderStatus,
-  poIs = false
+  poIs = false,
 }: OrdersListProps) {
   const { toast } = useToast();
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -70,39 +94,17 @@ export function OrdersList({
   const [selectCustomerInfo, setSelectCustomerInfo] = useState<any>({});
   const { cartItems, clearCart, addToCart } = useCart();
 
+  // State for cancel dialog
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
   const createInvoiceForOrder = async (
     orderId: string,
     orderData: OrderFormValues
   ) => {
     try {
-      // Generate invoice number using the database function
-      // const { data: invoiceNumberData, error: invoiceNumberError } =
-      //   await supabase.rpc("generate_invoice_number");
-
-      // if (invoiceNumberError) throw invoiceNumberError;
-
-      // const invoiceNumber = invoiceNumberData;
-
-      // // Create the invoice
-      // const { error: createError } = await supabase.from("invoices").insert({
-      //   invoice_number: invoiceNumber,
-      //   order_id: orderId,
-      //   profile_id: orderData.customer,
-      //   status: "needs_payment_link",
-      //   amount: parseFloat(orderData.total),
-      //   total_amount: parseFloat(orderData.total),
-      //   due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-      //   items: orderData.items,
-      //   customer_info: orderData.customerInfo,
-      //   shipping_info: orderData.shipping,
-      // });
-
-      // if (createError) throw createError;
-
-      // toast({
-      //   title: "Invoice Created",
-      //   description: `Invoice ${invoiceNumber} has been created and needs payment link`,
-      // });
+      // Your existing createInvoiceForOrder logic
     } catch (error) {
       console.error("Error creating invoice:", error);
       toast({
@@ -120,17 +122,15 @@ export function OrdersList({
     shippingMethod?: string
   ) => {
     try {
-      // Prepare update data
+      // Your existing handleStatusChange logic
       const updateData: any = {
         status: newStatus,
         updated_at: new Date().toISOString(),
       };
 
+      console.log("shippingMethod", shippingMethod);
+      console.log("trackingNumber", trackingNumber);
 
-      console.log("shippingMethod", shippingMethod)
-      console.log("trackingNumber", trackingNumber)
-
-      // Add shipping information if provided
       if (trackingNumber && shippingMethod) {
         updateData.tracking_number = trackingNumber;
         updateData.shipping_method = shippingMethod;
@@ -168,7 +168,6 @@ export function OrdersList({
         description: `Order status updated to ${newStatus}`,
       });
 
-      // If the order is being confirmed, create an invoice
       if (newStatus === "pending") {
         const orderData = orders.find((order) => order.id === orderId);
         if (orderData) {
@@ -176,7 +175,6 @@ export function OrdersList({
         }
       }
 
-      // Call the appropriate callback
       switch (newStatus) {
         case "processing":
           if (onProcessOrder) onProcessOrder(orderId);
@@ -198,12 +196,33 @@ export function OrdersList({
     }
   };
 
-console.log(orders)
+  const handleCancelOrderClick = (orderId: string) => {
+    setOrderToCancel(orderId);
+    setIsCancelDialogOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (orderToCancel && cancelReason) {
+      if (onCancelOrder) {
+        await onCancelOrder(orderToCancel, cancelReason);
+        setOrderStatus && setOrderStatus("cancelled"); // Assuming you want to update the status to "cancelled" in the parent
+      }
+      setIsCancelDialogOpen(false);
+      setOrderToCancel(null);
+      setCancelReason("");
+    } else {
+      toast({
+        title: "Error",
+        description: "Please provide a reason to cancel the order.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const acceptPO = async (orderId: string) => {
-    setLoadingPO(true)
+    setLoadingPO(true);
     try {
-
-
+      // Your existing acceptPO logic
       const orderNumber = await generateOrderId();
       const { data: updatedOrder, error: updateErrorOrder } = await supabase
         .from("orders")
@@ -213,24 +232,21 @@ console.log(orders)
           updated_at: new Date().toISOString(),
         })
         .eq("id", orderId)
-        .select("*") // Returns the updated order
-        .single(); // Ensures only one order is fetched
-
+        .select("*")
+        .single();
 
       if (updateErrorOrder) {
         throw new Error(updateErrorOrder);
       }
 
-      const newOrder = updatedOrder
+      const newOrder = updatedOrder;
 
-
-      const year = new Date().getFullYear(); // Get current year (e.g., 2025)
-
+      const year = new Date().getFullYear();
 
       const { data: inData, error: erroIn } = await supabase
         .from("centerize_data")
         .select("id, invoice_no, invoice_start")
-        .order("id", { ascending: false }) // Get latest order
+        .order("id", { ascending: false })
         .limit(1);
 
       if (erroIn) {
@@ -238,24 +254,22 @@ console.log(orders)
         return null;
       }
 
-      let newInvNo = 1; // Default to 1 if no previous order exists
-      let invoiceStart = "INV"; // Default order prefix
-
+      let newInvNo = 1;
+      let invoiceStart = "INV";
 
       if (inData && inData.length > 0) {
-        newInvNo = (inData[0].invoice_no || 0) + 1; // Increment last order number
-        invoiceStart = inData[0].invoice_start || "INV"; // Use existing order_start
+        newInvNo = (inData[0].invoice_no || 0) + 1;
+        invoiceStart = inData[0].invoice_start || "INV";
       }
 
-
-      const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
-
-
+      const invoiceNumber = `${invoiceStart}-${year}${newInvNo
+        .toString()
+        .padStart(6, "0")}`;
 
       const { error: updateError } = await supabase
         .from("centerize_data")
-        .update({ invoice_no: newInvNo }) // Correct update syntax
-        .eq("id", inData[0]?.id); // Update only the latest record
+        .update({ invoice_no: newInvNo })
+        .eq("id", inData[0]?.id);
 
       if (updateError) {
         console.error("🚨 Supabase Update Error:", updateError);
@@ -265,12 +279,10 @@ console.log(orders)
 
       const estimatedDeliveryDate = new Date(newOrder.estimated_delivery);
 
-      // Calculate the due_date by adding 30 days to the estimated delivery
       const dueDate = new Date(estimatedDeliveryDate);
-      dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
+      dueDate.setDate(dueDate.getDate() + 30);
 
-      // Format the due_date as a string in ISO 8601 format with time zone (UTC in this case)
-      const formattedDueDate = dueDate.toISOString(); // Example: "2025-04-04T13:45:00.000Z"
+      const formattedDueDate = dueDate.toISOString();
 
       const invoiceData = {
         invoice_number: invoiceNumber,
@@ -310,14 +322,6 @@ console.log(orders)
 
       console.log("Invoice created successfully:", invoicedata2);
 
-
-
-
-
-
-
-
-
       const { data: profileData, error: profileEror } = await supabase
         .from("profiles")
         .select()
@@ -335,33 +339,24 @@ console.log(orders)
         } catch (apiError) {
           console.error("Failed to send order status to backend:", apiError);
         }
-
       }
-
-
-
-
 
       if (error) throw error;
 
-      // Log the updated order
       console.log("Updated Order:", updatedOrder);
 
       window.location.reload();
-
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-    setLoadingPO(false)
-
-  }
-
+    setLoadingPO(false);
+  };
 
   const rejectPO = async (orderId: string) => {
-    setLoadingPO(true)
-
+    setLoadingPO(true);
 
     try {
+      // Your existing rejectPO logic
       const { error: invoiceDeleteError } = await supabase
         .from("invoices")
         .delete()
@@ -376,14 +371,11 @@ console.log(orders)
 
       if (error) throw error;
 
-
-
       toast({
         title: "Success",
         description: "Order deleted successfully",
       });
       window.location.reload();
-
     } catch (error) {
       console.error("Error deleting order:", error);
       toast({
@@ -392,10 +384,8 @@ console.log(orders)
         variant: "destructive",
       });
     }
-    setLoadingPO(false)
-
-  }
-
+    setLoadingPO(false);
+  };
 
   if (isLoading) {
     return (
@@ -413,8 +403,7 @@ console.log(orders)
     );
   }
 
-
-  console.log(orders)
+  console.log(orders);
   return (
     <Table className=" border-gray-300">
       <TableHeader className="bg-gray-100">
@@ -425,7 +414,7 @@ console.log(orders)
             </TableHead>
           )}
           <TableHead className="font-semibold text-center border-gray-300">
-            {poIs ? "Vendor":"Customer"} Name
+            {poIs ? "Vendor" : "Customer"} Name
           </TableHead>
           <TableHead className="font-semibold text-center border-gray-300">
             Order Date
@@ -433,31 +422,26 @@ console.log(orders)
           <TableHead className="font-semibold text-center border-gray-300">
             Total
           </TableHead>
-          {
-            !poIs && <>
+          {!poIs && (
+            <>
               <TableHead className="font-semibold text-center border-gray-300">
                 Status
               </TableHead>
-              {/* <TableHead className="font-semibold text-center border-gray-300">
-                Payment Status
-              </TableHead> */}
               <TableHead className="font-semibold text-center border-gray-300">
                 Tracking
               </TableHead>
-
               {userRole === "admin" && (
                 <TableHead className="font-semibold text-center border-gray-300">
                   Actions
                 </TableHead>
               )}
             </>
-          }
-          {
-            false && poIs &&
+          )}
+          {false && poIs && (
             <TableHead className="font-semibold text-center border-gray-300">
               Actions
             </TableHead>
-          }
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -466,14 +450,18 @@ console.log(orders)
           return (
             <TableRow key={orderId} className="cursor-pointer hover:bg-gray-50">
               {userRole === "admin" && onOrderSelect && (
-                <TableCell onClick={(e) => e.stopPropagation()} className="text-center border-gray-300">
+                <TableCell
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-center border-gray-300"
+                >
                   <Checkbox
                     checked={selectedOrders.includes(orderId)}
-                    onCheckedChange={() => { onOrderSelect(orderId) }}
+                    onCheckedChange={() => {
+                      onOrderSelect(orderId);
+                    }}
                   />
                 </TableCell>
               )}
-
 
               <TableCell
                 onClick={async () => {
@@ -517,48 +505,36 @@ console.log(orders)
                   );
                 })()}
               </TableCell>
-             <TableCell className="text-center border-gray-300">
-  {formatTotal(parseFloat(order.total ?? "0") - (order.tax_amount ?? 0))}
-  {order.tax_amount > 0 && (
-    <> + {formatTotal(order.tax_amount)}</>
-  )}
-</TableCell>
+              <TableCell className="text-center border-gray-300">
+                {formatTotal(parseFloat(order.total ?? "0") - (order.tax_amount ?? 0))}
+                {order.tax_amount > 0 && (
+                  <> + {formatTotal(order.tax_amount)}</>
+                )}
+              </TableCell>
 
-              {
-                !poIs && <>
+              {!poIs && (
+                <>
                   <TableCell className="text-center border-gray-300">
-                    <Badge variant="secondary" className={getStatusColor(order.status || "")}>
+                    <Badge
+                      variant="secondary"
+                      className={getStatusColor(order.status || "")}
+                    >
                       {order.status.toUpperCase() || "pending"}
                     </Badge>
                   </TableCell>
-                  {/* <TableCell className="text-center border-gray-300">
-                    <div className="flex items-center justify-center gap-2">
-                      <Badge variant="secondary" className={getStatusColor(order?.payment_status || "")}>
-                        {order?.payment_status.toUpperCase() || "UNPAID"}
-                      </Badge>
-                      {order?.payment_status.toLowerCase() === "unpaid" &&  !order.void && (
-                        <button
-                          onClick={() => {
-                            console.log("Cliced")
-                            setSelectCustomerInfo(order);
-                            setModalIsOpen(true);
-                          }}
-                          className="bg-green-600 text-[14px] text-white px-5 py-1 rounded-md transition"
-                        >
-                          Pay
-                        </button>
-                      )}
-                    </div>
-                  </TableCell> */}
                   <TableCell className="text-center border-gray-300">
-                    {order.shipping?.trackingNumber && order?.shipping.method !== "custom" ? (
+                    {order.shipping?.trackingNumber &&
+                    order?.shipping.method !== "custom" ? (
                       <Button
                         variant="link"
                         className="p-0 h-auto font-normal"
                         onClick={(e) => {
                           e.stopPropagation();
                           window.open(
-                            getTrackingUrl(order.shipping.method, order.shipping.trackingNumber!),
+                            getTrackingUrl(
+                              order.shipping.method,
+                              order.shipping.trackingNumber!
+                            ),
                             "_blank"
                           );
                         }}
@@ -567,40 +543,58 @@ console.log(orders)
                         <ExternalLink className="ml-1 h-3 w-3" />
                       </Button>
                     ) : (
-
-                      <Button
-                        variant="secondary"
-                        className="p-0 h-auto font-normal"
-
-                      >
+                      <Button variant="secondary" className="p-0 h-auto font-normal">
                         Manually
-
                       </Button>
                     )}
                   </TableCell>
-                  {userRole === "admin" &&  (
-                    <TableCell onClick={(e) => e.stopPropagation()} className="text-center border-gray-300">
-                      <OrderActions
-                        order={order}
-                        onProcessOrder={async (id) => {
-                          await handleStatusChange(id, "processing");
-                          setOrderStatus("processing")
-                        }}
-                        onShipOrder={async (id) => {
-                          await handleStatusChange(id, "shipped", order.shipping?.trackingNumber, order.shipping?.method);
-                          setOrderStatus("shipped")
-
-                        }}
-                        onConfirmOrder={async (id) => {
-                          await handleStatusChange(id, "processing");
-                          setOrderStatus("processing")
-                        }}
-                        onDeleteOrder={onDeleteOrder}
-                      />
+                  {userRole === "admin" && (
+                    <TableCell
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-center border-gray-300"
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                        { order.status !=="cancelled" &&  <DropdownMenuItem
+                            onClick={() => handleCancelOrderClick(order.id)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            Cancel Order
+                          </DropdownMenuItem>}
+                          {/* Your existing OrderActions items can go here if needed, or OrderActions can be modified to include this */}
+                          <OrderActions
+                            order={order}
+                            onProcessOrder={async (id) => {
+                              await handleStatusChange(id, "processing");
+                              setOrderStatus && setOrderStatus("processing");
+                            }}
+                            onShipOrder={async (id) => {
+                              await handleStatusChange(
+                                id,
+                                "shipped",
+                                order.shipping?.trackingNumber,
+                                order.shipping?.method
+                              );
+                              setOrderStatus && setOrderStatus("shipped");
+                            }}
+                            onConfirmOrder={async (id) => {
+                              await handleStatusChange(id, "processing");
+                              setOrderStatus && setOrderStatus("processing");
+                            }}
+                            onDeleteOrder={onDeleteOrder}
+                          />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   )}
                 </>
-              }
+              )}
               {false && poIs && (
                 <TableCell className="text-center border border-gray-300">
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
@@ -638,14 +632,9 @@ console.log(orders)
                   </div>
                 </TableCell>
               )}
-
-
-
-
             </TableRow>
           );
         })}
-
 
         {modalIsOpen && selectCustomerInfo && (
           <PaymentForm
@@ -658,8 +647,37 @@ console.log(orders)
           />
         )}
       </TableBody>
+
+      {/* Cancel Order AlertDialog */}
+      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please provide a reason for canceling this order.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="reason">Reason</Label>
+              <Input
+                id="reason"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="e.g., Customer requested cancellation"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsCancelDialogOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCancel}>
+              Confirm Cancellation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Table>
-
-
   );
 }

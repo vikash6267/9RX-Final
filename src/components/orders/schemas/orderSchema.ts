@@ -75,6 +75,7 @@ export const orderFormSchema = z.object({
   status: z.string(),
   void: z.boolean().optional(),
   voidReason: z.string().optional(),
+  cancelReason: z.string().optional(),
   poApproved: z.string().optional(),
   shipping_cost: z.string().optional(),
   quickBooksID: z.string().optional(),

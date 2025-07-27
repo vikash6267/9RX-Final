@@ -73,6 +73,7 @@ interface OrdersContainerProps {
   onShipOrder?: (orderId: string) => void;
   onConfirmOrder?: (orderId: string) => void;
   onDeleteOrder?: (orderId: string, reason?: string) => Promise<void>
+  handleCancelOrder?: (orderId: string, reason?: string) => Promise<void>
 
   poIs?: boolean;
 }
@@ -83,6 +84,7 @@ export const OrdersContainer = ({
   onShipOrder,
   onConfirmOrder,
   onDeleteOrder,
+  handleCancelOrder,
   poIs = false,
 }: OrdersContainerProps) => {
   const { toast } = useToast();
@@ -586,6 +588,7 @@ const fetchUsers = async () => {
         onDeleteOrder={onDeleteOrder}
         setOrderStatus={setOrderStatus}
         poIs={poIs}
+        onCancelOrder={handleCancelOrder}
         isLoading={loading}
       />
 

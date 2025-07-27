@@ -22,6 +22,7 @@ export default function Orders() {
     handleShipOrder,
     handleConfirmOrder,
     handleDeleteOrder,
+    handleCancelOrder
   } = useOrderManagement();
 
   return (
@@ -41,6 +42,7 @@ export default function Orders() {
           onConfirmOrder={handleConfirmOrder}
           onDeleteOrder={handleDeleteOrder}
           poIs={poIs}
+          handleCancelOrder={handleCancelOrder}
 
         />
       </div>

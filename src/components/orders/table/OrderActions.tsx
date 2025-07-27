@@ -28,6 +28,7 @@ export const OrderActions = ({
 }: OrderActionsProps) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isCancleDialogOpen, setIsCancleDialogOpen] = useState(false)
   const { toast } = useToast()
   const status = order.status?.toLowerCase() || ""
 
@@ -67,7 +68,7 @@ export const OrderActions = ({
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "VOID"}
           </Button>
 
-       {   <ConfirmationDialog
+          {<ConfirmationDialog
             isOpen={isDeleteDialogOpen}
             onOpenChange={setIsDeleteDialogOpen}
             title="Void Reason"
@@ -80,33 +81,70 @@ export const OrderActions = ({
       )
     }
 
-    if(!order.void){
- return (
-      <>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => setIsDeleteDialogOpen(true)}
-          disabled={isLoading || !order.id}
-        >
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-        </Button>
+    if (!order.void && status !== "cancelled") {
+      return (
+        <>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={isLoading || !order.id}
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          </Button>
 
-        <ConfirmationDialog
-          isOpen={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          title="Delete Order"
-          description="Are you sure you want to delete this order? This action cannot be undone."
-          onConfirm={handleDelete}
-          isLoading={isLoading}
-          requireReason={true}
-          reasonLabel="Reason for deletion"
-        />
-      </>
-    )
+          <ConfirmationDialog
+            isOpen={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            title="Delete Order"
+            description="Are you sure you want to delete this order? This action cannot be undone."
+            onConfirm={handleDelete}
+            isLoading={isLoading}
+            requireReason={true}
+            reasonLabel="Reason for deletion"
+          />
+        </>
+      )
     }
-   
+
   }
+
+
+
+
+  const renderCalnceButton = () => {
+    if (status === "cancelled") {
+      return (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCancleDialogOpen(true)}
+            disabled={isLoading || !order.id}
+            className="text-xs font-semibold text-amber-600 border-amber-600 hover:bg-amber-50"
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cancled Reason"}
+          </Button>
+
+          {<ConfirmationDialog
+            isOpen={isCancleDialogOpen}
+            onOpenChange={setIsCancleDialogOpen}
+            title="Cancle Reason"
+            description={order.cancelReason || "No reason provided"}
+            onConfirm={() => setIsCancleDialogOpen(false)}
+            isLoading={isLoading}
+            requireReason={false}
+          />}
+        </>
+      )
+    }
+
+   
+
+  }
+
+
+
 
   if (status === "new" && !order.void) {
     return (
@@ -125,8 +163,16 @@ export const OrderActions = ({
       </div>
     )
   }
+  if (!order.void && status === "cancelled") {
+    return (
+      <div className="flex gap-2">
 
-  if (status === "processing"&& !order.void) {
+        {canDeleteOrder(order) && renderCalnceButton()}
+      </div>
+    )
+  }
+
+  if (status === "processing" && !order.void) {
     return (
       <div className="flex gap-2">
         <OrderShipAction order={order} onShipOrder={onShipOrder} />
