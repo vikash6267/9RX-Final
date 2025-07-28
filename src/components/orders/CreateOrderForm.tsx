@@ -247,8 +247,8 @@ export function CreateOrderForm({
         return `PO-${timestamp}${random}`; // Total 8 digits after 'PO-'
       };
 
-      const orderNumber = "DEV-TEST123";
-      // const orderNumber = poIs ? generateUniqueOrderNumber() : await generateOrderId();
+      // const orderNumber = "DEV-TEST123";
+      const orderNumber = poIs ? generateUniqueOrderNumber() : await generateOrderId();
 
       if (!userProfile?.id) return
       let profileID = userProfile?.id
@@ -321,8 +321,8 @@ export function CreateOrderForm({
         }
 
 
-        // const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
-        const invoiceNumber = "DEV-TEST123";
+        const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
+        // const invoiceNumber = "DEV-TEST123";
 
 
 
