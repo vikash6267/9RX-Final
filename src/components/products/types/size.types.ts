@@ -13,6 +13,7 @@ export interface NewSizeState {
   price: string;
   pricePerCase: string;
   sku?: any;
+  groupIds?: string[]; // Add this line
   sizeSquanence?: any;
   unit?: boolean;
   case?: boolean;

@@ -7,9 +7,11 @@ import { X, Edit3, Package, DollarSign, Warehouse, BarChart3, Printer } from "lu
 import { CATEGORY_CONFIGS } from "../../schemas/productSchema";
 import { SizeImageUploader } from "../SizeImageUploader";
 import { Card, CardContent } from "@/components/ui/card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { generateSingleProductLabelPDF } from "@/utils/size-lable-download";
+import { supabase } from "@/integrations/supabase/client";
 // Import the new single label generator
+import Select from "react-select";
 
 interface Size {
   size_value: string;
@@ -23,6 +25,7 @@ interface Size {
   rolls_per_case?: number;
   sizeSquanence?: number;
   shipping_cost?: number;
+  groupIds?: string[];
 }
 
 interface SizeListProps {
@@ -37,6 +40,8 @@ interface SizeListProps {
 export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, setNewSize, form }: SizeListProps) => {
   const categoryConfig = CATEGORY_CONFIGS[category as keyof typeof CATEGORY_CONFIGS] || CATEGORY_CONFIGS.OTHER;
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
 
   // Get the product name once from the form
   const productName = form?.getValues("name") || "Product"; // Use optional chaining for safety
@@ -50,6 +55,31 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
       </div>
     );
   }
+
+
+
+
+
+  const fetchGroupPricings = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("group_pricing")
+        .select("id, name")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setGroups(data || []);
+    } catch (error) {
+      console.error("Error fetching group pricings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroupPricings();
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -265,24 +295,50 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                   )}
 
                   {/* Sell Type Checkboxes */}
-<div className="col-span-2 flex items-center gap-4 mt-3">
-  <label className="flex items-center gap-2 text-xs text-gray-700">
-    <input
-      type="checkbox"
-      checked={!!size.unit}
-      onChange={(e) => onUpdateSize(index, "unit", e.target.checked)}
-    />
-    Sell by Unit
-  </label>
-  <label className="flex items-center gap-2 text-xs text-gray-700">
-    <input
-      type="checkbox"
-      checked={!!size.case}
-      onChange={(e) => onUpdateSize(index, "case", e.target.checked)}
-    />
-    Sell by Case
-  </label>
-</div>
+                  <div className="col-span-2 flex items-center gap-4 mt-3">
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={!!size.unit}
+                        onChange={(e) => onUpdateSize(index, "unit", e.target.checked)}
+                      />
+                      Sell by Unit
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={!!size.case}
+                        onChange={(e) => onUpdateSize(index, "case", e.target.checked)}
+                      />
+                      Sell by Case
+                    </label>
+                  </div>
+
+
+
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1 block">
+                      Allowed Groups
+                    </label>
+                    <Select
+                      isMulti
+                      options={groups.map((group) => ({
+                        label: group.name,
+                        value: group.id,
+                      }))}
+                      value={size.groupIds.map((id) => {
+                        const group = groups.find((g) => g.id === id);
+                        return group ? { label: group.name, value: group.id } : { label: id, value: id };
+                      })}
+                      onChange={(selected) => {
+                        const selectedIds = selected.map((option) => option.value);
+                        onUpdateSize(index, "groupIds", selectedIds);
+                      }}
+                      className="react-select-container text-sm"
+                      classNamePrefix="react-select"
+                      placeholder="Select groups..."
+                    />
+                  </div>
 
                 </div>
 
@@ -307,7 +363,7 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                 </div>
 
 
-                
+
               </div>
             )}
           </CardContent>

@@ -100,6 +100,7 @@ export const productFormSchema = z.object({
         sku: z.string(),
         image: z.string().optional(),
         price: z.coerce.number().min(0, "Price must be positive"),
+groupIds: z.array(z.string().uuid()).optional().default([]),
 
         price_per_case: z.coerce
           .number()

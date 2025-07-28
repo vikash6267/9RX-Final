@@ -1,19 +1,20 @@
-"use client"
+// Assuming this is in SizeOptionsField.tsx
+"use client";
 
-import { FormField, FormItem, FormMessage } from "@/components/ui/form"
-import { CATEGORY_CONFIGS } from "../schemas/productSchema"
-import { useState } from "react"
-import { toast } from "@/hooks/use-toast"
-import { AddSizeForm } from "./components/AddSizeForm"
-import { SizeList } from "./components/SizeList"
-import type { SizeOptionsFieldProps, NewSizeState } from "../types/size.types"
-import { supabase } from "@/integrations/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Ruler } from "lucide-react"
+import { FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { CATEGORY_CONFIGS } from "../schemas/productSchema";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
+import { AddSizeForm } from "./components/AddSizeForm";
+import { SizeList } from "./components/SizeList";
+import type { SizeOptionsFieldProps, NewSizeState } from "../types/size.types";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Ruler } from "lucide-react";
 
 export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => {
-  const category = form.watch("category")
-  const categoryConfig = CATEGORY_CONFIGS[category as keyof typeof CATEGORY_CONFIGS] || CATEGORY_CONFIGS.OTHER
+  const category = form.watch("category");
+  const categoryConfig = CATEGORY_CONFIGS[category as keyof typeof CATEGORY_CONFIGS] || CATEGORY_CONFIGS.OTHER;
 
   const [newSize, setNewSize] = useState<NewSizeState>({
     size_value: "",
@@ -27,10 +28,11 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
     rolls_per_case: "",
     shipping_cost: "0",
     image: "",
+    groupIds: [], // Initialize as an empty array
     sizeSquanence: "",
-      unit: false, // default selected
-  case: true,
-  })
+    unit: false, // default selected
+    case: true,
+  });
 
   const handleAddSize = () => {
     if (!newSize.size_value || !newSize.price) {
@@ -38,12 +40,12 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
         title: "Validation Error",
         description: "Please fill in all required size fields",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    const currentSizes = form.getValues("sizes") || []
-    const PPC = (Number.parseFloat(newSize.price) / Number.parseFloat(newSize.quantity_per_case || "1")).toFixed(2)
+    const currentSizes = form.getValues("sizes") || [];
+    const PPC = (Number.parseFloat(newSize.price) / Number.parseFloat(newSize.quantity_per_case || "1")).toFixed(2);
 
     const sizeToAdd = {
       size_value: newSize.size_value,
@@ -58,23 +60,24 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
       price_per_case: Number.parseFloat(PPC) || 0,
       rolls_per_case: Number.parseInt(newSize.rolls_per_case) || 0,
       shipping_cost: Number.parseFloat(newSize.shipping_cost) || 15,
-        unit: newSize.unit || false,
-  case: newSize.case || false,
-    } as const
+      unit: newSize.unit || false,
+      case: newSize.case || false,
+      groupIds: newSize.groupIds || [], // Ensure groupIds are passed
+    } as const;
 
     if (!sizeToAdd.size_value || !sizeToAdd.size_unit) {
       toast({
         title: "Validation Error",
         description: "Size value and unit are required",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     form.setValue("sizes", [...currentSizes, sizeToAdd], {
       shouldValidate: true,
       shouldDirty: true,
-    })
+    });
 
     setNewSize({
       size_value: "",
@@ -89,82 +92,92 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
       sizeSquanence: "",
       shipping_cost: "0",
       image: "",
-    })
+      groupIds: [], // Reset groupIds after adding
+    });
 
     toast({
       title: "Size Added",
       description: "New size variation has been added successfully.",
-    })
-  }
+    });
+  };
 
   const handleRemoveSize = async (index: number) => {
-    const currentSizes = form.getValues("sizes") || []
-    const newSizes = [...currentSizes]
-    const removedSize = newSizes[index]
+    const currentSizes = form.getValues("sizes") || [];
+    const newSizes = [...currentSizes];
+    const removedSize = newSizes[index];
 
-    newSizes.splice(index, 1)
+    newSizes.splice(index, 1);
     form.setValue("sizes", newSizes, {
       shouldValidate: true,
       shouldDirty: true,
-    })
+    });
 
     if (isEditing && removedSize?.id) {
-      const { error: deleteError } = await supabase.from("product_sizes").delete().eq("id", removedSize.id)
+      const { error: deleteError } = await supabase.from("product_sizes").delete().eq("id", removedSize.id);
 
       if (deleteError) {
-        console.error("Error removing size:", deleteError)
+        console.error("Error removing size:", deleteError);
         toast({
           title: "Error",
           description: "Failed to remove size.",
-        })
-        return
+        });
+        return;
       }
     }
 
     toast({
       title: "Size Removed",
       description: "Size variation has been removed.",
-    })
-  }
+    });
+  };
 
-  const handleUpdateSize = (index: number, field: string, value: string | number) => {
-    const currentSizes = form.getValues("sizes") || []
-    const updatedSizes = [...currentSizes]
+  const handleUpdateSize = (index: number, field: string, value: string | number | string[]) => { // Updated type for value
+    const currentSizes = form.getValues("sizes") || [];
+    const updatedSizes = [...currentSizes];
 
     if (field === "price" || field === "quantity_per_case") {
-      const newPrice = field === "price" ? Number.parseFloat(value as string) : updatedSizes[index].price
+      const newPrice = field === "price" ? Number.parseFloat(value as string) : updatedSizes[index].price;
       const newQuantity =
-        field === "quantity_per_case" ? Number.parseFloat(value as string) : updatedSizes[index].quantity_per_case
+        field === "quantity_per_case" ? Number.parseFloat(value as string) : updatedSizes[index].quantity_per_case;
 
-      const PPC = newQuantity > 0 ? (newPrice / newQuantity).toFixed(2) : "0.00"
+      const PPC = newQuantity > 0 ? (newPrice / newQuantity).toFixed(2) : "0.00";
 
       updatedSizes[index] = {
         ...updatedSizes[index],
         price_per_case: Number(PPC),
-      }
+      };
     }
 
-    const parsedValue =
-      typeof value === "string" &&
-      field !== "size_value" &&
-      field !== "size_unit" &&
-      field !== "sku" &&
-      field !== "image"
-        ? Number.parseFloat(value) || 0
-        : value
+    // Handle groupIds separately as it's an array
+    // Handle groupIds separately as it's an array
+    if (field === "groupIds") {
+      updatedSizes[index] = {
+        ...updatedSizes[index],
+        [field]: value as string[], // Cast to string[]
+      };
+    } else {
+      const parsedValue =
+        typeof value === "string" &&
+          field !== "size_value" &&
+          field !== "size_unit" &&
+          field !== "sku" &&
+          field !== "image"
+          ? Number.parseFloat(value) || 0
+          : value;
 
-    updatedSizes[index] = {
-      ...updatedSizes[index],
-      [field]: parsedValue,
+      updatedSizes[index] = {
+        ...updatedSizes[index],
+        [field]: parsedValue,
+      };
     }
 
     form.setValue("sizes", updatedSizes, {
       shouldValidate: true,
       shouldDirty: true,
-    })
+    });
 
-    form.trigger("sizes")
-  }
+    form.trigger("sizes");
+  };
 
   return (
     <Card className="border-0 shadow-none bg-gradient-to-br from-purple-50 to-blue-50">
@@ -177,12 +190,14 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Pass groups and setGroups to AddSizeForm so it can display the dropdown */}
         <AddSizeForm
           newSize={newSize}
           onSizeChange={setNewSize}
           onAddSize={handleAddSize}
           category={category}
           setNewSize={setNewSize}
+        // You might need to pass `groups` and `loadingGroups` to `AddSizeForm` if it also needs to display the group dropdown
         />
 
         <FormField
@@ -199,6 +214,7 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
                   price: size.price || 0,
                   quantity_per_case: size?.quantity_per_case || 0,
                   stock: size.stock || 0,
+                  groupIds: size.groupIds || [], // Ensure groupIds are initialized
                 }))}
                 onRemoveSize={handleRemoveSize}
                 onUpdateSize={handleUpdateSize}
@@ -212,5 +228,5 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
         />
       </CardContent>
     </Card>
-  )
-}
+  );
+};

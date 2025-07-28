@@ -82,6 +82,7 @@ export const addProductService = async (data: ProductFormValues) => {
       quantity_per_case: size.quantity_per_case,
       case: size.case ,
       unit: size.unit ,
+      groupIds: size.groupIds ,
     }));
 
     const { error: sizesError } = await supabase
@@ -162,6 +163,7 @@ export const updateProductService = async (
           sizeSquanence: Number(size.sizeSquanence) || 0,
           shipping_cost: size.shipping_cost,
             case: size.case ,
+      groupIds: size.groupIds ,
       unit: size.unit ,
         })));
     
@@ -188,6 +190,7 @@ export const updateProductService = async (
           sizeSquanence: Number(size.sizeSquanence) || 0,
           shipping_cost: size.shipping_cost,
             case: size.case,
+      groupIds: size.groupIds ,
       unit: size.unit ,
         })
         .eq("id", size.id);

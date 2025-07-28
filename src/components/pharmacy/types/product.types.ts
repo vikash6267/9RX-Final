@@ -26,6 +26,7 @@ export interface ProductSize {
   price: number;
   quantity_per_case: number;
   unit?: boolean;
+  groupIds?: string[];
   case?: boolean;
   price_per_case: number;
   pricePerCase: any;

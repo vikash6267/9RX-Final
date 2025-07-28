@@ -39,6 +39,7 @@ export const useProducts = () => {
         toast({ title: "Error", description: "Failed to fetch products." });
         console.error("Error fetching products:", error);
       } else {
+        console.log(productsData)
         const transformedProducts = transformProductData(productsData || []);
         setProducts(transformedProducts);
         setTotalProducts(count || 0);
@@ -77,6 +78,7 @@ export const useProducts = () => {
   const handleUpdateProduct = async (data: ProductFormValues) => {
     console.log(data)
    
+    
     if (!editingProduct) return;
 
     try {

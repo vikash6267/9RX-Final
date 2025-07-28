@@ -11,7 +11,7 @@ import { ImageUploadField } from "./form-fields/ImageUploadField"
 import { SizeOptionsField } from "./form-fields/SizeOptionsField"
 import { InventorySection } from "./form-sections/InventorySection"
 import { Loader2, Package, Save, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CustomizationSection } from "./form-fields/Customizations"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -62,6 +62,18 @@ export function AddProductDialog({
       image_url: initialData?.image_url || "",
     },
   })
+
+
+  const { watch } = form;
+
+useEffect(() => {
+  const subscription = watch((value, { name, type }) => {
+    console.log("📝 Changed field:", name);
+    console.log("📦 New form values:", value);
+  });
+
+  return () => subscription.unsubscribe(); // cleanup on unmount
+}, [watch]);
 
   const handleSubmit = async (values: ProductFormValues) => {
     setLoading(true)

@@ -25,7 +25,9 @@ const sizeSchema = z.object({
   price: z.number().min(0, "Price must be a positive number"),
   quantity: z.number().min(0, "Quantity must be at least 0"),
   size_unit: z.string().min(1, "Size unit is required"),
-  size_value: z.string().min(1, "Size value is required"),
+  size_value: z.string().min(1, "Size value is required"),  
+  groupIds: z.array(z.string()).optional().default([]), // ✅ here
+
 });
 
 const orderItemSchema = z.object({

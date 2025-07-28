@@ -92,52 +92,62 @@ const ProductShowcase = ({ groupShow,isEditing=false,form={} }: ProductShowcaseP
               safetyInfo: item.description || "",
             },
             quantityPerCase: item.quantity_per_case || 0,
-            sizes:
-            item.product_sizes
-            ?.map((size) => {
-              let newPrice = size.price; // Default price
-          
-              // Find applicable group for the user
-              const applicableGroup = groupData.find(
-                (group) =>
-                  group.group_ids.includes(ID) &&
-                  group.product_arrayjson.some((product) => product.product_id === size.id)
-              );
-          
-              // If applicable group is found, use new_price
-              if (applicableGroup) {
-                const groupProduct = applicableGroup.product_arrayjson.find(
-                  (product) => product.product_id === size.id
-                );
-          
-                if (groupProduct) {
-                  newPrice = parseFloat(groupProduct.new_price) || size.price;
-                }
-              }
-          
-              return {
-                id: size.id,
-                size_value: size.size_value,
-                size_unit: size.size_unit,
-                rolls_per_case: size.rolls_per_case,
-                sizeSquanence: size.sizeSquanence, // Sorting will be based on this field
-                price: newPrice,
-                originalPrice: size.price === newPrice ? 0 : size.price, // Track original price
-                sku: size.sku || "",
-                key_features: size.key_features || "",
-                squanence: size.squanence || "",
-                quantity_per_case: size.quantity_per_case,
-                pricePerCase: size.price_per_case,
-                price_per_case: size.price_per_case,
-                stock: size.stock,
-                image: size.image || "",
-                shipping_cost:Number(size.shipping_cost),
-                case:size.case,
-                unit:size.unit,
-              };
-            })
-            .sort((a, b) => a.sizeSquanence - b.sizeSquanence) || [], // Sorting by sizeSquanence
-          
+          sizes:
+  item.product_sizes
+    ?.filter((size) => {
+      const groupIds = size.groupIds || [];
+
+      // Size is public (no group restriction)
+      if (groupIds.length === 0) return true;
+
+      // Check if this user's ID exists in any group that includes them
+      return groupData.some((group) =>
+        group.group_ids.includes(ID) && groupIds.includes(group.id)
+      );
+    })
+    .map((size) => {
+      let newPrice = size.price;
+
+      const applicableGroup = groupData.find(
+        (group) =>
+          group.group_ids.includes(ID) &&
+          group.product_arrayjson.some((product) => product.product_id === size.id)
+      );
+
+      if (applicableGroup) {
+        const groupProduct = applicableGroup.product_arrayjson.find(
+          (product) => product.product_id === size.id
+        );
+
+        if (groupProduct) {
+          newPrice = parseFloat(groupProduct.new_price) || size.price;
+        }
+      }
+
+      return {
+        id: size.id,
+        size_value: size.size_value,
+        size_unit: size.size_unit,
+        rolls_per_case: size.rolls_per_case,
+        sizeSquanence: size.sizeSquanence,
+        price: newPrice,
+        originalPrice: size.price === newPrice ? 0 : size.price,
+        sku: size.sku || "",
+        key_features: size.key_features || "",
+        squanence: size.squanence || "",
+        quantity_per_case: size.quantity_per_case,
+        pricePerCase: size.price_per_case,
+        price_per_case: size.price_per_case,
+        stock: size.stock,
+        image: size.image || "",
+        shipping_cost: Number(size.shipping_cost),
+        case: size.case,
+        unit: size.unit,
+        groupIds: size.groupIds || [],
+      };
+    })
+    .sort((a, b) => a.sizeSquanence - b.sizeSquanence) || [],
+
             tierPricing: item.enable_tier_pricing
               ? {
                   tier1: { quantity: item.tier1_name || "", price: item.tier1_price || 0 },
