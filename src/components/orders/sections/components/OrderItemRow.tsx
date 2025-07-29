@@ -16,6 +16,7 @@ import { useCart } from "@/hooks/use-cart";
 interface OrderItemRowProps {
   index: number;
   isEditing?: boolean;
+  poIs?: boolean;
   form: UseFormReturn<OrderFormValues>;
   products: any[];
 }
@@ -25,6 +26,7 @@ export const OrderItemRow = ({
   form,
   products,
   isEditing,
+  poIs
 }: OrderItemRowProps) => {
   const allValues = form.getValues();
   const selectedProductId = form.getValues(`items.${index}`);
@@ -79,14 +81,14 @@ export const OrderItemRow = ({
             </p>
           )}
 
-          <Button
+     { poIs &&     <Button
             type="button"
             variant="outline"
             className="mt-2"
             onClick={() => setShowDialog(true)}
           >
             {selectedProductId.description ? "Edit" : "Add"} Description
-          </Button>
+          </Button>}
 
         </div>
 

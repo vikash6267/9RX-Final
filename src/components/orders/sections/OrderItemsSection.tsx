@@ -80,6 +80,7 @@ export function OrderItemsSection({ orderItems, form, setIsCus, isCus, isEditing
           form={form}
           products={products}
           isEditing={isEditing}
+          poIs={poIs}
         />
       ))}
     </div>
