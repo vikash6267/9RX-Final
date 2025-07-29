@@ -413,6 +413,9 @@ export function OrdersList({
               <span className="sr-only">Select</span>
             </TableHead>
           )}
+          {poIs && <TableHead className="font-semibold text-center border-gray-300">
+            Order Number
+          </TableHead>}
           <TableHead className="font-semibold text-center border-gray-300">
             {poIs ? "Vendor" : "Customer"} Name
           </TableHead>
@@ -463,6 +466,14 @@ export function OrdersList({
                 </TableCell>
               )}
 
+              {
+                poIs && <TableCell className="text-center border-gray-300" onClick={async () => {
+                  onOrderClick(order);
+                  await clearCart();
+                }}>
+                  {order.order_number}
+                </TableCell>
+              }
               <TableCell
                 onClick={async () => {
                   onOrderClick(order);
@@ -524,7 +535,7 @@ export function OrdersList({
                   </TableCell>
                   <TableCell className="text-center border-gray-300">
                     {order.shipping?.trackingNumber &&
-                    order?.shipping.method !== "custom" ? (
+                      order?.shipping.method !== "custom" ? (
                       <Button
                         variant="link"
                         className="p-0 h-auto font-normal"
@@ -561,7 +572,7 @@ export function OrdersList({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                        { order.status !=="cancelled" &&  <DropdownMenuItem
+                          {order.status !== "cancelled" && <DropdownMenuItem
                             onClick={() => handleCancelOrderClick(order.id)}
                             className="text-red-600 focus:text-red-600"
                           >

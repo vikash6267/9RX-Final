@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
-import { addToCart as addToCartAction, removeFromCart as removeFromCartAction, updateQuantity as updateQuantityAction, clearCart as clearCartAction } from '@/store/actions/cartActions';
+import { addToCart as addToCartAction, removeFromCart as removeFromCartAction, updateQuantity as updateQuantityAction, clearCart as clearCartAction, updateCartDescription as updateDescriptionAction,} from '@/store/actions/cartActions';
 import { CartItem } from '@/store/types/cartTypes';
 
 export const useCart = () => {
@@ -47,6 +47,15 @@ export const useCart = () => {
       return false;
     }
   };
+const updateDescription = async (productId: string, description: string) => {
+  try {
+    dispatch(updateDescriptionAction(productId, description));
+    return true;
+  } catch (error) {
+    console.error("Error updating description:", error);
+    return false;
+  }
+};
 
   return {
     cartItems,
@@ -54,5 +63,6 @@ export const useCart = () => {
     removeFromCart,
     updateQuantity,
     clearCart,
+    updateDescription
   };
 };

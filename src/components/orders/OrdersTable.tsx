@@ -49,12 +49,14 @@ export const OrdersTable = () => {
     fetchOrders();
   }, [toast]);
 
+  console.log("orders",orders )
   const filteredOrders = orders
     .filter((order) => (statusFilter === "all" ? true : order.status === statusFilter))
     .filter((order) =>
       searchQuery
         ? order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.id.toLowerCase().includes(searchQuery.toLowerCase())
+          order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.order_number.includes(searchQuery.toLowerCase())
         : true
     );
 

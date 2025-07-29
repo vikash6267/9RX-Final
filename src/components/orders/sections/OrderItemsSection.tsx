@@ -13,7 +13,7 @@ interface OrderItemsSectionProps {
   isCus?: boolean;
 }
 
-export function OrderItemsSection({ orderItems, form, setIsCus, isCus,isEditing,poIs }) {
+export function OrderItemsSection({ orderItems, form, setIsCus, isCus, isEditing, poIs }) {
   const [products, setProducts] = useState([]);
   const { toast } = useToast();
 
@@ -50,7 +50,7 @@ export function OrderItemsSection({ orderItems, form, setIsCus, isCus,isEditing,
             <input
               type="checkbox"
               checked={isCus}
-              onChange={() => {setIsCus?.((prev) => !prev) ; form.setFieldValue("customization", isCus);              }}
+              onChange={() => { setIsCus?.((prev) => !prev); form.setFieldValue("customization", isCus); }}
               className="sr-only"
             />
             {/* Switch Background */}

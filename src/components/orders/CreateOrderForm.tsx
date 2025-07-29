@@ -194,7 +194,7 @@ export function CreateOrderForm({
 
 
   const onSubmit = async (data: OrderFormValues) => {
-    console.log(data);
+    console.log(cartItems);
 
 
 

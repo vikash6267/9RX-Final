@@ -1,5 +1,5 @@
 import { createReducer } from '@reduxjs/toolkit';
-import { CartState, addToCart, removeFromCart, updateQuantity, clearCart, updatePrice } from '../types/cartTypes';
+import { CartState, addToCart, removeFromCart, updateQuantity, clearCart, updatePrice,updateDescription } from '../types/cartTypes';
 
 const initialState: CartState = {
   items: JSON.parse(localStorage.getItem("cartItems") || "[]"),
@@ -50,5 +50,14 @@ export const cartReducer = createReducer(initialState, (builder) => {
       }
       localStorage.setItem("cartItems", JSON.stringify(state.items)); // ✅ Save to localStorage
     })
+    .addCase(updateDescription, (state, action) => {
+  const { productId, description } = action.payload;
+  const product = state.items.find(item => item.productId === productId);
+  if (product) {
+    product.description = description;
+  }
+  localStorage.setItem("cartItems", JSON.stringify(state.items)); // ✅ Save to localStorage
+})
+
 
 });

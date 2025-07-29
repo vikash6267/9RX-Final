@@ -5,6 +5,7 @@ export interface CartItem {
   name: string;
   price: number;
   image: string;
+  description?: string;
   quantity: number;
   sizes: any[];
   customizations: Record<string, string>;
@@ -26,4 +27,9 @@ export const updateQuantity = createAction<{
   quantity: number;
   sizeId: string;
 }>("cart/updateQuantity");
+
+export const updateDescription = createAction<{
+  productId: string;
+  description: string;
+}>("cart/updateDescription");
 export const clearCart = createAction("cart/clearCart");
