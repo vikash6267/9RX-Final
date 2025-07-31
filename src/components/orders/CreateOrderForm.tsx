@@ -596,9 +596,14 @@ export function CreateOrderForm({
               </p>
 
               { <div>
-                <p onClick={() => setIsOpen(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
+               <div className=" flex gap-4">
+                 <p onClick={() => setIsOpen(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
                   Add Items
                 </p>
+               {!poIs && <p onClick={() => setIsCustom(true)} className="p-2 cursor-pointer bg-gray-600 text-white rounded">
+                  Add Additional Items
+                </p>}
+               </div>
 
                 <CustomProductForm isOpen={isCustom} onClose={() => setIsCustom(false)} isEditing={isEditing} form={form} />
               </div>}
