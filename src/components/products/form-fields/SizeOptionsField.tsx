@@ -11,6 +11,8 @@ import type { SizeOptionsFieldProps, NewSizeState } from "../types/size.types";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ruler } from "lucide-react";
+import Swal from "sweetalert2";
+import { ConfirmDialog } from "./components/ConfirmDeleteSize";
 
 export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => {
   const category = form.watch("category");
@@ -101,26 +103,37 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
     });
   };
 
+  const [confirmIndex, setConfirmIndex] = useState<number | null>(null);
+
   const handleRemoveSize = async (index: number) => {
+    setConfirmIndex(index);
+  };
+
+  const confirmDelete = async () => {
+    if (confirmIndex === null) return;
+
     const currentSizes = form.getValues("sizes") || [];
     const newSizes = [...currentSizes];
-    const removedSize = newSizes[index];
+    const removedSize = newSizes[confirmIndex];
 
-    newSizes.splice(index, 1);
+    newSizes.splice(confirmIndex, 1);
     form.setValue("sizes", newSizes, {
       shouldValidate: true,
       shouldDirty: true,
     });
 
     if (isEditing && removedSize?.id) {
-      const { error: deleteError } = await supabase.from("product_sizes").delete().eq("id", removedSize.id);
+      const { error: deleteError } = await supabase
+        .from("product_sizes")
+        .delete()
+        .eq("id", removedSize.id);
 
       if (deleteError) {
-        console.error("Error removing size:", deleteError);
         toast({
           title: "Error",
           description: "Failed to remove size.",
         });
+        setConfirmIndex(null);
         return;
       }
     }
@@ -129,24 +142,42 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
       title: "Size Removed",
       description: "Size variation has been removed.",
     });
+    setConfirmIndex(null);
   };
+
+
 
   const handleUpdateSize = (index: number, field: string, value: string | number | string[]) => { // Updated type for value
     const currentSizes = form.getValues("sizes") || [];
     const updatedSizes = [...currentSizes];
 
-    if (field === "price" || field === "quantity_per_case") {
-      const newPrice = field === "price" ? Number.parseFloat(value as string) : updatedSizes[index].price;
-      const newQuantity =
-        field === "quantity_per_case" ? Number.parseFloat(value as string) : updatedSizes[index].quantity_per_case;
+    let newPrice = updatedSizes[index].price;
+    let newQuantity = updatedSizes[index].quantity_per_case;
+    let rollsPerCase = updatedSizes[index].rolls_per_case;
 
-      const PPC = newQuantity > 0 ? (newPrice / newQuantity).toFixed(2) : "0.00";
-
-      updatedSizes[index] = {
-        ...updatedSizes[index],
-        price_per_case: Number(PPC),
-      };
+    if (field === "price") {
+      newPrice = Number.parseFloat(value as string);
     }
+    if (field === "quantity_per_case") {
+      newQuantity = Number.parseFloat(value as string);
+    }
+    if (field === "rolls_per_case") {
+      rollsPerCase = Number.parseFloat(value as string);
+    }
+
+    // Avoid division by zero
+    const PPC = rollsPerCase > 0 && newQuantity > 0
+      ? (newPrice / rollsPerCase / newQuantity).toFixed(2)
+      : "0.00";
+
+    updatedSizes[index] = {
+      ...updatedSizes[index],
+      price: newPrice,
+      quantity_per_case: newQuantity,
+      rolls_per_case: rollsPerCase,
+      price_per_case: Number(PPC),
+    };
+
 
     // Handle groupIds separately as it's an array
     // Handle groupIds separately as it's an array
@@ -227,6 +258,13 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
           )}
         />
       </CardContent>
+      <ConfirmDialog
+        open={confirmIndex !== null}
+        message="This size will be permanently deleted. Are you sure?"
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmIndex(null)}
+      />
+
     </Card>
   );
 };

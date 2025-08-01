@@ -492,9 +492,10 @@ export function CreateOrderForm({
       }
 
       // Reset form and local state
+      localStorage.removeItem("cart");
+      localStorage.removeItem("cartItems");
       window.location.reload();
 
-      localStorage.removeItem("cart");
 
       toast({
         title: "Order Created Successfully",
@@ -600,7 +601,7 @@ export function CreateOrderForm({
                  <p onClick={() => setIsOpen(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
                   Add Items
                 </p>
-               {!poIs && <p onClick={() => setIsCustom(true)} className="p-2 cursor-pointer bg-gray-600 text-white rounded">
+               {<p onClick={() => setIsCustom(true)} className="p-2 cursor-pointer bg-gray-600 text-white rounded">
                   Add Additional Items
                 </p>}
                </div>

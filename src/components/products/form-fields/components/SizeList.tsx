@@ -43,6 +43,7 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
   const [loading, setLoading] = useState<boolean>(false);
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
 
+  console.log(category)
   // Get the product name once from the form
   const productName = form?.getValues("name") || "Product"; // Use optional chaining for safety
 
@@ -244,7 +245,10 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
 
                   {/* Quantity per Case */}
                   <div>
-                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Q.Per Case</label>
+                  <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+  {category === "RX LABELS" ? "Q.Per Roll" : "Q.Per Case"}
+</label>
+
                     <Input
                       type="number"
                       value={size.quantity_per_case || 15}

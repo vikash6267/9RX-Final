@@ -11,7 +11,7 @@ import { InvoiceRowActions } from "./InvoiceRowActions";
 import { InvoiceTableHeader } from "./InvoiceTableHeader";
 import { SortConfig } from "../types/table.types";
 import { motion } from "framer-motion";
-import { Ban } from "lucide-react"
+import { AlertTriangle, Ban, XCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/components/orders/utils/statusUtils";
 import { useState } from "react";
@@ -35,7 +35,7 @@ export function InvoiceTableContent({
 }: InvoiceTableContentProps) {
   const [selectCustomerInfo, setSelectCustomerInfo] = useState<any>({});
   const [modalIsOpen, setModalIsOpen] = useState(false);
-
+  console.log("invoices", invoices)
   return (
     <div className="rounded-md border">
       <Table>
@@ -62,12 +62,22 @@ export function InvoiceTableContent({
                       : `${invoice.profiles?.first_name ?? ""} ${invoice.profiles?.last_name ?? ""}`.trim()}
                   </span>
 
+                  {/* Voided badge */}
                   {invoice.void && (
-                    <div className="mt-1 flex items-center gap-1 text-red-600 text-xs font-medium bg-red-100 px-2 py-1 rounded-full">
-                      <Ban size={14} className="stroke-[2.5]" />
+                    <div className="mt-1 flex items-center gap-1 text-yellow-800 text-xs font-medium bg-yellow-100 px-2 py-1 rounded-full">
+                      <AlertTriangle size={14} className="stroke-[2.5]" />
                       Voided
                     </div>
                   )}
+
+                  {/* Cancelled badge */}
+                  {!invoice.void && invoice.status === "cancelled" && (
+                    <div className="mt-1 flex items-center gap-1 text-red-700 text-xs font-medium bg-red-100 px-2 py-1 rounded-full">
+                      <XCircle size={14} className="stroke-[2.5]" />
+                      Cancelled
+                    </div>
+                  )}
+
                 </div>
               </TableCell>
               <TableCell className="text-center">${invoice.amount.toFixed(2)}</TableCell>
@@ -80,18 +90,20 @@ export function InvoiceTableContent({
                   <Badge variant="secondary" className={getStatusColor(invoice.orders?.payment_status || "")}>
                     {invoice.orders?.payment_status.toUpperCase() || "UNPAID"}
                   </Badge>
-                  {invoice.orders?.payment_status.toLowerCase() === "unpaid" && !invoice.orders.void && (
-                    <button
-                      onClick={() => {
-                        console.log("Cliced")
-                        setSelectCustomerInfo(invoice.orders);
-                        setModalIsOpen(true);
-                      }}
-                      className="bg-green-600 text-[14px] text-white px-5 py-1 rounded-md transition"
-                    >
-                      Pay
-                    </button>
-                  )}
+                  {
+                    invoice.orders?.payment_status.toLowerCase() === "unpaid"
+                    && !invoice.orders.void && invoice.status !== "cancelled" && (
+                      <button
+                        onClick={() => {
+                          console.log("Cliced")
+                          setSelectCustomerInfo(invoice.orders);
+                          setModalIsOpen(true);
+                        }}
+                        className="bg-green-600 text-[14px] text-white px-5 py-1 rounded-md transition"
+                      >
+                        Pay
+                      </button>
+                    )}
                 </div>
               </TableCell>
               <TableCell className="text-center">
@@ -133,16 +145,16 @@ export function InvoiceTableContent({
 
       </Table>
 
-         {modalIsOpen && selectCustomerInfo && (
-          <PaymentForm
-            modalIsOpen={modalIsOpen}
-            setModalIsOpen={setModalIsOpen}
-            customer={selectCustomerInfo.customerInfo}
-            amountP={selectCustomerInfo.total_amount}
-            orderId={selectCustomerInfo.id}
-            orders={selectCustomerInfo}
-          />
-        )}
+      {modalIsOpen && selectCustomerInfo && (
+        <PaymentForm
+          modalIsOpen={modalIsOpen}
+          setModalIsOpen={setModalIsOpen}
+          customer={selectCustomerInfo.customerInfo}
+          amountP={selectCustomerInfo.total_amount}
+          orderId={selectCustomerInfo.id}
+          orders={selectCustomerInfo}
+        />
+      )}
     </div>
   );
 }
