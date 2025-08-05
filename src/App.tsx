@@ -43,7 +43,42 @@ import Expenses from "./pages/admin/Expenses";
 import AdminLogs from "./pages/admin/AdminLogs";
 import ProductDetails from "./pages/ProductDetails";
 
+export let CATEGORY_CONFIGS: Record<
+  string,
+  {
+    sizeUnits: string[];
+    defaultUnit: string;
+    hasRolls: boolean;
+    requiresCase: boolean;
+  }
+> = {};
+export let PRODUCT_CATEGORIES: string[] = [];
 
+// Function to fetch and set CATEGORY_CONFIGS
+export async function fetchCategoryConfigs() {
+  const { data, error } = await supabase
+    .from('category_configs')
+    .select('*');
+
+    console.log(data,"DATA")
+  if (error) {
+    console.error('❌ Failed to load CATEGORY_CONFIGS:', error.message);
+    return;
+  }
+  PRODUCT_CATEGORIES = data.map((row) => row.category_name);
+
+  CATEGORY_CONFIGS = data.reduce((acc, row) => {
+    acc[row.category_name] = {
+      sizeUnits: row.size_units,
+      defaultUnit: row.default_unit,
+      hasRolls: row.has_rolls,
+      requiresCase: row.requires_case
+    };
+    return acc;
+  }, {} as typeof CATEGORY_CONFIGS);
+
+  console.log('✅ CATEGORY_CONFIGS loaded:', CATEGORY_CONFIGS);
+}
 // Protected route wrapper component
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) => {
   const location = useLocation();
@@ -69,9 +104,10 @@ function App() {
 
   useEffect(() => {
 
-   
-    
-      
+
+  fetchCategoryConfigs();
+
+
     // Clear any expired sessions
     const lastActivity = sessionStorage.getItem('lastActivity');
     if (lastActivity && Date.now() - parseInt(lastActivity) > 24 * 60 * 60 * 1000) {
@@ -86,12 +122,15 @@ function App() {
     }
   }, [location.pathname, toast]);
 
+
+
+
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Index />} />
 
-                <Route path="/product/:id" element={<ProductDetails />} />
+      <Route path="/product/:id" element={<ProductDetails />} />
 
       <Route path="/login" element={<Login />} />
       <Route path="/activation" element={<ActivationUser />} />
@@ -101,7 +140,7 @@ function App() {
       <Route path="/pay-now" element={<PayNowOrder />} />
       <Route path="/products" element={<Products />} />
       <Route path="/cart-price" element={<CartItemsPricing />} />
-      
+
       {/* Admin Routes */}
       <Route path="/admin/dashboard" element={
         <ProtectedRoute allowedRoles={['admin']}>
@@ -139,13 +178,13 @@ function App() {
         </ProtectedRoute>
       } />
 
-      
+
       <Route path="/admin/po" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <AdminOrders />
         </ProtectedRoute>
       } />
- 
+
       <Route path="/admin/invoices" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <AdminInvoices />
@@ -161,7 +200,7 @@ function App() {
           <AdminSettings />
         </ProtectedRoute>
       } />
-      
+
       {/* Pharmacy Routes */}
       <Route path="/pharmacy/dashboard" element={
         <ProtectedRoute allowedRoles={['pharmacy']}>
@@ -194,7 +233,7 @@ function App() {
         </ProtectedRoute>
       } />
 
-           <Route path="/pharmacy/invoices" element={
+      <Route path="/pharmacy/invoices" element={
         <ProtectedRoute allowedRoles={['pharmacy']}>
           <PharmacyInvoices />
         </ProtectedRoute>
@@ -217,7 +256,7 @@ function App() {
       } />
 
 
-<Route path="/group/invoices" element={
+      <Route path="/group/invoices" element={
         <ProtectedRoute allowedRoles={['group']}>
           <PharmacyInvoices />
         </ProtectedRoute>
@@ -227,7 +266,7 @@ function App() {
           <GroupOrders />
         </ProtectedRoute>
       } />
-        <Route path="/group/products" element={
+      <Route path="/group/products" element={
         <ProtectedRoute allowedRoles={['group']}>
           <GroupProducts />
         </ProtectedRoute>
@@ -252,7 +291,7 @@ function App() {
           <Staff />
         </ProtectedRoute>
       } />
-      
+
       {/* Hospital Routes */}
       <Route path="/hospital/dashboard" element={
         <ProtectedRoute allowedRoles={['hospital']}>

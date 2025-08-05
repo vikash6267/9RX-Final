@@ -2,7 +2,7 @@
 "use client";
 
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { CATEGORY_CONFIGS } from "../schemas/productSchema";
+
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { AddSizeForm } from "./components/AddSizeForm";
@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ruler } from "lucide-react";
 import Swal from "sweetalert2";
 import { ConfirmDialog } from "./components/ConfirmDeleteSize";
+import { CATEGORY_CONFIGS } from "@/App";
 
 export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => {
   const category = form.watch("category");
@@ -20,7 +21,7 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
 
   const [newSize, setNewSize] = useState<NewSizeState>({
     size_value: "",
-    size_unit: categoryConfig.defaultUnit,
+    size_unit: categoryConfig?.defaultUnit || "",
     price: "",
     sku: "",
     pricePerCase: "",

@@ -117,6 +117,40 @@ export type Database = {
           }
         ];
       };
+      category_configs: {
+        Row: {
+          id: string;
+          category_name: string;
+          size_units: string[]; // assuming it's stored as text[] in PostgreSQL
+          default_unit: string;
+          has_rolls: boolean;
+          requires_case: boolean;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          category_name: string;
+          size_units: string[];
+          default_unit: string;
+          has_rolls: boolean;
+          requires_case: boolean;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          category_name?: string;
+          size_units?: string[];
+          default_unit?: string;
+          has_rolls?: boolean;
+          requires_case?: boolean;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+
       customers: {
         Row: {
           created_at: string | null;
@@ -351,7 +385,7 @@ export type Database = {
         Row: {
           contact_email: string | null;
           contact_phone: string | null;
-          
+
           created_at: string | null;
           id: string;
           manager: string | null;
@@ -562,9 +596,9 @@ export type Database = {
           shipping_cost: number | null;
           size_unit: string;
           sku: any;
-unit?: boolean;
-  groupIds?: string[];
-  case?: boolean;
+          unit?: boolean;
+          groupIds?: string[];
+          case?: boolean;
           size_value: string;
           stock: number;
           updated_at: string | null;
@@ -581,9 +615,9 @@ unit?: boolean;
           shipping_cost?: number | null;
           size_unit: string;
           sku: any;
-unit?: boolean;
-  groupIds?: string[];
-  case?: boolean;
+          unit?: boolean;
+          groupIds?: string[];
+          case?: boolean;
           size_value: string;
           stock?: number;
           updated_at?: string | null;
@@ -601,9 +635,9 @@ unit?: boolean;
           size_unit?: string;
           size_value?: string;
           sku: any;
-unit?: boolean;
-  groupIds?: string[];
-  case?: boolean;
+          unit?: boolean;
+          groupIds?: string[];
+          case?: boolean;
           stock?: number;
           updated_at?: string | null;
         };
@@ -1001,31 +1035,31 @@ unit?: boolean;
       };
       expenses: {
         Row: {
-          amount: number
-          created_at: string
-          date: string
-          description: string | null
-          id: string
-          name: string
-        }
+          amount: number;
+          created_at: string;
+          date: string;
+          description: string | null;
+          id: string;
+          name: string;
+        };
         Insert: {
-          amount?: number
-          created_at?: string
-          date: string
-          description?: string | null
-          id?: string
-          name: string
-        }
+          amount?: number;
+          created_at?: string;
+          date: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+        };
         Update: {
-          amount?: number
-          created_at?: string
-          date?: string
-          description?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
+          amount?: number;
+          created_at?: string;
+          date?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

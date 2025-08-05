@@ -244,16 +244,16 @@ export default function VendorDialogForm({ vendor, mode = "add", onSubmit }: Ven
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-1">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="basic" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Basic Info
                 </TabsTrigger>
-                {/* <TabsTrigger value="billing" className="flex items-center gap-2">
+                <TabsTrigger value="billing" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Billing
                 </TabsTrigger>
-                <TabsTrigger value="shipping" className="flex items-center gap-2">
+                {/* <TabsTrigger value="shipping" className="flex items-center gap-2">
                   <Truck className="h-4 w-4" />
                   Shipping
                 </TabsTrigger> */}

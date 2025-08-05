@@ -10,7 +10,7 @@ import { PaymentSection } from "./sections/PaymentSection";
 import { ShippingSection } from "./sections/ShippingSection";
 import { OrderFormActions } from "./form/OrderFormActions";
 import { useNavigate } from "react-router-dom";
-import { generateOrderId, calculateOrderTotal } from "./utils/orderUtils";
+import { generateOrderId, calculateOrderTotal,generatePurchaseOrderId } from "./utils/orderUtils";
 import {
   validateOrderItems,
   useOrderValidation,
@@ -248,7 +248,7 @@ export function CreateOrderForm({
       };
 
       // const orderNumber = "DEV-TEST123";
-      const orderNumber = poIs ? generateUniqueOrderNumber() : await generateOrderId();
+      const orderNumber = poIs ? await generatePurchaseOrderId() : await generateOrderId();
 
       if (!userProfile?.id) return
       let profileID = userProfile?.id
@@ -296,6 +296,8 @@ export function CreateOrderForm({
       const newOrder = orderResponse[0];
       console.log("Order saved:", newOrder);
 
+
+      // !poIs
       if (!poIs) {
         const year = new Date().getFullYear(); // Get current year (e.g., 2025)
 
@@ -455,6 +457,80 @@ export function CreateOrderForm({
 
         }
       }
+
+
+      if(poIs && false){
+
+
+          const estimatedDeliveryDate = new Date(newOrder.estimated_delivery);
+
+        // Calculate the due_date by adding 30 days to the estimated delivery
+        const dueDate = new Date(estimatedDeliveryDate);
+        dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
+
+        // Format the due_date as a string in ISO 8601 format with time zone (UTC in this case)
+        const formattedDueDate = dueDate.toISOString(); // Example: "2025-04-04T13:45:00.000Z"
+
+        const invoiceData = {
+          invoice_number: `INV-${orderNumber}`,
+          order_id: newOrder.id,
+          due_date: formattedDueDate,
+          profile_id: newOrder.profile_id,
+          status: "pending" as InvoiceStatus,
+          amount: parseFloat(calculatedTotal + newtax) || 0,
+          tax_amount: orderData.tax_amount || 0,
+          total_amount: parseFloat(calculatedTotal + newtax),
+          payment_status: newOrder.payment_status,
+          payment_method: newOrder.paymentMethod as PaymentMethod,
+          payment_notes: newOrder.notes || null,
+          items: newOrder.items || [],
+          customer_info: newOrder.customerInfo || {
+            name: newOrder.customerInfo?.name,
+            email: newOrder.customerInfo?.email || "",
+            phone: newOrder.customerInfo?.phone || "",
+          },
+          shipping_info: orderData.shippingAddress || {},
+          shippin_cost: totalShippingCost,
+          subtotal:
+            calculatedTotal + newtax + (isCus ? 0.5 : 0) ||
+            parseFloat(calculatedTotal + newtax + (isCus ? 0.5 : 0)),
+        };
+
+
+        const { invoicedata2, error } = await supabase
+          .from("invoices")
+          .insert(invoiceData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Error creating invoice:", error);
+          throw error;
+        }
+
+
+
+        // Prepare and save order items
+        const orderItemsData = cleanedCartItems.map((item) => ({
+          order_id: newOrder.id,
+          product_id: item.productId,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.quantity * item.price,
+          notes: item.notes,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItemsData);
+
+        if (itemsError) {
+          throw new Error(itemsError.message);
+        }
+
+      }
+
+
 
       if (!poIs) {
         for (const item of data.items) {

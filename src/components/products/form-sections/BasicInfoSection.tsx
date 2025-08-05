@@ -4,10 +4,14 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PRODUCT_CATEGORIES } from "@/types/product"
+
 import type { UseFormReturn } from "react-hook-form"
 import type { ProductFormValues } from "../schemas/productSchema"
 import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import CategorySelectorDialog from "./AddCategory"
+import { PRODUCT_CATEGORIES } from "@/App"
 
 interface BasicInfoSectionProps {
   form: UseFormReturn<ProductFormValues>
@@ -15,16 +19,26 @@ interface BasicInfoSectionProps {
 }
 
 export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) => {
+    const [openDialog, setOpenDialog] = useState(false);
+
   return (
     <Card className="border-0 shadow-none bg-gray-50/50">
       <CardContent className="p-6 space-y-6">
+
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="category"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">Product Category *</FormLabel>
+              <div className="flex gap-4 justify-between items-center">
+                  <FormLabel className="text-sm font-semibold text-gray-700">Product Category *</FormLabel>
+
+              <Button onClick={() => setOpenDialog(true)}>Add New</Button>
+
+              </div>
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value)
@@ -134,6 +148,13 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
           )}
         />
       </CardContent>
+       <CategorySelectorDialog
+        open={openDialog}
+        onOpenChange={setOpenDialog}
+        onAddSuccess={() => {
+          // Optional: refresh data in parent
+        }}
+      />
     </Card>
   )
 }

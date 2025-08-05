@@ -52,13 +52,13 @@ export const CATEGORY_CONFIGS = {
     requiresCase: true,
   },
   "INSULATED SHIPPING KIT": {
-    sizeUnits: ["unit","OZ","mm","mL","cc","inch","gram"],
+    sizeUnits: ["unit", "OZ", "mm", "mL", "cc", "inch", "gram"],
     defaultUnit: "unit",
     hasRolls: false,
     requiresCase: false,
   },
   OTHER: {
-    sizeUnits: ["unit","OZ","mm","mL","cc","inch","gram"],
+    sizeUnits: ["unit", "OZ", "mm", "mL", "cc", "inch", "gram"],
     defaultUnit: "unit",
     hasRolls: false,
     requiresCase: false,
@@ -70,17 +70,22 @@ export const customizationOptionSchema = z.object({
   name: z.string().min(1, "Name is required"),
   type: z.enum(["text", "color", "dropdown"]),
   required: z.boolean().default(false),
-  price: z.number().min(0, "Price must be greater than or equal to 0").default(0),
+  price: z
+    .number()
+    .min(0, "Price must be greater than or equal to 0")
+    .default(0),
   options: z.array(z.string()).optional(),
   maxLength: z.number().optional(),
 });
 
 export const customizationSchema = z.object({
   allowed: z.boolean().default(false),
-  price: z.number().min(0, "Price must be greater than or equal to 0").default(0),
+  price: z
+    .number()
+    .min(0, "Price must be greater than or equal to 0")
+    .default(0),
   options: z.array(customizationOptionSchema).default([]),
 });
-
 
 export const productFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -88,7 +93,7 @@ export const productFormSchema = z.object({
   sku: z.string().min(2, "SKU must be at least 2 characters"),
   key_features: z.string().min(2, "key features must be at least 2 characters"),
   squanence: z.any().optional(),
- 
+
   category: z.string(),
   images: z.array(z.string()).default([]),
   sizes: z
@@ -100,7 +105,7 @@ export const productFormSchema = z.object({
         sku: z.string(),
         image: z.string().optional(),
         price: z.coerce.number().min(0, "Price must be positive"),
-groupIds: z.array(z.string().uuid()).optional().default([]),
+        groupIds: z.array(z.string().uuid()).optional().default([]),
 
         price_per_case: z.coerce
           .number()
@@ -111,7 +116,7 @@ groupIds: z.array(z.string().uuid()).optional().default([]),
         rolls_per_case: z.coerce
           .number()
           .min(0, "Rolls per case must be positive"),
-          sizeSquanence: z.coerce
+        sizeSquanence: z.coerce
           .number()
           .min(0, "sizeSquanence must be positive"),
         shipping_cost: z.coerce

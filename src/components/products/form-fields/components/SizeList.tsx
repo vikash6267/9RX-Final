@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X, Edit3, Package, DollarSign, Warehouse, BarChart3, Printer } from "lucide-react"; // Added Printer icon
-import { CATEGORY_CONFIGS } from "../../schemas/productSchema";
+import { CATEGORY_CONFIGS } from "@/App";
 import { SizeImageUploader } from "../SizeImageUploader";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
@@ -128,7 +128,7 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                 </div>
 
                 {/* Rolls per case if applicable */}
-                {categoryConfig.hasRolls && size.rolls_per_case && (
+                {categoryConfig?.hasRolls && size.rolls_per_case && (
                   <Badge variant="secondary" className="text-xs">
                     {size.rolls_per_case} Rolls/CS
                   </Badge>
@@ -285,7 +285,7 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                   </div>
 
                   {/* Rolls per Case - Conditional */}
-                  {categoryConfig.hasRolls && (
+                  {categoryConfig?.hasRolls && (
                     <div>
                       <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Rolls/CS</label>
                       <Input
