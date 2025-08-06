@@ -35,6 +35,10 @@ export const fetchProductsService = async (
 
 export const addProductService = async (data: ProductFormValues) => {
   const productData = {
+     ...(data.ndcCode && { ndcCode: data.ndcCode }),
+  ...(data.upcCode && { upcCode: data.upcCode }),
+  ...(data.lotNumber && { lotNumber: data.lotNumber }),
+  ...(data.exipry && { exipry: data.exipry }),
     sku: data.sku,
     key_features: data.key_features,
     squanence: data.squanence,
@@ -83,6 +87,7 @@ export const addProductService = async (data: ProductFormValues) => {
       case: size.case ,
       unit: size.unit ,
       groupIds: size.groupIds ,
+      disAllogroupIds: size.disAllogroupIds ,
     }));
 
     const { error: sizesError } = await supabase
@@ -164,6 +169,7 @@ export const updateProductService = async (
           shipping_cost: size.shipping_cost,
             case: size.case ,
       groupIds: size.groupIds ,
+      disAllogroupIds: size.disAllogroupIds ,
       unit: size.unit ,
         })));
     
@@ -191,6 +197,7 @@ export const updateProductService = async (
           shipping_cost: size.shipping_cost,
             case: size.case,
       groupIds: size.groupIds ,
+      disAllogroupIds: size.disAllogroupIds ,
       unit: size.unit ,
         })
         .eq("id", size.id);

@@ -92,19 +92,26 @@ const ProductShowcase = ({ groupShow,isEditing=false,form={} }: ProductShowcaseP
               safetyInfo: item.description || "",
             },
             quantityPerCase: item.quantity_per_case || 0,
-          sizes:
-  item.product_sizes
-    ?.filter((size) => {
-      const groupIds = size.groupIds || [];
+         sizes: item.product_sizes
+  ?.filter((size) => {
+    const groupIds = size.groupIds || [];
+    const disAllowGroupIds = size.disAllogroupIds || [];
 
-      // Size is public (no group restriction)
-      if (groupIds.length === 0) return true;
+    // ❌ If any group in disAllowGroupIds includes this user, skip this size
+    const isDisallowed = groupData.some(
+      (group) => disAllowGroupIds.includes(group.id) && group.group_ids.includes(ID)
+    );
+    if (isDisallowed) return false;
 
-      // Check if this user's ID exists in any group that includes them
-      return groupData.some((group) =>
-        group.group_ids.includes(ID) && groupIds.includes(group.id)
-      );
-    })
+    // ✅ If size has no group restriction, it's public
+    if (groupIds.length === 0) return true;
+
+    // ✅ Allow if this user is part of any allowed group
+    return groupData.some(
+      (group) => group.group_ids.includes(ID) && groupIds.includes(group.id)
+    );
+  })
+
     .map((size) => {
       let newPrice = size.price;
 

@@ -26,6 +26,7 @@ interface Size {
   sizeSquanence?: number;
   shipping_cost?: number;
   groupIds?: string[];
+  disAllogroupIds?: string[];
 }
 
 interface SizeListProps {
@@ -45,8 +46,12 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
 
   console.log(category)
   // Get the product name once from the form
-  const productName = form?.getValues("name") || "Product"; // Use optional chaining for safety
-
+  const productName = form?.getValues("name") || "Product";
+  const productUPCcode = form?.getValues("upcCode") || "";
+  const productNdcCode = form?.getValues("ndcCode") || "";
+  const productExpiry = form?.getValues("exipry") || "";
+  const productLotNumber = form?.getValues("lotNumber") || "";
+console.log("productUPCcode",productUPCcode)
   if (sizes.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -144,7 +149,15 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                   size="sm"
                   onClick={async () => {
                     try {
-                      await generateSingleProductLabelPDF(productName, size);
+                      await generateSingleProductLabelPDF(
+                        productName,
+                        size,
+                        productUPCcode,
+                        productNdcCode,
+                        productExpiry,
+                        productLotNumber
+                      );
+
                       // Optional: Add a success toast
                       console.log(`Label for ${size.sku || size.size_value} downloaded!`);
                     } catch (error) {
@@ -245,9 +258,9 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
 
                   {/* Quantity per Case */}
                   <div>
-                  <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-  {category === "RX LABELS" ? "Q.Per Roll" : "Q.Per Case"}
-</label>
+                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      {category === "RX LABELS" ? "Q.Per Roll" : "Q.Per Case"}
+                    </label>
 
                     <Input
                       type="number"
@@ -337,6 +350,31 @@ export const SizeList = ({ sizes = [], onRemoveSize, onUpdateSize, category, set
                       onChange={(selected) => {
                         const selectedIds = selected.map((option) => option.value);
                         onUpdateSize(index, "groupIds", selectedIds);
+                      }}
+                      className="react-select-container text-sm"
+                      classNamePrefix="react-select"
+                      placeholder="Select groups..."
+                    />
+                  </div>
+
+
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1 block">
+                      Disallowed Groups
+                    </label>
+                    <Select
+                      isMulti
+                      options={groups.map((group) => ({
+                        label: group.name,
+                        value: group.id,
+                      }))}
+                      value={size.disAllogroupIds.map((id) => {
+                        const group = groups.find((g) => g.id === id);
+                        return group ? { label: group.name, value: group.id } : { label: id, value: id };
+                      })}
+                      onChange={(selected) => {
+                        const selectedIds = selected.map((option) => option.value);
+                        onUpdateSize(index, "disAllogroupIds", selectedIds);
                       }}
                       className="react-select-container text-sm"
                       classNamePrefix="react-select"

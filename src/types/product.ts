@@ -18,6 +18,10 @@ export interface Product {
   sku: string;
   key_features: string;
   squanence?: string;
+   ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
   name: string;
   description: string;
   category: string;

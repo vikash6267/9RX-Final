@@ -27,6 +27,7 @@ export interface ProductSize {
   quantity_per_case: number;
   unit?: boolean;
   groupIds?: string[];
+  disAllogroupIds?: string[];
   case?: boolean;
   price_per_case: number;
   pricePerCase: any;
@@ -45,6 +46,10 @@ export interface ProductDetails {
   sku: string;
   key_features: string;
   squanence:string;
+   ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
   images: string[];
   image_url: string;
   endsIn: string;

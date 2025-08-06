@@ -19,7 +19,7 @@ interface BasicInfoSectionProps {
 }
 
 export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) => {
-    const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   return (
     <Card className="border-0 shadow-none bg-gray-50/50">
@@ -33,12 +33,12 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
             name="category"
             render={({ field }) => (
               <FormItem>
-              <div className="flex gap-4 justify-between items-center">
+                <div className="flex gap-4 justify-between items-center">
                   <FormLabel className="text-sm font-semibold text-gray-700">Product Category *</FormLabel>
 
-              <Button onClick={() => setOpenDialog(true)}>Add New</Button>
+                  {<Button onClick={() => setOpenDialog(true)}>Add New</Button>}
 
-              </div>
+                </div>
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value)
@@ -82,7 +82,7 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
           <FormField
             control={form.control}
             name="sku"
@@ -90,7 +90,40 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
               <FormItem>
                 <FormLabel className="text-sm font-semibold text-gray-700">Product Code *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Auto-generated SKU" className="h-11 font-mono" {...field} />
+                  <Input placeholder="Enter product code" className="h-11 font-mono" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* <FormField
+            control={form.control}
+            name="squanence"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-semibold text-gray-700">Product Sequence</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter sequence number" className="h-11" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+        </div>
+
+
+
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="ndcCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-semibold text-gray-700">NDC Code</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter NDC code" className="h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -99,12 +132,47 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
 
           <FormField
             control={form.control}
-            name="squanence"
+            name="upcCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">Product Sequence</FormLabel>
+                <FormLabel className="text-sm font-semibold text-gray-700">UPC Code</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter sequence number" className="h-11" {...field} />
+                  <Input placeholder="Enter UPC code" className="h-11" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="lotNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-semibold text-gray-700">Lot Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter lot number" className="h-11" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="exipry"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-semibold text-gray-700">Expiry Date</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    className="h-11"
+                    {...field}
+                    value={field.value ? field.value.slice(0, 10) : ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,7 +216,7 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
           )}
         />
       </CardContent>
-       <CategorySelectorDialog
+      <CategorySelectorDialog
         open={openDialog}
         onOpenChange={setOpenDialog}
         onAddSuccess={() => {

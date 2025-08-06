@@ -90,9 +90,14 @@ export const customizationSchema = z.object({
 export const productFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  sku: z.string().min(2, "SKU must be at least 2 characters"),
+  sku: z.string().min(2, "Product code must be at least 2 characters"),
   key_features: z.string().min(2, "key features must be at least 2 characters"),
   squanence: z.any().optional(),
+  
+  ndcCode: z.any().optional(),
+  upcCode: z.any().optional(),
+  lotNumber: z.any().optional(),
+  exipry: z.any().optional(),
 
   category: z.string(),
   images: z.array(z.string()).default([]),
@@ -106,6 +111,7 @@ export const productFormSchema = z.object({
         image: z.string().optional(),
         price: z.coerce.number().min(0, "Price must be positive"),
         groupIds: z.array(z.string().uuid()).optional().default([]),
+        disAllogroupIds: z.array(z.string().uuid()).optional().default([]),
 
         price_per_case: z.coerce
           .number()

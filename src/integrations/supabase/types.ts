@@ -598,6 +598,7 @@ export type Database = {
           sku: any;
           unit?: boolean;
           groupIds?: string[];
+          disAllogroupIds?: string[];
           case?: boolean;
           size_value: string;
           stock: number;
@@ -617,6 +618,7 @@ export type Database = {
           sku: any;
           unit?: boolean;
           groupIds?: string[];
+          disAllogroupIds?: string[];
           case?: boolean;
           size_value: string;
           stock?: number;
@@ -637,6 +639,7 @@ export type Database = {
           sku: any;
           unit?: boolean;
           groupIds?: string[];
+          disAllogroupIds?: string[];
           case?: boolean;
           stock?: number;
           updated_at?: string | null;
@@ -675,6 +678,10 @@ export type Database = {
           key_features: string;
           squanence: string;
           updated_at: string | null;
+           ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
         };
         Insert: {
           base_price?: number;
@@ -698,6 +705,10 @@ export type Database = {
           sku: string;
           key_features: string;
           squanence: string;
+           ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
           updated_at?: string | null;
         };
         Update: {
@@ -722,6 +733,10 @@ export type Database = {
           sku?: string;
           key_features?: string;
           squanence?: string;
+           ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
           updated_at?: string | null;
         };
         Relationships: [];

@@ -27,6 +27,7 @@ const sizeSchema = z.object({
   size_unit: z.string().min(1, "Size unit is required"),
   size_value: z.string().min(1, "Size value is required"),  
   groupIds: z.array(z.string()).optional().default([]), // ✅ here
+  disAllogroupIds: z.array(z.string()).optional().default([]), // ✅ here
 
 });
 

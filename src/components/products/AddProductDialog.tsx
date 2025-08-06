@@ -42,6 +42,11 @@ export function AddProductDialog({
       sku: initialData?.sku || "",
       key_features: initialData?.key_features || "",
       squanence: initialData?.squanence || "",
+      ndcCode: initialData?.ndcCode || "",
+      upcCode: initialData?.upcCode || "",
+      lotNumber: initialData?.lotNumber || "",
+      exipry: initialData?.exipry || "",
+
       description: initialData?.description || "",
       category: initialData?.category || "",
       images: initialData?.images || [],
@@ -66,19 +71,20 @@ export function AddProductDialog({
 
   const { watch } = form;
 
-useEffect(() => {
-  const subscription = watch((value, { name, type }) => {
-    console.log("📝 Changed field:", name);
-    console.log("📦 New form values:", value);
-  });
+  useEffect(() => {
+    const subscription = watch((value, { name, type }) => {
+      console.log("📝 Changed field:", name);
+      console.log("📦 New form values:", value);
+    });
 
-  return () => subscription.unsubscribe(); // cleanup on unmount
-}, [watch]);
+    return () => subscription.unsubscribe(); // cleanup on unmount
+  }, [watch]);
 
   const handleSubmit = async (values: ProductFormValues) => {
     setLoading(true)
     try {
       await onSubmit(values)
+      return
       form.reset()
       onProductAdded()
       onOpenChange(false)

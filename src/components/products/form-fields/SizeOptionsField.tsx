@@ -32,6 +32,7 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
     shipping_cost: "0",
     image: "",
     groupIds: [], // Initialize as an empty array
+    disAllogroupIds: [], 
     sizeSquanence: "",
     unit: false, // default selected
     case: true,
@@ -66,6 +67,7 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
       unit: newSize.unit || false,
       case: newSize.case || false,
       groupIds: newSize.groupIds || [], // Ensure groupIds are passed
+      disAllogroupIds: newSize.disAllogroupIds || [], // Ensure groupIds are passed
     } as const;
 
     if (!sizeToAdd.size_value || !sizeToAdd.size_unit) {
@@ -96,6 +98,7 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
       shipping_cost: "0",
       image: "",
       groupIds: [], // Reset groupIds after adding
+      disAllogroupIds: [], // Reset groupIds after adding
     });
 
     toast({
@@ -182,11 +185,12 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
 
     // Handle groupIds separately as it's an array
     // Handle groupIds separately as it's an array
-    if (field === "groupIds") {
+    if (field === "groupIds" || field ==="disAllogroupIds") {
       updatedSizes[index] = {
         ...updatedSizes[index],
         [field]: value as string[], // Cast to string[]
       };
+ 
     } else {
       const parsedValue =
         typeof value === "string" &&
@@ -247,6 +251,7 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
                   quantity_per_case: size?.quantity_per_case || 0,
                   stock: size.stock || 0,
                   groupIds: size.groupIds || [], // Ensure groupIds are initialized
+                  disAllogroupIds: size.disAllogroupIds || [], // Ensure groupIds are initialized
                 }))}
                 onRemoveSize={handleRemoveSize}
                 onUpdateSize={handleUpdateSize}

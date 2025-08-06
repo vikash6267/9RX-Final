@@ -14,6 +14,7 @@ export interface NewSizeState {
   pricePerCase: string;
   sku?: any;
   groupIds?: string[]; // Add this line
+  disAllogroupIds?: string[]; // Add this line
   sizeSquanence?: any;
   unit?: boolean;
   case?: boolean;
