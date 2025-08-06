@@ -136,7 +136,7 @@ const filteredUsers = users.filter((user) => {
     user.email.toLowerCase().includes(searchTerm.toLowerCase());
   const matchesType = filterType === "all" || user.type.toLowerCase() === filterType.toLowerCase();
   const matchesStatus = filterStatus === "all" || user.status.toLowerCase() === filterStatus.toLowerCase();
-  return isNotVendor && matchesSearch && matchesType && matchesStatus;
+  return  matchesSearch && matchesType && matchesStatus;
 });
 
 

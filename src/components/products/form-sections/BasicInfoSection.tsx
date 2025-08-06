@@ -36,7 +36,7 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
                 <div className="flex gap-4 justify-between items-center">
                   <FormLabel className="text-sm font-semibold text-gray-700">Product Category *</FormLabel>
 
-                  {<Button onClick={() => setOpenDialog(true)}>Add New</Button>}
+                  {<Button onClick={() => setOpenDialog(true)}>Add Category</Button>}
 
                 </div>
                 <Select

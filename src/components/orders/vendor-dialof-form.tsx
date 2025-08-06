@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -68,14 +68,14 @@ const defaultValues: VendorFormData = {
   workPhone: "",
   mobilePhone: "",
   billingAddress: {
-    attention: "9RX",
-    countryRegion: "USA",
-    street1: "936 Broad River Ln",
+    attention: "",
+    countryRegion: "",
+    street1: "",
     street2: "",
-    city: "Charlotte",
-    state: "NC",
-    zip_code: "28211",
-    phone: "1 800 969 6295",
+    city: "",
+    state: "",
+    zip_code: "",
+    phone: "",
     faxNumber: "",
   },
   shippingAddress: {
@@ -111,6 +111,10 @@ export default function VendorDialogForm({ vendor, mode = "add", onSubmit }: Ven
   })
 
   const watchSameAsShipping = form.watch("sameAsShipping")
+
+
+
+
 
   // const handleSubmit = (data: VendorFormData) => {
   //   console.log("Form submitted:", data)
@@ -251,7 +255,7 @@ export default function VendorDialogForm({ vendor, mode = "add", onSubmit }: Ven
                 </TabsTrigger>
                 <TabsTrigger value="billing" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  Billing
+                  Address
                 </TabsTrigger>
                 {/* <TabsTrigger value="shipping" className="flex items-center gap-2">
                   <Truck className="h-4 w-4" />
@@ -263,8 +267,8 @@ export default function VendorDialogForm({ vendor, mode = "add", onSubmit }: Ven
               <TabsContent value="basic" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>Basic vendor contact details</CardDescription>
+                    <CardTitle>Vendor Information</CardTitle>
+                    {/* <CardDescription>Basic vendor contact details</CardDescription> */}
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -356,8 +360,8 @@ export default function VendorDialogForm({ vendor, mode = "add", onSubmit }: Ven
               <TabsContent value="billing" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Billing Address</CardTitle>
-                    <CardDescription>Enter the billing address information</CardDescription>
+                    <CardTitle>Vendor Address</CardTitle>
+                    <CardDescription>Enter the Vendor address information</CardDescription>
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
