@@ -61,17 +61,17 @@ export const generatePurchaseOrderId = async () => {
   }
 
   let newPurchaseNo = 1;
-  let purchaseStart = "PO"; // Default purchase prefix
+  let purchaseStart = "PO-9RX"; // Default purchase prefix
 
   if (data && data.length > 0) {
     newPurchaseNo = (data[0].purchase_no || 0) + 1;
-    purchaseStart = data[0].purchase_start || "PO";
+    purchaseStart = data[0].purchase_start || "PO-9RX";
   }
 
   // Format like 'PO202500001'
-  const purchaseOrderId = `${purchaseStart}${year}${newPurchaseNo
+  const purchaseOrderId = `${purchaseStart}${newPurchaseNo
     .toString()
-    .padStart(5, "0")}`;
+    .padStart(6, "0")}`;
 
   // Update the purchase_no in DB
   const { error: updateError } = await supabase
