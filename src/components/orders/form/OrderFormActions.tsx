@@ -254,6 +254,12 @@ export function OrderFormActions({
               className="flex items-center gap-3 text-center justify-center px-4 py-2 text-white bg-blue-600 rounded-lg cursor-pointer hover:bg-blue-700 transition duration-300 active:scale-95 select-none"
             >
               <ShoppingCart className="h-5 w-5" /> Pay And Order
+
+                  {isSubmitting
+              ? "Creating Order..."
+              : poIs
+                ? "Create Purchase Order"
+                : "Create Order"}
             </p>
 
           }

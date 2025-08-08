@@ -68,7 +68,7 @@ export const OrderDetailsSheet = ({
   // Update currentOrder when order prop changes
   useEffect(() => {
     setCurrentOrder(order);
-    console.log(order)
+    console.log(order, "ORDERED")
   }, [order]);
 
   const handleStatusUpdate = async (action: "process" | "ship" | "confirm") => {
@@ -258,7 +258,6 @@ export const OrderDetailsSheet = ({
 
 
 
-
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
 
@@ -272,14 +271,6 @@ export const OrderDetailsSheet = ({
       const pageWidth = doc.internal.pageSize.getWidth();
       const margin = 10;
       const contentWidth = pageWidth - margin * 2;
-
-
-
-
-
-
-
-
 
       // Add Logo (Left side)
       const logo = new Image();
@@ -322,23 +313,11 @@ export const OrderDetailsSheet = ({
       doc.setDrawColor(200);
       doc.line(margin, margin + 26, pageWidth - margin, margin + 26);
 
-
-
-
-
-
-
-
-
-
-
-
-
       // Addresses
       const infoStartY = margin + 35;
       doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
       doc.setFont("helvetica", "normal").setFontSize(9);
-      doc.text("9RX", margin, infoStartY + 5);
+      doc.text(componyName, margin, infoStartY + 5);
       doc.text(currentOrder.customerInfo?.name || "N/A", margin, infoStartY + 10);
       doc.text(currentOrder.customerInfo?.phone || "N/A", margin, infoStartY + 15);
       doc.text(currentOrder.customerInfo?.email || "N/A", margin, infoStartY + 20);
@@ -348,8 +327,6 @@ export const OrderDetailsSheet = ({
         infoStartY + 25,
         { maxWidth: contentWidth / 2 }
       );
-
-
 
       doc.setFont("helvetica", "bold").setFontSize(11).text("Ship To", pageWidth / 2, infoStartY);
       doc.setFont("helvetica", "normal").setFontSize(9);
@@ -367,31 +344,38 @@ export const OrderDetailsSheet = ({
       doc.line(margin, infoStartY + 35, pageWidth - margin, infoStartY + 35);
 
       // Items Table
+      // Items Table
       const tableStartY = infoStartY + 45;
       const tableHead = [["Description", "Size", "Qty", "Price/Unit", "Total"]];
 
       const tableBody = [];
-      currentOrder.items.forEach((item) => {
-        // Add a separate row for the product name (spanning all columns)
-        tableBody.push([
-          { content: item.name, colSpan: 5, styles: { fontStyle: 'bold', halign: 'left', fillColor: [245, 245, 245] } }
-        ]);
 
-        item.sizes.forEach((size) => {
+      currentOrder.items.forEach((item) => {
+        item.sizes.forEach((size, sizeIndex) => {
           const sizeValueUnit = `${size.size_value} ${size.size_unit}`;
           const quantity = size.quantity.toString();
           const pricePerUnit = `$${Number(size.price).toFixed(2)}`;
           const totalPerSize = `$${(size.quantity * size.price).toFixed(2)}`;
 
+          // First row: product name in Description column
           tableBody.push([
-            "", // Description column empty (since we show name in separate row)
+            item.name, // product name
             sizeValueUnit,
             quantity,
             pricePerUnit,
-            totalPerSize,
+            totalPerSize
           ]);
+
+          // Only add description row for the first size
+          if (sizeIndex === 0 && item.description && item.description.trim()) {
+            tableBody.push([
+              { content: item.description.trim(), styles: { fontStyle: 'italic', textColor: [80, 80, 80] } },
+              "", "", "", "" // empty for other columns
+            ]);
+          }
         });
       });
+
       (doc as any).autoTable({
         head: tableHead,
         body: tableBody,
@@ -408,6 +392,7 @@ export const OrderDetailsSheet = ({
         tableWidth: 'auto',
       });
 
+
       const finalY = (doc as any).lastAutoTable.finalY + 10;
 
       // Summary Calculations
@@ -420,34 +405,32 @@ export const OrderDetailsSheet = ({
       const tax = Number(currentOrder?.tax_amount || 0);
       const total = subtotal + handling + fred + shipping + tax;
 
-      const summaryBoxWidth = 60; // adjust as needed
-      const summaryX = pageWidth - margin - 6; // right edge
-      let summaryY = finalY;
-
-      doc.setFont("helvetica", "bold").setFontSize(10);
-      doc.text("Order Summary", summaryX, summaryY, { align: "right" });
-      summaryY += 6;
-
-      const summaryRows = [
-        ["Sub Total", subtotal],
-        ["Handling-Shipping", handling],
-        ["Tax", fred],
-        ["Total", total],
+      // Summary Table
+      const summaryHead = [['Description', 'Amount']];
+      const summaryBody = [
+        ['Sub Total', `$${subtotal.toFixed(2)}`],
+        ['Handling-Shipping', `$${handling.toFixed(2)}`],
+        ['Tax', `$${fred.toFixed(2)}`],
+        ['Total', `$${total.toFixed(2)}`],
       ];
 
-      doc.setFont("helvetica", "normal").setFontSize(9);
-      summaryRows.forEach(([label, value]) => {
-        // Label aligned to left of summaryBox
-        doc.text(label, summaryX - summaryBoxWidth, summaryY, { align: "left" });
-
-        // Value aligned to right edge
-        doc.text(`$${value.toFixed(2)}`, summaryX, summaryY, { align: "right" });
-
-        summaryY += 5;
+      (doc as any).autoTable({
+        head: summaryHead,
+        body: summaryBody,
+        startY: finalY,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [230, 230, 230], textColor: 0, fontStyle: 'bold' },
+        columnStyles: {
+          0: { halign: 'left', fontStyle: 'bold' },
+          1: { halign: 'right' },
+        },
+        margin: { left: pageWidth - margin - 60 },
+        tableWidth: 60,
       });
 
       // Save PDF
-      doc.save(`Invoice_${currentOrder.order_number}.pdf`);
+      doc.save(`${currentOrder.order_number}.pdf`);
 
       toast({
         title: "Success",
@@ -464,7 +447,6 @@ export const OrderDetailsSheet = ({
       setIsGeneratingPDF(false);
     }
   };
-
 
 
 
