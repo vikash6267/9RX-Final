@@ -159,30 +159,60 @@ export const generateWorkOrderPDF = async (workOrderData: WorkOrderData, packing
     // Bill To Section - Populated from workOrderData.customer_info and profiles
     doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
     doc.setFont("helvetica", "normal").setFontSize(9);
-    doc.text(workOrderData?.profiles?.company_name || "9RX", margin, infoStartY + 5);
-    doc.text(workOrderData?.customer_info?.name || "N/A", margin, infoStartY + 10);
-    doc.text(workOrderData?.customer_info?.phone || "N/A", margin, infoStartY + 15);
-    doc.text(workOrderData?.customer_info?.email || "N/A", margin, infoStartY + 20);
-    doc.text(
-      `${workOrderData?.customer_info?.address?.street || ""} ${workOrderData?.customer_info?.address?.city || ""}, ${workOrderData?.customer_info?.address?.state || ""} ${workOrderData?.customer_info?.address?.zip_code || ""}`,
-      margin,
-      infoStartY + 25,
-      { maxWidth: contentWidth / 2 }
-    );
+  // Bill To Section
+let billToY = infoStartY;
+const billToX = margin;
 
-    // Ship To Section - Populated from workOrderData.shipping_info and profiles
-    doc.setFont("helvetica", "bold").setFontSize(11).text("Ship To", pageWidth / 2, infoStartY);
-    doc.setFont("helvetica", "normal").setFontSize(9);
-    doc.text(workOrderData?.profiles?.company_name || "9RX", pageWidth / 2, infoStartY + 5);
-    doc.text(workOrderData?.shipping_info?.fullName || "N/A", pageWidth / 2, infoStartY + 10);
-    doc.text(workOrderData?.shipping_info?.phone || "N/A", pageWidth / 2, infoStartY + 15);
-    doc.text(workOrderData?.shipping_info?.email || "N/A", pageWidth / 2, infoStartY + 20);
-    doc.text(
-      `${workOrderData?.shipping_info?.address?.street || ""} ${workOrderData?.shipping_info?.address?.city || ""}, ${workOrderData?.shipping_info?.address?.state || ""} ${workOrderData?.shipping_info?.address?.zip_code || ""}`,
-      pageWidth / 2,
-      infoStartY + 25,
-      { maxWidth: contentWidth / 2 }
-    );
+const addBillToLine = (text) => {
+  if (text && text.trim()) {
+    billToY += 5; // sirf jab print hota hai tab hi Y increment
+    doc.text(text, billToX, billToY);
+  }
+};
+
+addBillToLine(workOrderData?.profiles?.company_name);
+addBillToLine(workOrderData?.customer_info?.name);
+addBillToLine(workOrderData?.customer_info?.phone);
+addBillToLine(workOrderData?.customer_info?.email);
+
+if (
+  workOrderData?.customer_info?.address?.street ||
+  workOrderData?.customer_info?.address?.city ||
+  workOrderData?.customer_info?.address?.state ||
+  workOrderData?.customer_info?.address?.zip_code
+) {
+  const address = `${workOrderData?.customer_info?.address?.street || ""} ${workOrderData?.customer_info?.address?.city || ""}, ${workOrderData?.customer_info?.address?.state || ""} ${workOrderData?.customer_info?.address?.zip_code || ""}`.trim();
+  addBillToLine(address);
+}
+
+// Ship To Section
+let shipToY = infoStartY;
+const shipToX = pageWidth / 2;
+
+doc.setFont("helvetica", "bold").setFontSize(11).text("Ship To", shipToX, shipToY);
+doc.setFont("helvetica", "normal").setFontSize(9);
+
+const addShipToLine = (text) => {
+  if (text && text.trim()) {
+    shipToY += 5;
+    doc.text(text, shipToX, shipToY);
+  }
+};
+
+addShipToLine(workOrderData?.profiles?.company_name);
+addShipToLine(workOrderData?.shipping_info?.fullName);
+addShipToLine(workOrderData?.shipping_info?.phone);
+addShipToLine(workOrderData?.shipping_info?.email);
+
+if (
+  workOrderData?.shipping_info?.address?.street ||
+  workOrderData?.shipping_info?.address?.city ||
+  workOrderData?.shipping_info?.address?.state ||
+  workOrderData?.shipping_info?.address?.zip_code
+) {
+  const shipAddress = `${workOrderData?.shipping_info?.address?.street || ""} ${workOrderData?.shipping_info?.address?.city || ""}, ${workOrderData?.shipping_info?.address?.state || ""} ${workOrderData?.shipping_info?.address?.zip_code || ""}`.trim();
+  addShipToLine(shipAddress);
+}
 
     doc.line(margin, infoStartY + 35, pageWidth - margin, infoStartY + 35);
 

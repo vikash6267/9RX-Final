@@ -96,7 +96,7 @@ export const generateSingleProductLabelPDF = async (
   const rightX = labelWidth / 2 + 5; // दाएं कॉलम की सामग्री की शुरुआत
 
   // उत्पाद का नाम (केवल मान, कोई लेबल नहीं)
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   const productNameLines = doc.splitTextToSize(
     productName || "PRODUCT NAME",
@@ -106,7 +106,7 @@ export const generateSingleProductLabelPDF = async (
   yPos += productNameLines.length * 3.5 + 2;
 
   // आकार (केवल मान, कोई लेबल नहीं)
-  doc.setFontSize(10);
+  doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   const sizeText = `${size.size_value || "N/A"} ${size.size_unit || ""}`;
   const sizeLines = doc.splitTextToSize(

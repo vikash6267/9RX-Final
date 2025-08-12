@@ -101,6 +101,7 @@ console.log(invoice)
 
   const handleDownloadPackingSlip = async () => {
     setIsGeneratingPDF(true)
+    console.log("workOrderData",workOrderData)
     try {
       await generateWorkOrderPDF(workOrderData, packingData)
       toast({
