@@ -82,8 +82,10 @@ const generateBarcode = (text: string): string => {
   return canvas.toDataURL("image/png");
 };
 
-
-export const generateWorkOrderPDF = async (workOrderData: WorkOrderData, packingData: PackingSlipData) => {
+export const generateWorkOrderPDF = async (
+  workOrderData: WorkOrderData,
+  packingData: PackingSlipData
+) => {
   try {
     const doc = new jsPDF({
       orientation: "portrait",
@@ -96,59 +98,70 @@ export const generateWorkOrderPDF = async (workOrderData: WorkOrderData, packing
     const margin = 10;
     const contentWidth = pageWidth - margin * 2;
 
+    // Add Logo (Left side)
+    const logo = new Image();
+    logo.src = "/final.png";
+    await new Promise((resolve) => (logo.onload = resolve));
+    const logoHeight = 23;
+    const logoWidth = (logo.width / logo.height) * logoHeight;
+    // Logo (center aligned)
+    doc.addImage(
+      logo,
+      "PNG",
+      pageWidth / 2 - logoWidth / 2,
+      margin,
+      logoWidth,
+      logoHeight
+    );
 
+    // Set Fonts
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
 
+    // Top Info Line (All in one row, top line)
+    const topInfo = [
+      "Tax ID : 99-0540972",
+      "936 Broad River Ln, Charlotte, NC 28211",
+      "info@9rx.com",
+      "www.9rx.com",
+    ].join("     |     ");
+    doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
 
+    // Centered Phone Number (under logo)
+    // Phone number (left aligned, vertically center of logo)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text("+1 800 969 6295", margin, margin + 10);
 
+    // PACKING SLIP TITLE (right side)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text("PACKING SLIP", pageWidth - margin, margin + 10, {
+      align: "right",
+    });
 
-
-   
-      // Add Logo (Left side)
-      const logo = new Image();
-      logo.src = "/final.png";
-      await new Promise((resolve) => (logo.onload = resolve));
-      const logoHeight = 23;
-      const logoWidth = (logo.width / logo.height) * logoHeight;
-      // Logo (center aligned)
-      doc.addImage(logo, "PNG", pageWidth / 2 - logoWidth / 2, margin, logoWidth, logoHeight);
-
-      // Set Fonts
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-
-      // Top Info Line (All in one row, top line)
-      const topInfo = [
-        "Tax ID : 99-0540972",
-        "936 Broad River Ln, Charlotte, NC 28211",
-        "info@9rx.com",
-        "www.9rx.com"
-      ].join("     |     ");
-      doc.text(topInfo, pageWidth / 2, margin - 2, { align: "center" });
-
-      // Centered Phone Number (under logo)
-      // Phone number (left aligned, vertically center of logo)
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(15);
-      doc.text("+1 800 969 6295", margin, margin + 10);
-
-      // PACKING SLIP TITLE (right side)
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(15);
-      doc.text("PACKING SLIP", pageWidth - margin , margin + 10, { align: "right" });
-
-      const orderNumber = workOrderData?.orders?.order_number || workOrderData?.order_id || "N/A";
-    const formattedDate = new Date(workOrderData?.created_at || new Date()).toLocaleDateString("en-US", {
+    const orderNumber =
+      workOrderData?.orders?.order_number || workOrderData?.order_id || "N/A";
+    const formattedDate = new Date(
+      workOrderData?.created_at || new Date()
+    ).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-      doc.setFontSize(10);
-      doc.text(`ORDER - ${workOrderData?.orders?.order_number || workOrderData?.order_id}`, pageWidth - margin , margin + 15, { align: "right" });
-      doc.text(`Date - ${formattedDate}`, pageWidth - margin , margin + 20, { align: "right" });
+    doc.setFontSize(10);
+    doc.text(
+      `ORDER - ${
+        workOrderData?.orders?.order_number || workOrderData?.order_id
+      }`,
+      pageWidth - margin,
+      margin + 15,
+      { align: "right" }
+    );
+    doc.text(`Date - ${formattedDate}`, pageWidth - margin, margin + 20, {
+      align: "right",
+    });
 
-
-
-   
     // Divider line - Same as PO
     doc.setDrawColor(200);
     doc.line(margin, margin + 26, pageWidth - margin, margin + 26);
@@ -157,80 +170,109 @@ export const generateWorkOrderPDF = async (workOrderData: WorkOrderData, packing
     const infoStartY = margin + 35;
 
     // Bill To Section - Populated from workOrderData.customer_info and profiles
-    doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
+    doc
+      .setFont("helvetica", "bold")
+      .setFontSize(11)
+      .text("Bill To", margin, infoStartY);
     doc.setFont("helvetica", "normal").setFontSize(9);
-  // Bill To Section
-let billToY = infoStartY;
-const billToX = margin;
+    // Bill To Section
+    let billToY = infoStartY;
+    const billToX = margin;
 
-const addBillToLine = (text) => {
-  if (text && text.trim()) {
-    billToY += 5; // sirf jab print hota hai tab hi Y increment
-    doc.text(text, billToX, billToY);
-  }
-};
+    const addBillToLine = (text) => {
+      if (text && text.trim()) {
+        billToY += 5; // sirf jab print hota hai tab hi Y increment
+        doc.text(text, billToX, billToY);
+      }
+    };
 
-addBillToLine(workOrderData?.profiles?.company_name);
-addBillToLine(workOrderData?.customer_info?.name);
-addBillToLine(workOrderData?.customer_info?.phone);
-addBillToLine(workOrderData?.customer_info?.email);
+    addBillToLine(workOrderData?.profiles?.company_name);
+    addBillToLine(workOrderData?.customer_info?.name);
+    addBillToLine(workOrderData?.customer_info?.phone);
+    addBillToLine(workOrderData?.customer_info?.email);
 
-if (
-  workOrderData?.customer_info?.address?.street ||
-  workOrderData?.customer_info?.address?.city ||
-  workOrderData?.customer_info?.address?.state ||
-  workOrderData?.customer_info?.address?.zip_code
-) {
-  const address = `${workOrderData?.customer_info?.address?.street || ""} ${workOrderData?.customer_info?.address?.city || ""}, ${workOrderData?.customer_info?.address?.state || ""} ${workOrderData?.customer_info?.address?.zip_code || ""}`.trim();
-  addBillToLine(address);
-}
+    if (
+      workOrderData?.customer_info?.address?.street ||
+      workOrderData?.customer_info?.address?.city ||
+      workOrderData?.customer_info?.address?.state ||
+      workOrderData?.customer_info?.address?.zip_code
+    ) {
+      const address = `${workOrderData?.customer_info?.address?.street || ""} ${
+        workOrderData?.customer_info?.address?.city || ""
+      }, ${workOrderData?.customer_info?.address?.state || ""} ${
+        workOrderData?.customer_info?.address?.zip_code || ""
+      }`.trim();
+      addBillToLine(address);
+    }
 
-// Ship To Section
-let shipToY = infoStartY;
-const shipToX = pageWidth / 2;
+    // Ship To Section
+    let shipToY = infoStartY;
+    const shipToX = pageWidth / 2;
 
-doc.setFont("helvetica", "bold").setFontSize(11).text("Ship To", shipToX, shipToY);
-doc.setFont("helvetica", "normal").setFontSize(9);
+    doc
+      .setFont("helvetica", "bold")
+      .setFontSize(11)
+      .text("Ship To", shipToX, shipToY);
+    doc.setFont("helvetica", "normal").setFontSize(9);
 
-const addShipToLine = (text) => {
-  if (text && text.trim()) {
-    shipToY += 5;
-    doc.text(text, shipToX, shipToY);
-  }
-};
+    const addShipToLine = (text) => {
+      if (text && text.trim()) {
+        shipToY += 5;
+        doc.text(text, shipToX, shipToY);
+      }
+    };
 
-addShipToLine(workOrderData?.profiles?.company_name);
-addShipToLine(workOrderData?.shipping_info?.fullName);
-addShipToLine(workOrderData?.shipping_info?.phone);
-addShipToLine(workOrderData?.shipping_info?.email);
+    addShipToLine(workOrderData?.profiles?.company_name);
+    addShipToLine(workOrderData?.shipping_info?.fullName);
+    addShipToLine(workOrderData?.shipping_info?.phone);
+    addShipToLine(workOrderData?.shipping_info?.email);
 
-if (
-  workOrderData?.shipping_info?.address?.street ||
-  workOrderData?.shipping_info?.address?.city ||
-  workOrderData?.shipping_info?.address?.state ||
-  workOrderData?.shipping_info?.address?.zip_code
-) {
-  const shipAddress = `${workOrderData?.shipping_info?.address?.street || ""} ${workOrderData?.shipping_info?.address?.city || ""}, ${workOrderData?.shipping_info?.address?.state || ""} ${workOrderData?.shipping_info?.address?.zip_code || ""}`.trim();
-  addShipToLine(shipAddress);
-}
+    if (
+      workOrderData?.shipping_info?.address?.street ||
+      workOrderData?.shipping_info?.address?.city ||
+      workOrderData?.shipping_info?.address?.state ||
+      workOrderData?.shipping_info?.address?.zip_code
+    ) {
+      const shipAddress = `${
+        workOrderData?.shipping_info?.address?.street || ""
+      } ${workOrderData?.shipping_info?.address?.city || ""}, ${
+        workOrderData?.shipping_info?.address?.state || ""
+      } ${workOrderData?.shipping_info?.address?.zip_code || ""}`.trim();
+      addShipToLine(shipAddress);
+    }
 
     doc.line(margin, infoStartY + 35, pageWidth - margin, infoStartY + 35);
 
     // Items Table - Now with specific headers: ITEMS, DESCRIPTION, QTY/CS, Shipped QTY, IN CASE
     const tableStartY = infoStartY + 45;
-    const tableHead = [["ITEMS", "DESCRIPTION", "QTY/CS", "Shipped QTY", "IN CASE"]]; // Updated headers
+    const tableHead = [
+      ["ITEMS", "DESCRIPTION", "QTY/CS", "Shipped QTY", "IN CASE"],
+    ]; // Updated headers
 
     const tableBody = [];
 
     // Use workOrderData.items for the packing slip items
-    if (workOrderData && workOrderData.items && Array.isArray(workOrderData.items)) {
+    if (
+      workOrderData &&
+      workOrderData.items &&
+      Array.isArray(workOrderData.items)
+    ) {
       workOrderData.items.forEach((item) => {
         if (item && item.sizes && Array.isArray(item.sizes)) {
           item.sizes.forEach((size) => {
             const itemSku = size.sku || "N/A";
-            const description = `${item.name || "N/A"} - ${size.size_value || ""} ${size.size_unit || ""}`;
-            const quantityPerCase = (size.quantity_per_case !== undefined && size.quantity_per_case !== null) ? size.quantity_per_case.toString() : "N/A";
-            const shippedQuantity = (size.quantity !== undefined && size.quantity !== null) ? size.quantity.toString() : "N/A";
+            const description = `${item.name || "N/A"} - ${
+              size.size_value || ""
+            } ${size.size_unit || ""}`;
+            const quantityPerCase =
+              size.rolls_per_case ? size.rolls_per_case : size.quantity_per_case !== undefined &&
+              size.quantity_per_case !== null
+                ? size.quantity_per_case.toString()
+                : "N/A";
+            const shippedQuantity =
+              size.quantity !== undefined && size.quantity !== null
+                ? size.quantity.toString()
+                : "N/A";
             const inCase = "_____"; // As per your example, a placeholder for manual entry
 
             tableBody.push([
@@ -244,7 +286,9 @@ if (
         }
       });
     } else {
-      console.warn("Work Order data items are missing or not an array. Packing slip will have no items.");
+      console.warn(
+        "Work Order data items are missing or not an array. Packing slip will have no items."
+      );
       tableBody.push(["No items found for this packing slip.", "", "", "", ""]); // Ensure 5 columns for 'No items'
     }
 
@@ -254,7 +298,11 @@ if (
       startY: tableStartY,
       styles: { fontSize: 9 },
       theme: "grid",
-      headStyles: { fillColor: [230, 230, 230], textColor: 0, fontStyle: "bold" },
+      headStyles: {
+        fillColor: [230, 230, 230],
+        textColor: 0,
+        fontStyle: "bold",
+      },
       columnStyles: {
         // Adjust column indices for the new headers:
         // ITEMS (0), DESCRIPTION (1), QTY/CS (2), Shipped QTY (3), IN CASE (4)
@@ -263,37 +311,40 @@ if (
         4: { halign: "center" }, // IN CASE
       },
       margin: { left: margin, right: margin }, // full width
-  tableWidth: 'auto', // stretch to margins
-      didDrawPage: function(data: any) {
+      tableWidth: "auto", // stretch to margins
+      didDrawPage: function (data: any) {
         // This function will be triggered for each page drawn by autoTable.
         // It's useful for repeating headers/footers on multi-page tables if autoTable's
         // default header repetition isn't sufficient.
-      }
+      },
     });
 
     // Get the final Y position after the autoTable.
     let currentYPosition = (doc as any).lastAutoTable.finalY + 10;
 
     // Helper function to add sections safely, handling page breaks
-    const addSectionSafely = (textFunction: () => void, requiredHeight: number) => {
-        if (currentYPosition + requiredHeight > pageHeight - margin) { // Check if new page is needed
-            doc.addPage();
-            currentYPosition = margin + 10; // Reset Y for new page, with some top margin
-        }
-        textFunction();
+    const addSectionSafely = (
+      textFunction: () => void,
+      requiredHeight: number
+    ) => {
+      if (currentYPosition + requiredHeight > pageHeight - margin) {
+        // Check if new page is needed
+        doc.addPage();
+        currentYPosition = margin + 10; // Reset Y for new page, with some top margin
+      }
+      textFunction();
     };
 
     // --- Add packingData specific sections here ---
 
     // Ship Via Section
     addSectionSafely(() => {
-        doc.setFont("helvetica", "bold").setFontSize(9);
-        doc.text(`Ship Via:`, margin, currentYPosition);
-        doc.setFont("helvetica", "normal").setFontSize(9);
-        doc.text(packingData.shipVia || "N/A", margin + 20, currentYPosition); // Adjust X for value
-        currentYPosition += 8;
+      doc.setFont("helvetica", "bold").setFontSize(9);
+      doc.text(`Ship Via:`, margin, currentYPosition);
+      doc.setFont("helvetica", "normal").setFontSize(9);
+      doc.text(packingData.shipVia || "N/A", margin + 20, currentYPosition); // Adjust X for value
+      currentYPosition += 8;
     }, 10);
-
 
     // Notes Section
     if (packingData.notes) {
@@ -312,26 +363,44 @@ if (
 
     // Bottom section (Cartons, Master cases, Weight, Shipping class)
     addSectionSafely(() => {
-        doc.setFont("helvetica", "normal").setFontSize(9);
-        doc.text(`Cartons: ${packingData.cartons || "N/A"}`, margin, currentYPosition);
-        doc.text(`Master cases: ${packingData.masterCases || "N/A"}`, pageWidth / 2, currentYPosition);
-        currentYPosition += 8;
-        doc.text(`Weight: ${packingData.weight || "N/A"}`, margin, currentYPosition);
-        doc.text(`Shipping class: ${packingData.shippingClass || "N/A"}`, pageWidth / 2, currentYPosition);
-        currentYPosition += 20;
+      doc.setFont("helvetica", "normal").setFontSize(9);
+      doc.text(
+        `Cartons: ${packingData.cartons || "N/A"}`,
+        margin,
+        currentYPosition
+      );
+      doc.text(
+        `Master cases: ${packingData.masterCases || "N/A"}`,
+        pageWidth / 2,
+        currentYPosition
+      );
+      currentYPosition += 8;
+      doc.text(
+        `Weight: ${packingData.weight || "N/A"}`,
+        margin,
+        currentYPosition
+      );
+      doc.text(
+        `Shipping class: ${packingData.shippingClass || "N/A"}`,
+        pageWidth / 2,
+        currentYPosition
+      );
+      currentYPosition += 20;
     }, 30);
 
     // Signature section
     addSectionSafely(() => {
-        doc.text("Signature: _________________________________", margin, currentYPosition);
-        doc.text("Date: _______________", pageWidth / 2, currentYPosition);
-        currentYPosition += 10;
+      doc.text(
+        "Signature: _________________________________",
+        margin,
+        currentYPosition
+      );
+      doc.text("Date: _______________", pageWidth / 2, currentYPosition);
+      currentYPosition += 10;
     }, 15);
-
 
     // Save the PDF
     doc.save(`Packing_Slip_${orderNumber}.pdf`);
-
   } catch (error) {
     console.error("Packing Slip PDF Error:", error);
     throw error;
