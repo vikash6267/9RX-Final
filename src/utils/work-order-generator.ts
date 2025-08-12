@@ -245,52 +245,70 @@ export const generateWorkOrderPDF = async (
 
     // Items Table - Now with specific headers: ITEMS, DESCRIPTION, QTY/CS, Shipped QTY, IN CASE
     const tableStartY = infoStartY + 45;
-    const tableHead = [
-      ["ITEMS", "DESCRIPTION", "QTY/CS", "Shipped QTY", "IN CASE"],
-    ]; // Updated headers
+  // Table head (will add Q. PER ROLL if needed)
+const tableHead = [
+  [
+    "ITEMS",
+    "DESCRIPTION",
+    "QTY/CS",
+    "Shipped QTY (IN CASE)"
+  ]
+];
 
-    const tableBody = [];
+const tableBody = [];
 
-    // Use workOrderData.items for the packing slip items
-    if (
-      workOrderData &&
-      workOrderData.items &&
-      Array.isArray(workOrderData.items)
-    ) {
-      workOrderData.items.forEach((item) => {
-        if (item && item.sizes && Array.isArray(item.sizes)) {
-          item.sizes.forEach((size) => {
-            const itemSku = size.sku || "N/A";
-            const description = `${item.name || "N/A"} - ${
-              size.size_value || ""
-            } ${size.size_unit || ""}`;
-            const quantityPerCase =
-              size.rolls_per_case ? size.rolls_per_case : size.quantity_per_case !== undefined &&
-              size.quantity_per_case !== null
-                ? size.quantity_per_case.toString()
-                : "N/A";
-            const shippedQuantity =
-              size.quantity !== undefined && size.quantity !== null
-                ? size.quantity.toString()
-                : "N/A";
-            const inCase = "_____"; // As per your example, a placeholder for manual entry
+if (workOrderData?.items && Array.isArray(workOrderData.items)) {
+  let hasRollsPerCase = false; // Track if we need to add Q. PER ROLL column
 
-            tableBody.push([
-              itemSku,
-              description,
-              quantityPerCase,
-              shippedQuantity,
-              inCase,
-            ]);
-          });
+  workOrderData.items.forEach((item) => {
+    if (Array.isArray(item.sizes)) {
+      item.sizes.forEach((size) => {
+        const itemSku = size.sku || "N/A";
+        const description = `${item.name || "N/A"} - ${size.size_value || ""} ${size.size_unit || ""}`;
+
+        let quantityPerCase = "N/A";
+        let quantityPerRoll = null;
+
+        if (size.size_unit === "ROLL") {
+          // Rolls case
+          quantityPerCase = size.rolls_per_case.toString();
+          quantityPerRoll = size.quantity_per_case ?? "N/A";
+          hasRollsPerCase = true;
+        } else {
+          // Normal case
+          quantityPerCase = size.quantity_per_case?.toString() ?? "N/A";
         }
+
+        const shippedQuantity = size.quantity?.toString() ?? "N/A";
+
+        // Build row
+        const row = [itemSku, description, quantityPerCase];
+        if (quantityPerRoll !== null) {
+          row.push(quantityPerRoll.toString());
+        }
+        row.push(shippedQuantity);
+
+        tableBody.push(row);
       });
-    } else {
-      console.warn(
-        "Work Order data items are missing or not an array. Packing slip will have no items."
-      );
-      tableBody.push(["No items found for this packing slip.", "", "", "", ""]); // Ensure 5 columns for 'No items'
     }
+  });
+
+  // If any size had rolls_per_case > 1, add Q. PER ROLL in header
+  if (hasRollsPerCase) {
+    tableHead[0] = [
+      "ITEMS",
+      "DESCRIPTION",
+      "QTY/CS",
+      "Q. PER ROLL",
+      "Shipped QTY (IN CASE)"
+    ];
+  }
+
+} else {
+  console.warn("No valid items found for packing slip.");
+  tableBody.push(["No items found for this packing slip.", "", "", "", ""]);
+}
+
 
     (doc as any).autoTable({
       head: tableHead,
