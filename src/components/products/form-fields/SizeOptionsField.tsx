@@ -38,74 +38,91 @@ export const SizeOptionsField = ({ form, isEditing }: SizeOptionsFieldProps) => 
     case: true,
   });
 
-  const handleAddSize = () => {
-    if (!newSize.size_value || !newSize.price) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required size fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const currentSizes = form.getValues("sizes") || [];
-    const PPC = (Number.parseFloat(newSize.price) / Number.parseFloat(newSize.quantity_per_case || "1")).toFixed(2);
-
-    const sizeToAdd = {
-      size_value: newSize.size_value,
-      sku: newSize.sku || "",
-      sizeSquanence: newSize.sizeSquanence || "",
-      image: newSize.image || "",
-      size_unit: newSize.size_unit || categoryConfig.defaultUnit,
-      price: Number.parseFloat(newSize.price) || 0,
-      stock: Number.parseInt(newSize.stock) || 0,
-      quantity_per_case: Number.parseFloat(newSize.quantity_per_case) || 0,
-      pricePerCase: Number.parseFloat(newSize.price_per_case) || 0,
-      price_per_case: Number.parseFloat(PPC) || 0,
-      rolls_per_case: Number.parseInt(newSize.rolls_per_case) || 0,
-      shipping_cost: Number.parseFloat(newSize.shipping_cost) || 15,
-      unit: newSize.unit || false,
-      case: newSize.case || false,
-      groupIds: newSize.groupIds || [], // Ensure groupIds are passed
-      disAllogroupIds: newSize.disAllogroupIds || [], // Ensure groupIds are passed
-    } as const;
-
-    if (!sizeToAdd.size_value || !sizeToAdd.size_unit) {
-      toast({
-        title: "Validation Error",
-        description: "Size value and unit are required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    form.setValue("sizes", [...currentSizes, sizeToAdd], {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-
-    setNewSize({
-      size_value: "",
-      size_unit: categoryConfig.defaultUnit,
-      price: "",
-      sku: "",
-      pricePerCase: "",
-      price_per_case: "",
-      stock: "",
-      quantity_per_case: "",
-      rolls_per_case: "",
-      sizeSquanence: "",
-      shipping_cost: "0",
-      image: "",
-      groupIds: [], // Reset groupIds after adding
-      disAllogroupIds: [], // Reset groupIds after adding
-    });
-
+const handleAddSize = () => {
+  if (!newSize.size_value || !newSize.price) {
     toast({
-      title: "Size Added",
-      description: "New size variation has been added successfully.",
+      title: "Validation Error",
+      description: "Please fill in all required size fields",
+      variant: "destructive",
     });
+    return;
+  }
+
+  const currentSizes = form.getValues("sizes") || [];
+  
+  // 🔥 FIX: Proper calculation based on category
+  let calculatedPricePerUnit = 0;
+  const price = parseFloat(newSize.price) || 0;
+  const quantity = parseFloat(newSize.quantity_per_case) || 1;
+  const rolls = parseFloat(newSize.rolls_per_case) || 1;
+
+  // Check if category has rolls (like RX LABELS)
+  if (categoryConfig?.hasRolls && rolls > 0) {
+    // For categories with rolls: price ÷ (rolls × quantity)
+    calculatedPricePerUnit = price / (rolls * quantity);
+  } else {
+    // For regular categories: price ÷ quantity
+    calculatedPricePerUnit = price / quantity;
+  }
+
+  const sizeToAdd = {
+    size_value: newSize.size_value,
+    sku: newSize.sku || "",
+    sizeSquanence: parseInt(newSize.sizeSquanence) || 0,
+    image: newSize.image || "",
+    size_unit: newSize.size_unit || categoryConfig.defaultUnit,
+    price: price,
+    stock: parseInt(newSize.stock) || 0,
+    quantity_per_case: quantity,
+    price_per_case: parseFloat(calculatedPricePerUnit.toFixed(2)), // 🔥 FIXED
+    rolls_per_case: rolls,
+    shipping_cost: parseFloat(newSize.shipping_cost) || 15,
+    unit: newSize.unit || false,
+    case: newSize.case || false,
+    groupIds: newSize.groupIds || [],
+    disAllogroupIds: newSize.disAllogroupIds || [],
   };
+
+  // Validation
+  if (!sizeToAdd.size_value || !sizeToAdd.size_unit) {
+    toast({
+      title: "Validation Error",
+      description: "Size value and unit are required",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  form.setValue("sizes", [...currentSizes, sizeToAdd], {
+    shouldValidate: true,
+    shouldDirty: true,
+  });
+
+  // Reset form with default values
+  setNewSize({
+    size_value: "",
+    size_unit: categoryConfig.defaultUnit,
+    price: "",
+    sku: "",
+    pricePerCase: "",
+    price_per_case: "",
+    stock: "",
+    quantity_per_case: "100", // Default value
+    rolls_per_case: categoryConfig?.hasRolls ? "1" : "", // Default 1 for categories with rolls
+    sizeSquanence: "",
+    shipping_cost: "15", // Default shipping
+    image: "",
+    groupIds: [],
+    disAllogroupIds: [],
+    unit: false,
+    case: true,
+  });
+
+  toast({
+    title: "Size Added",
+    description: `Size ${newSize.size_value} ${newSize.size_unit} added ($/Unit: $${calculatedPricePerUnit.toFixed(2)})`,
+  });
+};
 
   const [confirmIndex, setConfirmIndex] = useState<number | null>(null);
 

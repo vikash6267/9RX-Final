@@ -84,7 +84,7 @@ export function AddProductDialog({
     setLoading(true)
     try {
       await onSubmit(values)
-      return
+      
       form.reset()
       onProductAdded()
       onOpenChange(false)
