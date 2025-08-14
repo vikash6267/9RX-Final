@@ -27,7 +27,7 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
                     className="border p-2 rounded bg-gray-100"
                   >
                     <p>
-                      <strong>Size:</strong> {size.size_value} {size.size_unit}
+                      <strong>Size:</strong> {size.size_value} 
                     </p>
                     <p>
                       <strong>Quantity:</strong> {size.quantity} {size.type === "unit" ? "unit" : ""}

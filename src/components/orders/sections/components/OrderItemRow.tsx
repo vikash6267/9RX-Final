@@ -110,7 +110,8 @@ export const OrderItemRow = ({
                 .map((size, i) => (
                   <div key={i} className="mb-1">
                     {size.size_value}
-                    {size.size_unit?.toUpperCase()} ({size.quantity}{" "}
+                    {/* {size.size_unit?.toUpperCase()} */}
+                     ({size.quantity}{" "}
                     {size.type === "unit" ? "unit" : ""})
                   </div>
                 ))

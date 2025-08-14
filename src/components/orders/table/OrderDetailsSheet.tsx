@@ -315,7 +315,7 @@ export const OrderDetailsSheet = ({
 
       // Addresses
       const infoStartY = margin + 35;
-      doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
+      doc.setFont("helvetica", "bold").setFontSize(11).text("Vendor", margin, infoStartY);
       doc.setFont("helvetica", "normal").setFontSize(9);
       doc.text(componyName, margin, infoStartY + 5);
       doc.text(currentOrder.customerInfo?.name || "N/A", margin, infoStartY + 10);

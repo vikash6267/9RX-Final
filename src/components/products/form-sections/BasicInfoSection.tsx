@@ -115,70 +115,7 @@ export const BasicInfoSection = ({ form, generateSKU }: BasicInfoSectionProps) =
 
 
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="ndcCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">NDC Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter NDC code" className="h-11" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="upcCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">UPC Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter UPC code" className="h-11" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="lotNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">Lot Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter lot number" className="h-11" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="exipry"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-semibold text-gray-700">Expiry Date</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    className="h-11"
-                    {...field}
-                    value={field.value ? field.value.slice(0, 10) : ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+     
 
         <FormField
           control={form.control}

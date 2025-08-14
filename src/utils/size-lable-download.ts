@@ -14,9 +14,12 @@ interface Size {
   rolls_per_case?: number;
   sizeSquanence?: number;
   shipping_cost?: number;
-  lot_number?: string;
-  ndc_number?: string;
-  expiry_date?: string;
+  lotNumber?: string;
+  ndcCode?: string;
+  exipry?: string;
+  upcCode?: string;
+  isUnit?:boolean
+  
 }
 
 // बारकोड को base64 इमेज के रूप में जनरेट करें
@@ -41,10 +44,10 @@ const generateBarcode = (text: string): string => {
 export const generateSingleProductLabelPDF = async (
   productName: string,
   size: Size,
-  productUPCcode: string,
-  productNdcCode: string,
-  productExpiry: string,
-  productLotNumber: string
+  isUnit:boolean
+  
+
+ 
 ) => {
   // लेबल के आयाम mm में (4 इंच = 101.6 mm, 2 इंच = 50.8 mm)
   const labelWidth = 101.6; // 4 इंच
@@ -59,12 +62,9 @@ export const generateSingleProductLabelPDF = async (
 
   // बढ़े हुए मार्जिन के साथ गोल आयत की बॉर्डर बनाएँ
   const margin = 4; // मार्जिन 2mm से बढ़ाकर 4mm किया गया
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(margin, margin, labelWidth - (margin * 2), labelHeight - (margin * 2), 3, 3);
 
   // हेडर अनुभाग - छोटे फ़ॉन्ट
-  let yPos = margin + 4; // नए मार्जिन के आधार पर शुरुआती स्थिति को समायोजित किया गया
+  let yPos = margin + 3; // नए मार्जिन के आधार पर शुरुआती स्थिति को समायोजित किया गया
   const headerFontSize = 9;
   const websiteFontSize = 8;
   const contentMargin = 8; // बाएं/दाएं के लिए नया, बढ़ा हुआ सामग्री मार्जिन
@@ -108,8 +108,7 @@ export const generateSingleProductLabelPDF = async (
   // आकार (केवल मान, कोई लेबल नहीं)
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
-  const sizeText = `${size.size_value || "N/A"} ${size.size_unit || ""}`;
-  const sizeLines = doc.splitTextToSize(
+const sizeText = `${size.size_value || "N/A"}${isUnit ? ` ${size.size_unit || ""}` : ""}`;  const sizeLines = doc.splitTextToSize(
     sizeText,
     labelWidth / 2 - leftX - 2
   );
@@ -124,7 +123,7 @@ export const generateSingleProductLabelPDF = async (
       size.quantity_per_case !== undefined && size.quantity_per_case !== null
         ? size.quantity_per_case
         : "N/A"
-    }`,
+    }/case`,
     leftX,
     yPos
   );
@@ -138,7 +137,7 @@ export const generateSingleProductLabelPDF = async (
   doc.text("LOT#", rightX, rightYPos);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text(productLotNumber || "", rightX + 12, rightYPos);
+  doc.text(size.lotNumber || "", rightX + 12, rightYPos);
   rightYPos += 4.5;
 
   // NDC# (बोल्ड लेबल)
@@ -147,7 +146,7 @@ export const generateSingleProductLabelPDF = async (
   doc.text("NDC#", rightX, rightYPos);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text(productNdcCode || "", rightX + 12, rightYPos);
+  doc.text(size.ndcCode || "", rightX + 12, rightYPos);
   rightYPos += 4.5;
 
   // EXPIRY: (बोल्ड लेबल)
@@ -156,13 +155,13 @@ export const generateSingleProductLabelPDF = async (
   doc.text("EXPIRY:", rightX, rightYPos);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text(productExpiry || "", rightX + 18, rightYPos);
+  doc.text(size.exipry || "", rightX + 18, rightYPos);
   rightYPos += 6;
 
   // बारकोड जनरेट करें और जोड़ें
-  if (productUPCcode) {
+  if (size.upcCode) {
     try {
-      const barcodeData = generateBarcode(String(productUPCcode));
+      const barcodeData = generateBarcode(String(size.upcCode));
       const barcodeWidth = 35;
       const barcodeHeight = 8;
       // नए सामग्री मार्जिन के साथ बारकोड को दाईं ओर संरेखित करें
@@ -181,7 +180,7 @@ export const generateSingleProductLabelPDF = async (
       // बारकोड के नीचे SKU टेक्स्ट जोड़ें
       doc.setFontSize(7);
       doc.setFont("helvetica", "normal");
-      doc.text(String(productUPCcode), barcodeX + barcodeWidth / 2, rightYPos, {
+      doc.text(String(size.upcCode), barcodeX + barcodeWidth / 2, rightYPos, {
         align: "center",
       });
     } catch (error) {

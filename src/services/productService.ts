@@ -35,10 +35,10 @@ export const fetchProductsService = async (
 
 export const addProductService = async (data: ProductFormValues) => {
   const productData = {
-     ...(data.ndcCode && { ndcCode: data.ndcCode }),
-  ...(data.upcCode && { upcCode: data.upcCode }),
-  ...(data.lotNumber && { lotNumber: data.lotNumber }),
-  ...(data.exipry && { exipry: data.exipry }),
+    ...(data.ndcCode && { ndcCode: data.ndcCode }),
+    ...(data.upcCode && { upcCode: data.upcCode }),
+    ...(data.lotNumber && { lotNumber: data.lotNumber }),
+    ...(data.exipry && { exipry: data.exipry }),
     sku: data.sku,
     key_features: data.key_features,
     squanence: data.squanence,
@@ -58,6 +58,8 @@ export const addProductService = async (data: ProductFormValues) => {
     image_url: data.image_url || "",
     images: data.images || [],
   };
+
+  console.log(data);
 
   const { data: newProduct, error: productError } = await supabase
     .from("products")
@@ -84,10 +86,15 @@ export const addProductService = async (data: ProductFormValues) => {
       sizeSquanence: Number(size.sizeSquanence) || 0,
       shipping_cost: Number(size.shipping_cost) || 15,
       quantity_per_case: size.quantity_per_case,
-      case: size.case ,
-      unit: size.unit ,
-      groupIds: size.groupIds ,
-      disAllogroupIds: size.disAllogroupIds ,
+      case: size.case,
+      unit: size.unit,
+      groupIds: size.groupIds,
+      disAllogroupIds: size.disAllogroupIds,
+
+      ndcCode: size.ndcCode || "",
+      upcCode: size.upcCode || "",
+      lotNumber: size.lotNumber || "",
+      exipry: size.exipry || "",
     }));
 
     const { error: sizesError } = await supabase
@@ -132,6 +139,11 @@ export const updateProductService = async (
         image_url: data.image_url || "",
         images: data.images || [],
         updated_at: new Date().toISOString(),
+
+        ndcCode: data.ndcCode || null,
+        upcCode: data.upcCode || null,
+        lotNumber: data.lotNumber || null,
+        exipry: data.exipry || null,
       })
       .eq("id", productId);
 
@@ -141,7 +153,6 @@ export const updateProductService = async (
     }
 
     // Delete existing sizes
-   
 
     console.log(data.sizes);
 
@@ -149,36 +160,43 @@ export const updateProductService = async (
 
     const sizesToInsert = data.sizes.filter((size) => !size.id); // New sizes
     const sizesToUpdate = data.sizes.filter((size) => size.id); // Existing sizes
-    
+
     // First, insert new sizes
     if (sizesToInsert.length > 0) {
       const { error: insertError } = await supabase
         .from("product_sizes")
-        .insert(sizesToInsert.map((size) => ({
-          product_id:productId,
-          size_value: size.size_value || "0",
-          size_unit: size.size_unit || "unit",
-          price: Number(size.price) || 0,
-          stock: Number(size.stock) || 0,
-          price_per_case: Number(size.price_per_case) || 0,
-          sku: size.sku || "",
-          image: size.image || "",
-          quantity_per_case: Number(size.quantity_per_case) || 1,
-          rolls_per_case: Number(size.rolls_per_case) || 1,
-          sizeSquanence: Number(size.sizeSquanence) || 0,
-          shipping_cost: size.shipping_cost,
-            case: size.case ,
-      groupIds: size.groupIds ,
-      disAllogroupIds: size.disAllogroupIds ,
-      unit: size.unit ,
-        })));
-    
+        .insert(
+          sizesToInsert.map((size) => ({
+            product_id: productId,
+            size_value: size.size_value || "0",
+            size_unit: size.size_unit || "unit",
+            price: Number(size.price) || 0,
+            stock: Number(size.stock) || 0,
+            price_per_case: Number(size.price_per_case) || 0,
+            sku: size.sku || "",
+            image: size.image || "",
+            quantity_per_case: Number(size.quantity_per_case) || 1,
+            rolls_per_case: Number(size.rolls_per_case) || 1,
+            sizeSquanence: Number(size.sizeSquanence) || 0,
+            shipping_cost: size.shipping_cost,
+            case: size.case,
+            groupIds: size.groupIds,
+            disAllogroupIds: size.disAllogroupIds,
+            unit: size.unit,
+
+             ndcCode: size.ndcCode || "",
+            upcCode: size.upcCode || "",
+            lotNumber: size.lotNumber || "",
+            exipry: size.exipry || "",
+          }))
+        );
+
       if (insertError) {
         console.error("Error inserting new sizes:", insertError);
         throw insertError;
       }
     }
-    
+
     // Then, update existing sizes
     for (const size of sizesToUpdate) {
       const { error: updateError } = await supabase
@@ -195,74 +213,66 @@ export const updateProductService = async (
           rolls_per_case: Number(size.rolls_per_case) || 1,
           sizeSquanence: Number(size.sizeSquanence) || 0,
           shipping_cost: size.shipping_cost,
-            case: size.case,
-      groupIds: size.groupIds ,
-      disAllogroupIds: size.disAllogroupIds ,
-      unit: size.unit ,
+          case: size.case,
+          groupIds: size.groupIds,
+          disAllogroupIds: size.disAllogroupIds,
+          unit: size.unit,
+          ndcCode: size.ndcCode || "", // New field
+          upcCode: size.upcCode || "", // New field
+          lotNumber: size.lotNumber || "", // New field
+          exipry: size.exipry || "", // New field
         })
         .eq("id", size.id);
-    
+
       if (updateError) {
         console.error("Error updating size:", updateError);
         throw updateError;
       }
     }
-    
 
+    // 🔹 STEP 1: Group Pricing fetch karna
+    const { data: groupPricingData, error: fetchError } = await supabase
+      .from("group_pricing")
+      .select("*");
 
-
-
-
-
-
-
-
-// 🔹 STEP 1: Group Pricing fetch karna
-const { data: groupPricingData, error: fetchError } = await supabase
-  .from("group_pricing")
-  .select("*");
-
-if (fetchError) {
-  console.error("Error fetching group pricing:", fetchError);
-  throw fetchError;
-}
-
-// 🔹 STEP 2: Update product_arrayjson ke andar actual price
-const updatedGroupPricingData = groupPricingData.map((group) => {
-  if (!Array.isArray(group.product_arrayjson)) return group; // Ensure it's an array
-
-  // Update each product's actual_price where product_id matches
-  const updatedProducts = group.product_arrayjson.map((product) => {
-    const matchingSize = data.sizes.find((size) => size.id === product.product_id);
-    if (matchingSize) {
-      product.actual_price = matchingSize.price; // ✅ New price assign
+    if (fetchError) {
+      console.error("Error fetching group pricing:", fetchError);
+      throw fetchError;
     }
-    return product;
-  });
 
-  return {
-    id: group.id,
-    updatedJson: updatedProducts, // No need for JSON.stringify()
-  };
-});
+    // 🔹 STEP 2: Update product_arrayjson ke andar actual price
+    const updatedGroupPricingData = groupPricingData.map((group) => {
+      if (!Array.isArray(group.product_arrayjson)) return group; // Ensure it's an array
 
-// 🔹 STEP 3: Updated JSON ko wapas database mein save karna
-for (const group of updatedGroupPricingData) {
-  const { error: updateError } = await supabase
-    .from("group_pricing")
-    .update({ product_arrayjson: group.updatedJson })
-    .eq("id", group.id);
+      // Update each product's actual_price where product_id matches
+      const updatedProducts = group.product_arrayjson.map((product) => {
+        const matchingSize = data.sizes.find(
+          (size) => size.id === product.product_id
+        );
+        if (matchingSize) {
+          product.actual_price = matchingSize.price; // ✅ New price assign
+        }
+        return product;
+      });
 
-  if (updateError) {
-    console.error("Error updating group pricing:", updateError);
-    throw updateError;
-  }
-}
+      return {
+        id: group.id,
+        updatedJson: updatedProducts, // No need for JSON.stringify()
+      };
+    });
 
+    // 🔹 STEP 3: Updated JSON ko wapas database mein save karna
+    for (const group of updatedGroupPricingData) {
+      const { error: updateError } = await supabase
+        .from("group_pricing")
+        .update({ product_arrayjson: group.updatedJson })
+        .eq("id", group.id);
 
-
-
-
+      if (updateError) {
+        console.error("Error updating group pricing:", updateError);
+        throw updateError;
+      }
+    }
 
     // const sizesData = data.sizes.map((size) => ({
     //   product_id: productId,

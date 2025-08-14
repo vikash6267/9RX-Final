@@ -8,9 +8,13 @@ export interface ProductSize {
   price_per_case: number;
   stock: number;
   quantity_per_case: number; // ✅ Added this field
-  image?:any,
+  image?: any;
   created_at: string;
   updated_at: string;
+  ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
 }
 
 export interface Product {
@@ -18,7 +22,7 @@ export interface Product {
   sku: string;
   key_features: string;
   squanence?: string;
-   ndcCode?: string;
+  ndcCode?: string;
   upcCode?: string;
   lotNumber?: string;
   exipry?: string;

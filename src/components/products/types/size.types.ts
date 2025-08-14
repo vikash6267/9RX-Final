@@ -24,4 +24,9 @@ export interface NewSizeState {
   image: string;
   rolls_per_case: string;
   shipping_cost: string;
+
+    ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
 }

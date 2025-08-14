@@ -134,14 +134,14 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
     try {
       // Create a new PDF document
       const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4",
-          });
-    
-          const pageWidth = doc.internal.pageSize.getWidth();
-          const margin = 10;
-          const contentWidth = pageWidth - margin * 2;
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 10;
+      const contentWidth = pageWidth - margin * 2;
 
 
       // Barcode value
@@ -165,7 +165,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
 
 
 
-    // Add Logo (Left side)
+      // Add Logo (Left side)
       const logo = new Image();
       logo.src = "/final.png";
       await new Promise((resolve) => (logo.onload = resolve));
@@ -194,17 +194,17 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
       doc.text("+1 800 969 6295", margin, margin + 10);
 
       // PURCHASE ORDER TITLE (right side)
-   doc.setFont("helvetica", "bold");
-doc.setFontSize(15);
-doc.text("INVOICE", pageWidth - margin, margin + 10, { align: "right" });
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("INVOICE", pageWidth - margin, margin + 10, { align: "right" });
 
-doc.setFont("helvetica", "bold");
-doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
 
-// Compact spacing: 4pt gap per line
-doc.text(`ORDER - ${invoice.order_number}`, pageWidth - margin, margin + 15, { align: "right" });
-doc.text(`INVOICE - ${invoice.invoice_number}`, pageWidth - margin, margin + 20, { align: "right" });
-doc.text(`Date - ${formattedDate}`, pageWidth - margin, margin + 25, { align: "right" });
+      // Compact spacing: 4pt gap per line
+      doc.text(`ORDER - ${invoice.order_number}`, pageWidth - margin, margin + 15, { align: "right" });
+      doc.text(`INVOICE - ${invoice.invoice_number}`, pageWidth - margin, margin + 20, { align: "right" });
+      doc.text(`Date - ${formattedDate}`, pageWidth - margin, margin + 25, { align: "right" });
 
       // Divider line
       doc.setDrawColor(200);
@@ -256,51 +256,74 @@ doc.text(`Date - ${formattedDate}`, pageWidth - margin, margin + 25, { align: "r
       const tableStartY = infoStartY + 45
 
       // Prepare table data
-      const tableHead = [["Description", "Sizes", "Qty", "Amount"]]
+
+      // This code assumes `doc` is your jsPDF instance and `invoice` is your JSON data object.
+      const tableHead = [
+        ["ITEMS", "DESCRIPTION", "QUANTITY", "UNIT PRICE", "TOTAL"]
+      ];
+
       const tableBody = [];
-      invoice.items.forEach((item) => {
-        // Add a separate row for the product name (spanning all columns)
-        tableBody.push([
-          { content: item.name, colSpan: 5, styles: { fontStyle: 'bold', halign: 'left', fillColor: [245, 245, 245] } }
-        ]);
 
-        item.sizes.forEach((size) => {
-          const sizeValueUnit = `${size.size_value} ${size.size_unit}`;
-          const quantity = size.quantity.toString();
-          const pricePerUnit = `$${Number(size.price).toFixed(2)}`;
-          const totalPerSize = `$${(size.quantity * size.price).toFixed(2)}`;
-
+      if (invoice?.items && Array.isArray(invoice.items)) {
+        invoice.items.forEach((item) => {
+          // 1. Add a header row for the product name, spanning all columns
           tableBody.push([
-            "", // Description column empty (since we show name in separate row)
-            sizeValueUnit,
-            quantity,
-            pricePerUnit,
-            totalPerSize,
+            {
+              content: item.name,
+              colSpan: 5,
+              styles: {
+                fontStyle: 'bold',
+                halign: 'left',
+                fillColor: [245, 245, 245], // A light grey background
+                textColor: [0, 0, 0]
+              }
+            }
           ]);
+
+          // 2. Add a data row for each size variation under that product
+          if (Array.isArray(item.sizes)) {
+            item.sizes.forEach((size) => {
+              const itemSku = size.sku || "N/A";
+              const description = `${size.size_value} ${size.size_unit}`;
+              const quantity = size.quantity?.toString() || '0';
+              const unitPrice = `$${Number(size.price).toFixed(2)}`;
+              const total = `$${Number(size.total_price).toFixed(2)}`;
+
+              tableBody.push([
+                itemSku,
+                description,
+                quantity,
+                unitPrice,
+                total
+              ]);
+            });
+          }
         });
-      });
+      } else {
+        console.warn("Invoice data is missing or has no items.");
+        tableBody.push([{ content: "No items found in this invoice.", colSpan: 5, styles: { halign: 'center' } }]);
+      }
+
+      // 3. Generate the table using autoTable
       (doc as any).autoTable({
-  head: [["Description", "Size", "Qty", "Unit Price", "Amount"]],
-  body: tableBody,
-  startY: tableStartY,
-  styles: {
-    fontSize: 9,
-    cellPadding: { top: 2, bottom: 2, left: 2, right: 2 },
-  },
-  theme: "grid",
-  headStyles: {
-    fillColor: [230, 230, 230],
-    textColor: 0,
-    fontStyle: "bold",
-  },
-  columnStyles: {
-    2: { halign: "right", cellWidth: 20 },
-    3: { halign: "right", cellWidth: 25 },
-    4: { halign: "right", cellWidth: 30 },
-  },
-  margin: { left: margin, right: margin }, // full width
-  tableWidth: 'auto', // stretch to margins
-});
+        head: tableHead,
+        body: tableBody,
+        startY: tableStartY, // Your starting Y position
+        theme: "grid",
+        headStyles: {
+          fillColor: [230, 230, 230], // Header background color
+          textColor: [0, 0, 0],       // Header text color (black)
+          fontStyle: "bold",
+        },
+        columnStyles: {
+          0: { cellWidth: 35 },     // ITEMS (SKU)
+          1: { cellWidth: 'auto' }, // DESCRIPTION
+          2: { halign: "right" },   // QUANTITY
+          3: { halign: "right" },   // UNIT PRICE
+          4: { halign: "right" },   // TOTAL
+        },
+        margin: { left: margin, right: margin },
+      });
 
 
 
@@ -310,8 +333,8 @@ doc.text(`Date - ${formattedDate}`, pageWidth - margin, margin + 25, { align: "r
       // Payment status and summary section
       const paymentStatusX = margin
       const paymentStatusWidth = contentWidth / 3
-  const summaryWidth = contentWidth * 0.45; // make it 45% of full width
-const summaryX = pageWidth - margin - summaryWidth; // align right
+      const summaryWidth = contentWidth * 0.45; // make it 45% of full width
+      const summaryX = pageWidth - margin - summaryWidth; // align right
 
 
       // Payment status box
@@ -491,32 +514,45 @@ const summaryX = pageWidth - margin - summaryWidth; // align right
         </div>
 
         {/* Items Table - Responsive */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300 min-w-[500px]">
-            <thead className="bg-gray-200 text-xs sm:text-sm font-medium">
-              <tr>
-                <th className="border p-1 sm:p-2 text-left">Description</th>
-                <th className="border p-1 sm:p-2 text-left">Sizes</th>
-                <th className="border p-1 sm:p-2 text-right">Qty</th>
-                {/* <th className="border p-1 sm:p-2 text-right">Rate</th> */}
-                <th className="border p-1 sm:p-2 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice?.items?.map((item, index) => (
-                <tr key={index} className="border-b text-xs sm:text-sm">
-                  <td className="border p-1 sm:p-2">{item.name}</td>
-                  <td className="border p-1 sm:p-2">
-                    {item.sizes?.map((size) => `${size.size_value} ${size.size_unit}`).join(", ")}
-                  </td>
-                  <td className="border p-1 sm:p-2 text-right">{item.quantity}</td>
-                  {/* <td className="border p-1 sm:p-2 text-right">${item.price}</td> */}
-                  <td className="border p-1 sm:p-2 text-right">${item.price}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+     {/* Items Table - Responsive */}
+<div className="overflow-x-auto">
+  <table className="w-full border-collapse border border-gray-300 min-w-[600px]">
+    {/* Table Head */}
+    <thead className="bg-gray-200 text-xs sm:text-sm font-medium">
+      <tr>
+        <th className="border p-2 text-left">ITEMS</th>
+        <th className="border p-2 text-left">DESCRIPTION</th>
+        <th className="border p-2 text-right">QUANTITY</th>
+        <th className="border p-2 text-right">UNIT PRICE</th>
+        <th className="border p-2 text-right">TOTAL</th>
+      </tr>
+    </thead>
+
+    {/* Table Body */}
+    {invoice?.items?.map((item) => (
+      <tbody key={item.productId}>
+        {/* Product group header row */}
+        <tr className="bg-gray-100">
+          <td colSpan={5} className="border p-2 font-bold text-gray-800">
+            {item.name}
+          </td>
+        </tr>
+
+        {/* Rows for each size */}
+        {item.sizes?.map((size) => (
+          <tr key={size.id} className="border-b text-xs sm:text-sm hover:bg-gray-50">
+            <td className="border p-2">{size.sku || "N/A"}</td>
+            <td className="border p-2">{`${size.size_value} ${size.size_unit}`}</td>
+            <td className="border p-2 text-right">{size.quantity}</td>
+            <td className="border p-2 text-right">${Number(size.price).toFixed(2)}</td>
+            <td className="border p-2 text-right">${Number(size.total_price).toFixed(2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    ))}
+  </table>
+</div>
+
 
         {/* Totals */}
         <div className="flex flex-col lg:flex-row justify-between items-start border-t pt-4 space-y-4 lg:space-y-0 lg:space-x-4">
@@ -597,7 +633,7 @@ const summaryX = pageWidth - margin - summaryWidth; // align right
       </div>
 
       {/* Hidden PDF template with fixed laptop-like dimensions - this will be used for PDF generation */}
-      <div className="fixed left-[-9999px] top-[-9999px] overflow-hidden">
+      <div className="fixed left-[-9999px] top-[-9999px] overflow-hidden ">
         <div
           ref={pdfTemplateRef}
           className="w-[800px] p-6 space-y-8 bg-white border"

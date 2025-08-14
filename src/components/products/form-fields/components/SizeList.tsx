@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { generateSingleProductLabelPDF } from "@/utils/size-lable-download";
 import { supabase } from "@/integrations/supabase/client";
 import Select from "react-select";
+import { Switch } from "@/components/ui/switch";
 
 interface Size {
   size_value: string;
@@ -28,6 +29,10 @@ interface Size {
   disAllogroupIds?: string[];
   unit?: boolean;
   case?: boolean;
+  ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
 }
 
 interface SizeListProps {
@@ -39,23 +44,23 @@ interface SizeListProps {
   form?: any;
 }
 
-export const SizeList = ({ 
-  sizes = [], 
-  onRemoveSize, 
-  onUpdateSize, 
-  category, 
-  setNewSize, 
-  form 
+export const SizeList = ({
+  sizes = [],
+  onRemoveSize,
+  onUpdateSize,
+  category,
+  setNewSize,
+  form
 }: SizeListProps) => {
-  
+
   // ⚠️ IMPORTANT: Sabhi hooks TOP pe declare karo, kisi bhi condition se pehle!
   const categoryConfig = CATEGORY_CONFIGS[category as keyof typeof CATEGORY_CONFIGS] || CATEGORY_CONFIGS.OTHER;
-  
+
   // State hooks - ALWAYS top pe rakho
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
-
+console.log(sizes,"sizes")
   // Form values - ye bhi top pe
   const productName = form?.getValues("name") || "Product";
   const productUPCcode = form?.getValues("upcCode") || "";
@@ -112,7 +117,9 @@ export const SizeList = ({
       </div>
 
       {/* Size Cards Mapping */}
-      {sizes.map((size, index) => (
+      {sizes.map((size, index) => {
+          const [unitToggle, setUnitToggle] = useState(false); 
+        return(
         <Card
           key={index}
           className="border border-gray-200 hover:border-purple-300 transition-all duration-200 bg-white/80 backdrop-blur-sm"
@@ -123,7 +130,7 @@ export const SizeList = ({
               <div className="flex items-center gap-4 flex-1">
                 {/* Size Badge */}
                 <Badge className="bg-gradient-to-r text-white px-3 py-1 text-sm font-medium text-black">
-                  {size.size_value} {size.size_unit}
+                  {size.size_value} 
                 </Badge>
 
                 {/* SKU Badge */}
@@ -158,30 +165,39 @@ export const SizeList = ({
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 {/* Download Label Button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      await generateSingleProductLabelPDF(
-                        productName,
-                        size,
-                        productUPCcode,
-                        productNdcCode,
-                        productExpiry,
-                        productLotNumber
-                      );
-                      console.log(`Label for ${size.sku || size.size_value} downloaded!`);
-                    } catch (error) {
-                      console.error("Failed to download label:", error);
-                    }
-                  }}
-                  className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                  title="Download Label"
-                >
-                  <Printer className="h-4 w-4" />
-                </Button>
+               <div className="flex items-center gap-2">
+            {/* Toggle for unit */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">Unit</span>
+              <Switch
+                checked={unitToggle}
+                onCheckedChange={setUnitToggle}
+              />
+            </div>
+
+            {/* Download Label */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                try {
+                  await generateSingleProductLabelPDF(
+                    productName,
+                    { ...size, isUnit: unitToggle } ,
+                    unitToggle
+                  );
+                  console.log(`Label for ${ size} downloaded!`);
+                } catch (error) {
+                  console.error("Failed to download label:", error);
+                }
+              }}
+              className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+              title="Download Label"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
 
                 {/* Edit Button */}
                 <Button
@@ -341,26 +357,64 @@ export const SizeList = ({
                     </div>
                   )}
 
-                  {/* Sell Type Checkboxes */}
-                  <div className="col-span-2 flex items-center gap-4 mt-3">
-                    <label className="flex items-center gap-2 text-xs text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={!!size.unit}
-                        onChange={(e) => onUpdateSize(index, "unit", e.target.checked)}
-                      />
-                      Sell by Unit
+
+
+
+
+                  {/* NDC Code Input */}
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      NDC Code
                     </label>
-                    <label className="flex items-center gap-2 text-xs text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={!!size.case}
-                        onChange={(e) => onUpdateSize(index, "case", e.target.checked)}
-                      />
-                      Sell by Case
-                    </label>
+                    <Input
+                      type="text"
+                      value={size.ndcCode || ""}
+                      onChange={(e) => onUpdateSize(index, "ndcCode", e.target.value)}
+                      className="h-8 text-sm font-mono"
+                      placeholder="12345-678-90"
+                    />
                   </div>
 
+                  {/* UPC Code Input */}
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      UPC Code
+                    </label>
+                    <Input
+                      type="text"
+                      value={size.upcCode || ""}
+                      onChange={(e) => onUpdateSize(index, "upcCode", e.target.value)}
+                      className="h-8 text-sm font-mono"
+                      placeholder="012345678901"
+                    />
+                  </div>
+
+                  {/* Lot Number Input */}
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Lot Number
+                    </label>
+                    <Input
+                      type="text"
+                      value={size.lotNumber || ""}
+                      onChange={(e) => onUpdateSize(index, "lotNumber", e.target.value)}
+                      className="h-8 text-sm"
+                      placeholder="LOT-2024-001"
+                    />
+                  </div>
+
+                  {/* Expiry Date Input */}
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Expiry Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={size.exipry || ""}
+                      onChange={(e) => onUpdateSize(index, "exipry", e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
                   {/* Allowed Groups Multi-Select */}
                   <div className="col-span-2">
                     <label className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1 block">
@@ -437,7 +491,7 @@ export const SizeList = ({
             )}
           </CardContent>
         </Card>
-      ))}
+      )})}
     </div>
   );
 };

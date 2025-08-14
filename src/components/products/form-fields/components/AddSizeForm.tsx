@@ -45,7 +45,7 @@ export const AddSizeForm = ({
       const rolls = field === "rolls_per_case" ? parseFloat(value as string) : parseFloat(newSize.rolls_per_case || "1");
 
       let pricePerUnit = 0;
-      
+
       // Different calculation based on category
       if (categoryConfig?.hasRolls && rolls > 0) {
         // For categories with rolls (like RX LABELS)
@@ -266,6 +266,64 @@ export const AddSizeForm = ({
               </div>
             </div>
 
+
+
+
+
+            {/* NDC Code */}
+            <div>
+              <FormLabel className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                NDC Code
+              </FormLabel>
+              <Input
+                type="text"
+                value={newSize.ndcCode}
+                onChange={(e) => handleFieldChange("ndcCode", e.target.value)}
+                placeholder="12345-678-90"
+                className="h-9 text-sm font-mono"
+              />
+            </div>
+
+            {/* UPC Code */}
+            <div>
+              <FormLabel className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                UPC Code
+              </FormLabel>
+              <Input
+                type="text"
+                value={newSize.upcCode}
+                onChange={(e) => handleFieldChange("upcCode", e.target.value)}
+                placeholder="012345678901"
+                className="h-9 text-sm font-mono"
+              />
+            </div>
+
+            {/* Lot Number */}
+            <div>
+              <FormLabel className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Lot Number
+              </FormLabel>
+              <Input
+                type="text"
+                value={newSize.lotNumber}
+                onChange={(e) => handleFieldChange("lotNumber", e.target.value)}
+                placeholder="LOT-2024-001"
+                className="h-9 text-sm"
+              />
+            </div>
+
+            {/* Expiry Date */}
+            <div>
+              <FormLabel className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Expiry Date
+              </FormLabel>
+              <Input
+                type="date"
+                value={newSize.exipry}
+                onChange={(e) => handleFieldChange("exipry", e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
             {/* Add Button */}
             <div className="flex items-end col-span-2 md:col-span-1">
               <Button
@@ -284,7 +342,7 @@ export const AddSizeForm = ({
           {newSize.price && newSize.quantity_per_case && (
             <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-xs text-blue-700">
-                💡 <strong>Price Calculation:</strong> 
+                💡 <strong>Price Calculation:</strong>
                 {categoryConfig?.hasRolls && newSize.rolls_per_case
                   ? ` $${newSize.price} ÷ (${newSize.rolls_per_case} rolls × ${newSize.quantity_per_case} qty) = $${newSize.price_per_case}/unit`
                   : ` $${newSize.price} ÷ ${newSize.quantity_per_case} qty = $${newSize.price_per_case}/unit`

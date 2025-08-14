@@ -224,7 +224,7 @@ currentOrder.items.forEach((item) => {
 
     // Addresses
     const infoStartY = margin + 50;
-    doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
+    doc.setFont("helvetica", "bold").setFontSize(11).text("Vendor", margin, infoStartY);
     doc.setFont("helvetica", "normal").setFontSize(9);
     doc.text("9RX", margin, infoStartY + 5);
     doc.text(currentOrder.customerInfo?.name || "N/A", margin, infoStartY + 10);
@@ -405,7 +405,7 @@ currentOrder.items.forEach((item) => {
 
       // Addresses
       const infoStartY = margin + 35;
-      doc.setFont("helvetica", "bold").setFontSize(11).text("Bill To", margin, infoStartY);
+      doc.setFont("helvetica", "bold").setFontSize(11).text("Vendor", margin, infoStartY);
       doc.setFont("helvetica", "normal").setFontSize(9);
       doc.text("9RX", margin, infoStartY + 5);
       doc.text(currentOrder.customerInfo?.name || "N/A", margin, infoStartY + 10);

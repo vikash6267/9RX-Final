@@ -35,6 +35,7 @@ const Products = () => {
 
 
   const handleSubmit = async (data: ProductFormValues): Promise<void> => {
+    
     setIsSubmitting(true);
     try {
       return await handleAddProduct(data);

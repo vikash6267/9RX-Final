@@ -93,7 +93,7 @@ export const productFormSchema = z.object({
   sku: z.string().min(2, "Product code must be at least 2 characters"),
   key_features: z.string().min(2, "key features must be at least 2 characters"),
   squanence: z.any().optional(),
-  
+
   ndcCode: z.any().optional(),
   upcCode: z.any().optional(),
   lotNumber: z.any().optional(),
@@ -112,6 +112,11 @@ export const productFormSchema = z.object({
         price: z.coerce.number().min(0, "Price must be positive"),
         groupIds: z.array(z.string().uuid()).optional().default([]),
         disAllogroupIds: z.array(z.string().uuid()).optional().default([]),
+
+        ndcCode: z.any().optional(),
+        upcCode: z.any().optional(),
+        lotNumber: z.any().optional(),
+        exipry: z.any().optional(),
 
         price_per_case: z.coerce
           .number()

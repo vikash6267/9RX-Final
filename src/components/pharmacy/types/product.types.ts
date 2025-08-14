@@ -32,6 +32,11 @@ export interface ProductSize {
   price_per_case: number;
   pricePerCase: any;
   stock: number;
+
+   ndcCode?: string;
+  upcCode?: string;
+  lotNumber?: string;
+  exipry?: string;
 }
 
 export interface ProductDetails {
@@ -45,11 +50,13 @@ export interface ProductDetails {
   shipping_cost: number;
   sku: string;
   key_features: string;
-  squanence:string;
-   ndcCode?: string;
+  squanence?:string;
+
+  ndcCode?: string;
   upcCode?: string;
   lotNumber?: string;
   exipry?: string;
+
   images: string[];
   image_url: string;
   endsIn: string;

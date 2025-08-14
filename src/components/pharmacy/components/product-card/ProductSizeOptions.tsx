@@ -93,8 +93,10 @@ export const ProductSizeOptions = ({
                     {/* Size and Stock Status */}
                     <div className="flex flex-col">
                       <span className="text-lg font-semibold uppercase text-gray-800">
-                        {size.size_value} {size.size_unit}
+                        {size.size_value} 
+                        
                       </span>
+                      <span className="my-1">SKU:{" "}{size.sku} </span>
                       <span className={`text-sm font-medium ${isOutOfStock ? "text-red-500" : "text-green-600"}`}>
                         {isOutOfStock
                           ? "Out of Stock"
