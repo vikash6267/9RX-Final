@@ -405,8 +405,7 @@ export const OrderDetailsSheet = ({
       const tax = Number(currentOrder?.tax_amount || 0);
       const total = subtotal + handling + fred + shipping + tax;
 
-      // Summary Table
-      const summaryHead = [['Description', 'Amount']];
+  
       const summaryBody = [
         ['Sub Total', `$${subtotal.toFixed(2)}`],
         ['Handling-Shipping', `$${handling.toFixed(2)}`],
@@ -415,7 +414,7 @@ export const OrderDetailsSheet = ({
       ];
 
       (doc as any).autoTable({
-        head: summaryHead,
+       
         body: summaryBody,
         startY: finalY,
         theme: 'grid',
@@ -425,7 +424,7 @@ export const OrderDetailsSheet = ({
           0: { halign: 'left', fontStyle: 'bold' },
           1: { halign: 'right' },
         },
-        margin: { left: pageWidth - margin - 60 },
+        margin: { left: pageWidth - margin - 65 },
         tableWidth: 60,
       });
 
