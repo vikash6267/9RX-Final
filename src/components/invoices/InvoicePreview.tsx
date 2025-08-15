@@ -287,7 +287,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
               const description = `${size.size_value} ${size.size_unit}`;
               const quantity = size.quantity?.toString() || '0';
               const unitPrice = `$${Number(size.price).toFixed(2)}`;
-              const total = `$${Number(size.total_price).toFixed(2)}`;
+              const total = `$${Number(size.price *size.quantity ).toFixed(2)}`;
 
               tableBody.push([
                 itemSku,
@@ -545,7 +545,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <td className="border p-2">{`${size.size_value} ${size.size_unit}`}</td>
             <td className="border p-2 text-right">{size.quantity}</td>
             <td className="border p-2 text-right">${Number(size.price).toFixed(2)}</td>
-            <td className="border p-2 text-right">${Number(size.total_price).toFixed(2)}</td>
+            <td className="border p-2 text-right">${Number(size.quantity *size.price ).toFixed(2)}</td>
           </tr>
         ))}
       </tbody>
