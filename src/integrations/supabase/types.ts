@@ -683,7 +683,7 @@ export type Database = {
           upcCode?: string;
           lotNumber?: string;
           exipry?: string;
-          
+          unitToggle?: boolean;
         };
         Insert: {
           base_price?: number;
@@ -710,6 +710,7 @@ export type Database = {
           ndcCode?: string;
           upcCode?: string;
           lotNumber?: string;
+          unitToggle?: boolean;
           exipry?: string;
           updated_at?: string | null;
         };
@@ -737,6 +738,7 @@ export type Database = {
           squanence?: string;
           ndcCode?: string;
           upcCode?: string;
+          unitToggle?: boolean;
           lotNumber?: string;
           exipry?: string;
           updated_at?: string | null;

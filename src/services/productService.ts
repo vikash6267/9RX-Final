@@ -39,6 +39,7 @@ export const addProductService = async (data: ProductFormValues) => {
     ...(data.upcCode && { upcCode: data.upcCode }),
     ...(data.lotNumber && { lotNumber: data.lotNumber }),
     ...(data.exipry && { exipry: data.exipry }),
+    ...(data.unitToggle && { exipry: data.unitToggle }),
     sku: data.sku,
     key_features: data.key_features,
     squanence: data.squanence,
@@ -114,7 +115,7 @@ export const updateProductService = async (
   productId: string,
   data: ProductFormValues
 ) => {
-  // console.log("Updating product with data:", data);
+  console.log("Updating product with data:", data);
 
   try {
     const { error: productError } = await supabase
@@ -139,6 +140,7 @@ export const updateProductService = async (
         image_url: data.image_url || "",
         images: data.images || [],
         updated_at: new Date().toISOString(),
+        unitToggle: data.unitToggle,
 
         ndcCode: data.ndcCode || null,
         upcCode: data.upcCode || null,
@@ -184,7 +186,7 @@ export const updateProductService = async (
             disAllogroupIds: size.disAllogroupIds,
             unit: size.unit,
 
-             ndcCode: size.ndcCode || "",
+            ndcCode: size.ndcCode || "",
             upcCode: size.upcCode || "",
             lotNumber: size.lotNumber || "",
             exipry: size.exipry || "",

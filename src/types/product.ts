@@ -12,6 +12,7 @@ export interface ProductSize {
   created_at: string;
   updated_at: string;
   ndcCode?: string;
+  unitToggle?: boolean;
   upcCode?: string;
   lotNumber?: string;
   exipry?: string;
@@ -28,6 +29,7 @@ export interface Product {
   exipry?: string;
   name: string;
   description: string;
+  unitToggle?: boolean;
   category: string;
   current_stock: number;
   min_stock: number;

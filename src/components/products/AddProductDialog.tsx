@@ -46,6 +46,7 @@ export function AddProductDialog({
       upcCode: initialData?.upcCode || "",
       lotNumber: initialData?.lotNumber || "",
       exipry: initialData?.exipry || "",
+      unitToggle: initialData?.unitToggle,
 
       description: initialData?.description || "",
       category: initialData?.category || "",
@@ -84,7 +85,7 @@ export function AddProductDialog({
     setLoading(true)
     try {
       await onSubmit(values)
-      
+
       form.reset()
       onProductAdded()
       onOpenChange(false)

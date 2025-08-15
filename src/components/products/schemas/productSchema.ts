@@ -98,6 +98,7 @@ export const productFormSchema = z.object({
   upcCode: z.any().optional(),
   lotNumber: z.any().optional(),
   exipry: z.any().optional(),
+  unitToggle: z.boolean().optional(),
 
   category: z.string(),
   images: z.array(z.string()).default([]),
@@ -117,6 +118,7 @@ export const productFormSchema = z.object({
         upcCode: z.any().optional(),
         lotNumber: z.any().optional(),
         exipry: z.any().optional(),
+  unitToggle: z.boolean().optional(),
 
         price_per_case: z.coerce
           .number()

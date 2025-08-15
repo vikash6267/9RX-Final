@@ -37,6 +37,7 @@ export interface ProductSize {
   upcCode?: string;
   lotNumber?: string;
   exipry?: string;
+  unitToggle?: boolean;
 }
 
 export interface ProductDetails {
@@ -56,6 +57,7 @@ export interface ProductDetails {
   upcCode?: string;
   lotNumber?: string;
   exipry?: string;
+  unitToggle?: boolean;
 
   images: string[];
   image_url: string;

@@ -18,8 +18,7 @@ interface Size {
   ndcCode?: string;
   exipry?: string;
   upcCode?: string;
-  isUnit?:boolean
-  
+  isUnit?: boolean;
 }
 
 // बारकोड को base64 इमेज के रूप में जनरेट करें
@@ -44,10 +43,7 @@ const generateBarcode = (text: string): string => {
 export const generateSingleProductLabelPDF = async (
   productName: string,
   size: Size,
-  isUnit:boolean
-  
-
- 
+  isUnit: boolean
 ) => {
   // लेबल के आयाम mm में (4 इंच = 101.6 mm, 2 इंच = 50.8 mm)
   const labelWidth = 101.6; // 4 इंच
@@ -77,7 +73,9 @@ export const generateSingleProductLabelPDF = async (
   // दाईं ओर: फ़ोन नंबर
   doc.setFontSize(headerFontSize);
   doc.setFont("helvetica", "bold");
-  doc.text("1 800 969 6295", labelWidth - contentMargin, yPos, { align: "right" });
+  doc.text("1 800 969 6295", labelWidth - contentMargin, yPos, {
+    align: "right",
+  });
   yPos += 3.5;
 
   // वेबसाइट
@@ -106,14 +104,14 @@ export const generateSingleProductLabelPDF = async (
   yPos += productNameLines.length * 3.5 + 2;
 
   // आकार (केवल मान, कोई लेबल नहीं)
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-const sizeText = `${size.size_value || "N/A"}${isUnit ? ` ${size.size_unit || ""}` : ""}`;  const sizeLines = doc.splitTextToSize(
-    sizeText,
-    labelWidth / 2 - leftX - 2
-  );
+  const sizeText = `${size.size_value || "N/A"}${
+    isUnit ? ` ${size.size_unit || ""}` : ""
+  }`;
+  const sizeLines = doc.splitTextToSize(sizeText, labelWidth / 2 - leftX - 2);
   doc.text(sizeLines, leftX, yPos);
-  yPos += sizeLines.length * 3.5 + 2;
+  yPos += sizeLines.length * 3.5 + 3.5;
 
   // प्रति केस मात्रा (केवल मान, कोई लेबल नहीं)
   doc.setFontSize(10);
@@ -184,7 +182,10 @@ const sizeText = `${size.size_value || "N/A"}${isUnit ? ` ${size.size_unit || ""
         align: "center",
       });
     } catch (error) {
-      console.error(`SKU ${size.sku} के लिए बारकोड जनरेट करने में त्रुटि:`, error);
+      console.error(
+        `SKU ${size.sku} के लिए बारकोड जनरेट करने में त्रुटि:`,
+        error
+      );
       doc.setFontSize(7);
       doc.text(`${size.sku}`, rightX, rightYPos);
     }

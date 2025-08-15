@@ -140,6 +140,7 @@ const ProductShowcase = ({ groupShow,isEditing=false,form={} }: ProductShowcaseP
         price: newPrice,
         originalPrice: size.price === newPrice ? 0 : size.price,
         sku: size.sku || "",
+        unitToggle:item?.unitToggle  ,
         key_features: size.key_features || "",
         squanence: size.squanence || "",
         quantity_per_case: size.quantity_per_case,
