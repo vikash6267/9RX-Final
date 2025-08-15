@@ -34,7 +34,7 @@ interface OrderDetailsSheetProps {
   isEditing: boolean;
   poIs?: boolean;
   setIsEditing: (value: boolean) => void;
-  loadOrders?: () => void;
+  loadOrders?: (poIs) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onProcessOrder?: (orderId: string) => void;
@@ -214,7 +214,7 @@ export const OrderDetailsSheet = ({
             );
           } else {
             console.log("Order updated with QuickBooks ID successfully.");
-            await loadOrders();
+            await loadOrders(poIs);
             const updatedData = {
               ...currentOrder,
               quickBooksID: invoiceId, // ya jis variable me ID hai

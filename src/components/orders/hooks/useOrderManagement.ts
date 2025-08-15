@@ -14,14 +14,31 @@ export const useOrderManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(1);
+  const [limit, setLimit] = useState(20); 
 
-  const loadOrders = async () => {
-    setLoading(true)
+  const loadOrders = async ({
+    statusFilter,
+    statusFilter2,
+    searchQuery,
+    dateRange,
+    poIs
+  }: {
+    statusFilter?: string;
+    statusFilter2?: string;
+    searchQuery?: string;
+    dateRange?: { from?: Date; to?: Date };
+    poIs?: boolean;
+  } = {}) => {
+    setLoading(true);
+
+    console.log(poIs,"poIs")
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast({
           title: "Error",
@@ -30,17 +47,17 @@ export const useOrderManagement = () => {
         });
         return;
       }
-      
+
       const role = sessionStorage.getItem("userType");
       const adminRoles = ["admin"];
       console.log("Session:", session);
       console.log("User ID:", session.user.id);
       console.log("Role from sessionStorage:", role);
-      
+
       let query = supabase
-      .from("orders")
-      .select(
-        `
+        .from("orders")
+        .select(
+          `
         *,
         profiles (
           first_name, 
@@ -50,40 +67,67 @@ export const useOrderManagement = () => {
           type, 
           company_name
           )
-          `
+          `,
+          { count: "exact" }
         )
         .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-        
-        if (role === "pharmacy") {
-          query = query.eq("profile_id", session.user.id);
-        }
-        
-        if (role === "group") {
+        .order("created_at", { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+      if (role === "pharmacy") {
+        query = query.eq("profile_id", session.user.id);
+      }
+
+      if (role === "group") {
         const { data: groupProfiles, error } = await supabase
-        .from("profiles")
+          .from("profiles")
           .select("id")
           .eq("group_id", session.user.id);
-          
-          if (error) throw new Error("Failed to fetch customer information");
-          
-          if (!groupProfiles || groupProfiles.length === 0)
-            throw new Error("No customer profiles found");
-          
-          const userIds = groupProfiles.map((user) => user.id);
-          console.log(userIds);
-          query = query.in("profile_id", userIds);
-        }
-        
-        const { data, error } = await query;
 
-      console.log(data)
+        if (error) throw new Error("Failed to fetch customer information");
+
+        if (!groupProfiles || groupProfiles.length === 0)
+          throw new Error("No customer profiles found");
+
+        const userIds = groupProfiles.map((user) => user.id);
+        console.log(userIds);
+        query = query.in("profile_id", userIds);
+      }
+      // Apply status filters
+      if (statusFilter && statusFilter !== "all") {
+        query = query.eq("payment_status", statusFilter);
+      }
+      if (statusFilter2 && statusFilter2 !== "all") {
+        query = query.ilike("status", statusFilter2);
+      }
+
+      // Apply search
+      if (searchQuery) {
+        const search = `%${searchQuery}%`;
+        query = query.or(
+          `order_number.ilike.${search},customerInfo->>name.ilike.${search},customerInfo->>email.ilike.${search},customerInfo->>phone.ilike.${search}`
+        );
+      }
+ // ✅ PO orders filter
+    if (poIs !== undefined) {
+      query = query.eq("poAccept", !poIs);
+    }
+      // Date range filter
+      if (dateRange?.from && dateRange?.to) {
+        query = query
+          .gte("created_at", dateRange.from.toISOString())
+          .lte("created_at", dateRange.to.toISOString());
+      }
+      const { data, error, count } = await query;
+
+      console.log(data);
       if (error) throw error;
+      setTotalOrders(count || 0);
 
       const formattedOrders: OrderFormValues[] = (data as any[]).map(
         (order) => {
           const profileData = order.profiles || {};
-          
+
           return {
             id: order.id || "",
             customer: order.profile_id || "",
@@ -105,12 +149,12 @@ export const useOrderManagement = () => {
             customerInfo: order.customerInfo || {
               name:
                 profileData.first_name && profileData.last_name
-                ? `${profileData.first_name} ${profileData.last_name}`
-                : "Unknown",
-                email: profileData.email || "",
-                phone: profileData.mobile_phone || "",
-                type: profileData.type || "Pharmacy",
-                address: {
+                  ? `${profileData.first_name} ${profileData.last_name}`
+                  : "Unknown",
+              email: profileData.email || "",
+              phone: profileData.mobile_phone || "",
+              type: profileData.type || "Pharmacy",
+              address: {
                 street: profileData.company_name || "",
                 city: "",
                 state: "",
@@ -131,7 +175,7 @@ export const useOrderManagement = () => {
             },
             specialInstructions: order.notes || "",
             shippingAddress: order.shippingAddress
-            ? {
+              ? {
                   fullName: order.shippingAddress.fullName || "",
                   email: order.shippingAddress.email || "",
                   phone: order.shippingAddress.phone || "",
@@ -142,40 +186,40 @@ export const useOrderManagement = () => {
                     zip_code: order.shippingAddress.address?.zip_code || "",
                   },
                 }
-                : {
+              : {
                   fullName:
                     profileData.first_name && profileData.last_name
-                    ? `${profileData.first_name} ${profileData.last_name}`
-                    : "",
-                    email: profileData.email || "",
-                    phone: profileData.mobile_phone || "",
-                    address: {
-                      street: profileData.company_name || "",
-                      city: "",
-                      state: "",
-                      zip_code: "",
-                    },
+                      ? `${profileData.first_name} ${profileData.last_name}`
+                      : "",
+                  email: profileData.email || "",
+                  phone: profileData.mobile_phone || "",
+                  address: {
+                    street: profileData.company_name || "",
+                    city: "",
+                    state: "",
+                    zip_code: "",
                   },
-                };
-              }
-            );
-            
-            setOrders(formattedOrders);
-            setLoading(false)
-          } catch (error) {
-            console.error("Error loading orders:", error);
-            toast({
-              title: "Error",
+                },
+          };
+        }
+      );
+
+      setOrders(formattedOrders);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      toast({
+        title: "Error",
         description: "Failed to load orders",
         variant: "destructive",
       });
     }
   };
-  
+
   // Refresh orders when the component mounts
-  useEffect(() => {
-    loadOrders();
-  }, []);
+  // useEffect(() => {
+  //   loadOrders();
+  // }, []);
 
   const handleOrderClick = (order: OrderFormValues) => {
     setSelectedOrder(order);
@@ -186,7 +230,7 @@ export const useOrderManagement = () => {
   // const handleDeleteOrder = async (orderId: string,reason: string): Promise<void> => {
   //   try {
   //     console.log(reason)
-      
+
   //     const { error: invoiceDeleteError } = await supabase
   //       .from("invoices")
   //       .delete()
@@ -226,180 +270,205 @@ export const useOrderManagement = () => {
   //   }
   // };
 
+  const handleDeleteOrder = async (
+    orderId: string,
+    reason: string
+  ): Promise<void> => {
+    try {
+      console.log("Void Reason:", reason);
 
-const handleDeleteOrder = async (orderId: string, reason: string): Promise<void> => {
-  try {
-    console.log("Void Reason:", reason);
+      // Step 1: Update the invoices table
+      const { error: invoiceUpdateError } = await supabase
+        .from("invoices")
+        .update({ void: true, voidReason: reason })
+        .eq("order_id", orderId);
+      if (invoiceUpdateError) throw invoiceUpdateError;
 
-    // Step 1: Update the invoices table
-    const { error: invoiceUpdateError } = await supabase
-      .from("invoices")
-      .update({ void: true, voidReason: reason })
-      .eq("order_id", orderId);
-    if (invoiceUpdateError) throw invoiceUpdateError;
+      // Step 2: Update the orders table
+      const { data: orderData, error: orderUpdateError } = await supabase
+        .from("orders")
+        .update({ void: true, voidReason: reason })
+        .eq("id", orderId)
+        .select()
+        .single(); // Get updated order
+      if (orderUpdateError) throw orderUpdateError;
 
-    // Step 2: Update the orders table
-    const { data: orderData, error: orderUpdateError } = await supabase
-      .from("orders")
-      .update({ void: true, voidReason: reason })
-      .eq("id", orderId)
-      .select()
-      .single(); // Get updated order
-    if (orderUpdateError) throw orderUpdateError;
+      // Step 3: Reverse stock for order items
+      const { data: orderItems, error: itemsError } = await supabase
+        .from("order_items")
+        .select("product_id, quantity")
+        .eq("order_id", orderId);
+      if (itemsError) throw itemsError;
 
-    // Step 3: Reverse stock for order items
-    const { data: orderItems, error: itemsError } = await supabase
-      .from("order_items")
-      .select("product_id, quantity")
-      .eq("order_id", orderId);
-    if (itemsError) throw itemsError;
+      for (const item of orderItems) {
+        const { error: stockRestoreError } = await supabase.rpc(
+          "increment_stock",
+          {
+            product_id: item.product_id,
+            quantity: item.quantity,
+          }
+        );
+        if (stockRestoreError) {
+          console.error(
+            `❌ Error restoring stock for product ${item.product_id}:`,
+            stockRestoreError
+          );
+        }
+      }
 
-    for (const item of orderItems) {
-      const { error: stockRestoreError } = await supabase.rpc("increment_stock", {
-        product_id: item.product_id,
-        quantity: item.quantity,
+      // Step 4: Reverse stock for size-level if needed
+      const sizes = orderData.items?.flatMap((item) => item.sizes || []) || [];
+      for (const size of sizes) {
+        const { data: currentSize, error: fetchError } = await supabase
+          .from("product_sizes")
+          .select("stock")
+          .eq("id", size.id)
+          .single();
+        if (fetchError || !currentSize) {
+          console.warn(`⚠️ Size not found for ID: ${size.id}`);
+          continue;
+        }
+
+        const newQuantity = currentSize.stock + size.quantity;
+        const { error: updateError } = await supabase
+          .from("product_sizes")
+          .update({ stock: newQuantity })
+          .eq("id", size.id);
+        if (updateError) {
+          console.error(
+            `❌ Failed to restore stock for size ID: ${size.id}`,
+            updateError
+          );
+        }
+      }
+
+      // Step 5: Update UI
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId
+            ? { ...order, void: true, voidReason: reason }
+            : order
+        )
+      );
+
+      toast({
+        title: "Success",
+        description: "Order voided and stock restored successfully",
       });
-      if (stockRestoreError) {
-        console.error(`❌ Error restoring stock for product ${item.product_id}:`, stockRestoreError);
+
+      if (selectedOrder?.id === orderId) {
+        setIsSheetOpen(false);
+        setSelectedOrder(null);
       }
-    }
-
-    // Step 4: Reverse stock for size-level if needed
-    const sizes = orderData.items?.flatMap((item) => item.sizes || []) || [];
-    for (const size of sizes) {
-      const { data: currentSize, error: fetchError } = await supabase
-        .from("product_sizes")
-        .select("stock")
-        .eq("id", size.id)
-        .single();
-      if (fetchError || !currentSize) {
-        console.warn(`⚠️ Size not found for ID: ${size.id}`);
-        continue;
-      }
-
-      const newQuantity = currentSize.stock + size.quantity;
-      const { error: updateError } = await supabase
-        .from("product_sizes")
-        .update({ stock: newQuantity })
-        .eq("id", size.id);
-      if (updateError) {
-        console.error(`❌ Failed to restore stock for size ID: ${size.id}`, updateError);
-      }
-    }
-
-    // Step 5: Update UI
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === orderId ? { ...order, void: true, voidReason: reason } : order
-      )
-    );
-
-    toast({
-      title: "Success",
-      description: "Order voided and stock restored successfully",
-    });
-
-    if (selectedOrder?.id === orderId) {
-      setIsSheetOpen(false);
-      setSelectedOrder(null);
-    }
-  } catch (error) {
-    console.error("Error voiding order:", error);
-    toast({
-      title: "Error",
-      description: "Failed to void order",
-      variant: "destructive",
-    });
-  }
-};
-
-const handleCancelOrder = async (orderId: string, reason: string): Promise<void> => {
-  try {
-    console.log("Cancel Reason:", reason);
-
-    // Step 1: Update the invoices table
-    const { error: invoiceUpdateError } = await supabase
-      .from("invoices")
-      .update({ status: "cancelled", cancelReason: reason })
-      .eq("order_id", orderId);
-    if (invoiceUpdateError) throw invoiceUpdateError;
-
-    // Step 2: Update the orders table
-    const { data: orderData, error: orderUpdateError } = await supabase
-      .from("orders")
-      .update({ status: "cancelled", cancelReason: reason })
-      .eq("id", orderId)
-      .select()
-      .single();
-    if (orderUpdateError) throw orderUpdateError;
-
-    // Step 3: Restore product-level stock
-    const { data: orderItems, error: itemsError } = await supabase
-      .from("order_items")
-      .select("product_id, quantity")
-      .eq("order_id", orderId);
-    if (itemsError) throw itemsError;
-
-    for (const item of orderItems) {
-      const { error: stockRestoreError } = await supabase.rpc("increment_stock", {
-        product_id: item.product_id,
-        quantity: item.quantity,
+    } catch (error) {
+      console.error("Error voiding order:", error);
+      toast({
+        title: "Error",
+        description: "Failed to void order",
+        variant: "destructive",
       });
-      if (stockRestoreError) {
-        console.error(`❌ Error restoring stock for product ${item.product_id}:`, stockRestoreError);
-      }
     }
+  };
 
-    // Step 4: Restore size-level stock (if applicable)
-    const sizes = orderData.items?.flatMap((item) => item.sizes || []) || [];
-    for (const size of sizes) {
-      const { data: currentSize, error: fetchError } = await supabase
-        .from("product_sizes")
-        .select("stock")
-        .eq("id", size.id)
+  const handleCancelOrder = async (
+    orderId: string,
+    reason: string
+  ): Promise<void> => {
+    try {
+      console.log("Cancel Reason:", reason);
+
+      // Step 1: Update the invoices table
+      const { error: invoiceUpdateError } = await supabase
+        .from("invoices")
+        .update({ status: "cancelled", cancelReason: reason })
+        .eq("order_id", orderId);
+      if (invoiceUpdateError) throw invoiceUpdateError;
+
+      // Step 2: Update the orders table
+      const { data: orderData, error: orderUpdateError } = await supabase
+        .from("orders")
+        .update({ status: "cancelled", cancelReason: reason })
+        .eq("id", orderId)
+        .select()
         .single();
-      if (fetchError || !currentSize) {
-        console.warn(`⚠️ Size not found for ID: ${size.id}`);
-        continue;
+      if (orderUpdateError) throw orderUpdateError;
+
+      // Step 3: Restore product-level stock
+      const { data: orderItems, error: itemsError } = await supabase
+        .from("order_items")
+        .select("product_id, quantity")
+        .eq("order_id", orderId);
+      if (itemsError) throw itemsError;
+
+      for (const item of orderItems) {
+        const { error: stockRestoreError } = await supabase.rpc(
+          "increment_stock",
+          {
+            product_id: item.product_id,
+            quantity: item.quantity,
+          }
+        );
+        if (stockRestoreError) {
+          console.error(
+            `❌ Error restoring stock for product ${item.product_id}:`,
+            stockRestoreError
+          );
+        }
       }
 
-      const newQuantity = currentSize.stock + size.quantity;
-      const { error: updateError } = await supabase
-        .from("product_sizes")
-        .update({ stock: newQuantity })
-        .eq("id", size.id);
-      if (updateError) {
-        console.error(`❌ Failed to restore stock for size ID: ${size.id}`, updateError);
+      // Step 4: Restore size-level stock (if applicable)
+      const sizes = orderData.items?.flatMap((item) => item.sizes || []) || [];
+      for (const size of sizes) {
+        const { data: currentSize, error: fetchError } = await supabase
+          .from("product_sizes")
+          .select("stock")
+          .eq("id", size.id)
+          .single();
+        if (fetchError || !currentSize) {
+          console.warn(`⚠️ Size not found for ID: ${size.id}`);
+          continue;
+        }
+
+        const newQuantity = currentSize.stock + size.quantity;
+        const { error: updateError } = await supabase
+          .from("product_sizes")
+          .update({ stock: newQuantity })
+          .eq("id", size.id);
+        if (updateError) {
+          console.error(
+            `❌ Failed to restore stock for size ID: ${size.id}`,
+            updateError
+          );
+        }
       }
+
+      // Step 5: Update UI
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId
+            ? { ...order, status: "cancelled", cancelReason: reason }
+            : order
+        )
+      );
+
+      toast({
+        title: "Order Cancelled",
+        description: "Order has been cancelled and stock restored.",
+      });
+
+      if (selectedOrder?.id === orderId) {
+        setIsSheetOpen(false);
+        setSelectedOrder(null);
+      }
+    } catch (error) {
+      console.error("❌ Error cancelling order:", error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel order",
+        variant: "destructive",
+      });
     }
-
-    // Step 5: Update UI
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === orderId ? { ...order, status: "cancelled", cancelReason: reason } : order
-      )
-    );
-
-    toast({
-      title: "Order Cancelled",
-      description: "Order has been cancelled and stock restored.",
-    });
-
-    if (selectedOrder?.id === orderId) {
-      setIsSheetOpen(false);
-      setSelectedOrder(null);
-    }
-  } catch (error) {
-    console.error("❌ Error cancelling order:", error);
-    toast({
-      title: "Error",
-      description: "Failed to cancel order",
-      variant: "destructive",
-    });
-  }
-};
-
-
+  };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     console.log(newStatus);
@@ -411,8 +480,8 @@ const handleCancelOrder = async (orderId: string, reason: string): Promise<void>
           status: newStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", orderId).
-      select("*, profile_id(first_name, email_notifaction)")
+        .eq("id", orderId)
+        .select("*, profile_id(first_name, email_notifaction)")
         .single(); // Ensures only one order is fetched
 
       if (error) throw error;
@@ -421,7 +490,10 @@ const handleCancelOrder = async (orderId: string, reason: string): Promise<void>
       console.log("Updated Order:", updatedOrder);
 
       // Send the updated order to the backend
-      if (newStatus !== "processing" && updatedOrder.profile_id.email_notifaction ) {
+      if (
+        newStatus !== "processing" &&
+        updatedOrder.profile_id.email_notifaction
+      ) {
         try {
           await axios.post("/order-status", updatedOrder);
           console.log("Order status sent successfully to backend.");
@@ -478,6 +550,11 @@ const handleCancelOrder = async (orderId: string, reason: string): Promise<void>
     handleConfirmOrder,
     handleDeleteOrder,
     loadOrders,
-    handleCancelOrder
+    handleCancelOrder,
+    totalOrders,
+    page,
+    setPage,
+    limit,
+    setLimit
   };
 };

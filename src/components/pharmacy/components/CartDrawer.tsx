@@ -137,7 +137,7 @@ export const CartDrawer = () => {
                         >
                           <div className="flex justify-between">
                             <span className="font-medium">
-                              Size: {size.size_value} 
+                              Size: {size.size_value} {size.size_unit}
                             </span>
                             <span>${size.price.toFixed(2)} / {size.type as any}</span>
                           </div>

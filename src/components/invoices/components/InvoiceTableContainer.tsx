@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CSVLink } from "react-csv";
+import { Pagination } from "@/components/common/Pagination";
+
 
 interface DataTableProps {
   filterStatus?: InvoiceStatus;
@@ -29,135 +31,124 @@ export function InvoiceTableContainer({ filterStatus }: DataTableProps) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [page, setPage] = useState(1); // current page
+  const [limit, setLimit] = useState(20); // rows per page
+  const [totalInvoices, setTotalInvoices] = useState(0); // for showing total count
 
- const fetchInvoices = async () => {
-  setLoading(true);
-  const role = sessionStorage.getItem('userType');
-  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session) {
-    toast({
-      title: "Error",
-      description: "Please log in to view orders",
-      variant: "destructive",
-    });
-    return;
-  }
 
-  try {
-    let query = supabase
-      .from("invoices")
-      .select(`
-        *,
-        payment_status,
-        orders (id, order_number, payment_status, void, customerInfo, total_amount),
-        profiles (first_name, last_name, email, company_name)
-      `)
-      .order("created_at", { ascending: false });
+  const fetchInvoices = async () => {
+    setLoading(true);
+    const role = sessionStorage.getItem('userType');
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (role === "pharmacy") {
-      query.eq('profile_id', session.user.id);
-    }
-
-    if (role === "group") {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("group_id", session.user.id);
-
-      if (profileError) {
-        console.error("Failed to fetch customer information:", profileError);
-        throw new Error("Failed to fetch customer information: " + profileError.message);
-      }
-
-      if (!profileData || profileData.length === 0) {
-        throw new Error("No customer information found.");
-      }
-
-      const userIds = profileData.map(user => user.id);
-      query.in("profile_id", userIds);
-    }
-
-    // Remove search filter from query — it will be applied client-side
-    if (filters.status && filters.status !== "all") {
-      let payStatus = filters.status === "pending" ? "unpaid" : filters.status;
-      query = query.eq("payment_status", payStatus);
-    }
-
-    if (filters.dateFrom) {
-      query = query.gte("due_date", filters.dateFrom);
-    }
-
-    if (filters.dateTo) {
-      query = query.lte("due_date", filters.dateTo);
-    }
-
-    if (filters.amountMin) {
-      query = query.gte("amount", filters.amountMin);
-    }
-
-    if (filters.amountMax) {
-      query = query.lte("amount", filters.amountMax);
-    }
-
-    const { data, error } = await query;
-    console.log("Raw Data from Supabase:", data);
-
-    if (error) {
+    if (!session) {
       toast({
         title: "Error",
-        description: "Failed to fetch invoices.",
+        description: "Please log in to view orders",
         variant: "destructive",
       });
-      console.error("Error fetching invoices:", error);
+      setLoading(false);
       return;
     }
 
-    // Apply client-side search filter
-    let filteredInvoices = data || [];
+    try {
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
 
-    if (filters.search) {
-      const searchQuery = filters.search.toLowerCase();
+      let query = supabase
+        .from("invoices")
+        .select(`
+        *,
+        orders (id, order_number, payment_status, void, customerInfo, total_amount),
+        profiles (first_name, last_name, email, company_name)
+      `, { count: 'exact' }) // ✅ get count for pagination
+        .order("created_at", { ascending: false })
+        .range(from, to); // ✅ only fetch selected page
 
-      filteredInvoices = filteredInvoices.filter((invoice) => {
-        const invoiceNumber = invoice.invoice_number?.toLowerCase() || "";
-        const orderNumber = invoice.orders?.order_number?.toLowerCase() || "";
-        const firstName = invoice.profiles?.first_name?.toLowerCase() || "";
-        const lastName = invoice.profiles?.last_name?.toLowerCase() || "";
-        const email = invoice.profiles?.email?.toLowerCase() || "";
-        const company = invoice.profiles?.company_name?.toLowerCase() || "";
+      if (role === "pharmacy") {
+        query = query.eq('profile_id', session.user.id);
+      }
 
-        return (
-          invoiceNumber.includes(searchQuery) ||
-          orderNumber.includes(searchQuery) ||
-          firstName.includes(searchQuery) ||
-          lastName.includes(searchQuery) ||
-          email.includes(searchQuery) ||
-          company.includes(searchQuery)
+      if (role === "group") {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("group_id", session.user.id);
+
+        if (profileError) throw new Error(profileError.message);
+        const userIds = profileData.map(user => user.id);
+        if (userIds.length > 0) {
+          query = query.in("profile_id", userIds);
+        } else {
+          setInvoices([]);
+          setTotalInvoices(0);
+     
+          setLoading(false);
+          return;
+        }
+      }
+
+      // ✅ Apply filters directly in Supabase query
+      if (filters.status && filters.status !== "all") {
+        let payStatus = filters.status === "pending" ? "unpaid" : filters.status;
+        query = query.eq("payment_status", payStatus);
+      }
+
+      if (filters.dateFrom) {
+        query = query.gte("due_date", filters.dateFrom);
+      }
+
+      if (filters.dateTo) {
+        query = query.lte("due_date", filters.dateTo);
+      }
+
+      if (filters.amountMin) {
+        query = query.gte("amount", filters.amountMin);
+      }
+
+      if (filters.amountMax) {
+        query = query.lte("amount", filters.amountMax);
+      }
+
+      // ✅ Server-side search
+      if (filters.search) {
+        const searchTerm = `%${filters.search}%`;
+        query = query.or(
+          `invoice_number.ilike.${searchTerm},customer_info->>name.ilike.${searchTerm},customer_info->>email.ilike.${searchTerm},customer_info->>phone.ilike.${searchTerm}`
         );
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error("Error fetching invoices:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch invoices.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const validInvoices = (data || []).filter(isInvoice);
+      setInvoices(validInvoices);
+
+      // Update pagination info
+      setTotalInvoices(count || 0);
+      
+    } catch (error) {
+      console.error("Error in fetchInvoices:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while fetching invoices.",
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Validate the response data
-    const validInvoices = filteredInvoices.filter(isInvoice);
-    if (validInvoices.length !== filteredInvoices.length) {
-      console.warn("Some invoices failed validation:",
-        filteredInvoices.filter((invoice) => !isInvoice(invoice))
-      );
-    }
-
-    setInvoices(validInvoices);
-  } catch (error) {
-    console.error("Error in fetchInvoices:", error);
-    toast({
-      title: "Error",
-      description: "An unexpected error occurred while fetching invoices.",
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
 
 
   useEffect(() => {
@@ -201,7 +192,7 @@ export function InvoiceTableContainer({ filterStatus }: DataTableProps) {
 
   useEffect(() => {
     fetchInvoices();
-  }, [filters, refreshTrigger]);
+  }, [filters, refreshTrigger,limit,page]);
 
   const handleSort = (key: string) => {
     setSortConfig((currentSort) => {
@@ -257,7 +248,7 @@ export function InvoiceTableContainer({ filterStatus }: DataTableProps) {
         payment_transication: invoice.payment_transication,
         payment_notes: invoice.payment_notes,
         payment_method: invoice.payment_method,
-        shippin_cost:invoice.shippin_cost,
+        shippin_cost: invoice.shippin_cost,
         items,
         subtotal: invoice.subtotal,
         tax: invoice.tax_amount,
@@ -275,44 +266,44 @@ export function InvoiceTableContainer({ filterStatus }: DataTableProps) {
   };
 
 
-const exportInvoicesToCSV = () => {
-  // ✅ Filter out invoices with voided orders
-  const filteredInvoices = invoices?.filter(
-    (invoice) => invoice.void === false
-  );
+  const exportInvoicesToCSV = () => {
+    // ✅ Filter out invoices with voided orders
+    const filteredInvoices = invoices?.filter(
+      (invoice) => invoice.void === false
+    );
 
-  const csvData = filteredInvoices?.map((invoice) => ({
-    "Invoice Number": invoice.invoice_number,
-    "Order Number": invoice.orders?.order_number || "",
-    "Customer Name": `${invoice.profiles?.first_name || ""} ${invoice.profiles?.last_name || ""}`,
-    "Email": invoice.profiles?.email || "",
-    "Company Name": (invoice.profiles as any)?.company_name || "",
+    const csvData = filteredInvoices?.map((invoice) => ({
+      "Invoice Number": invoice.invoice_number,
+      "Order Number": invoice.orders?.order_number || "",
+      "Customer Name": `${invoice.profiles?.first_name || ""} ${invoice.profiles?.last_name || ""}`,
+      "Email": invoice.profiles?.email || "",
+      "Company Name": (invoice.profiles as any)?.company_name || "",
 
-    "Tax": invoice.tax_amount,
-    "Subtotal": invoice.subtotal,
-    "Payment Status": invoice.payment_status,
-    "Created At": invoice.created_at,
-    "Shipping Address": invoice.shipping_info
-      ? `${invoice.shipping_info.street}, ${invoice.shipping_info.city}, ${invoice.shipping_info.state}, ${invoice.shipping_info.zip_code}`
-      : "",
-  }));
+      "Tax": invoice.tax_amount,
+      "Subtotal": invoice.subtotal,
+      "Payment Status": invoice.payment_status,
+      "Created At": invoice.created_at,
+      "Shipping Address": invoice.shipping_info
+        ? `${invoice.shipping_info.street}, ${invoice.shipping_info.city}, ${invoice.shipping_info.state}, ${invoice.shipping_info.zip_code}`
+        : "",
+    }));
 
-  return csvData;
-};
+    return csvData;
+  };
 
 
 
   return (
     <>
-  <div className="flex flex-col p-4 sm:flex-row justify-between items-center bg-white  border border-gray-200 rounded-lg ">
-  <div className="w-full sm:w-auto  sm:mb-0">
-    <InvoiceFilters onFilterChange={handleFilterChange} exportInvoicesToCSV={exportInvoicesToCSV} />
-  </div>
+      <div className="flex flex-col p-4 sm:flex-row justify-between items-center bg-white  border border-gray-200 rounded-lg ">
+        <div className="w-full sm:w-auto  sm:mb-0">
+          <InvoiceFilters onFilterChange={handleFilterChange} exportInvoicesToCSV={exportInvoicesToCSV} />
+        </div>
 
-  <div className="flex gap-3">
-    <ExportOptions invoices={invoices} />
+        <div className="flex gap-3">
+          <ExportOptions invoices={invoices} />
 
-    {/* {invoices.length > 0 && (
+          {/* {invoices.length > 0 && (
       <CSVLink
         data={exportInvoicesToCSV()}
         filename={`invoices_${new Date().toISOString()}.csv`}
@@ -321,8 +312,8 @@ const exportInvoicesToCSV = () => {
         Export CSV
       </CSVLink>
     )} */}
-  </div>
-</div>
+        </div>
+      </div>
 
 
       {loading ? (
@@ -348,6 +339,14 @@ const exportInvoicesToCSV = () => {
           />
         )}
       </Sheet>
+
+      <Pagination
+              totalOrders={totalInvoices}
+              page={page}
+              setPage={setPage}
+              limit={limit}
+              setLimit={setLimit}
+            />
     </>
   );
 }

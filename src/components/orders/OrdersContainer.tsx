@@ -35,6 +35,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useDispatch } from "react-redux";
 import { updateCartPrice } from "@/store/actions/cartActions";
 import VendorDialogForm from "./vendor-dialof-form";
+import { Pagination } from "../common/Pagination";
 
 const exportToCSV = (orders: OrderFormValues[]) => {
   if (!orders || orders.length === 0) {
@@ -103,6 +104,8 @@ export const OrdersContainer = ({
   const [options, setOptions] = useState([]);
   const [orderStatus, setOrderStatus] = useState<string>("");
 
+
+
   const {
     orders,
     selectedOrder,
@@ -117,8 +120,15 @@ export const OrdersContainer = ({
     handleShipOrder: shipOrder,
     handleConfirmOrder: confirmOrder,
     loadOrders,
-    loading
+    loading,
+    totalOrders,
+    page,
+    setPage,
+    limit,
+    setLimit
   } = useOrderManagement();
+
+
 
   const { cartItems } = useCart();
   const dispatch = useDispatch();
@@ -158,62 +168,62 @@ export const OrdersContainer = ({
       }
     };
 
-const fetchUsers = async () => {
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, display_name, type, email");
+    const fetchUsers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, display_name, type, email");
 
-    if (error) {
-      console.error("Failed to fetch customer information:", error);
-      throw new Error(`Failed to fetch customer information: ${error.message}`);
-    }
+        if (error) {
+          console.error("Failed to fetch customer information:", error);
+          throw new Error(`Failed to fetch customer information: ${error.message}`);
+        }
 
-    const userEmail = sessionStorage.getItem("userEmail")?.toLowerCase();
-    console.log("User Email from Session:", userEmail);
+        const userEmail = sessionStorage.getItem("userEmail")?.toLowerCase();
+        console.log("User Email from Session:", userEmail);
 
-    if (poIs) {
-      // ✅ Only return users with type "vendor"
-      const vendorUsers = data.filter((user) => user.type === "vendor");
+        if (poIs) {
+          // ✅ Only return users with type "vendor"
+          const vendorUsers = data.filter((user) => user.type === "vendor");
 
-      const vendorOptions = vendorUsers.map((user) => ({
-        value: user.id,
-        label: user.display_name,
-      }));
+          const vendorOptions = vendorUsers.map((user) => ({
+            value: user.id,
+            label: user.display_name,
+          }));
 
-      setOptions(vendorOptions);
-      return; // ✅ return early
-    }
+          setOptions(vendorOptions);
+          return; // ✅ return early
+        }
 
-    // ✅ poIs is false: original logic
-    const loggedInAdmin = data.find(
-      (user) => user.email.toLowerCase() === userEmail && user.type === "admin"
-    );
+        // ✅ poIs is false: original logic
+        const loggedInAdmin = data.find(
+          (user) => user.email.toLowerCase() === userEmail && user.type === "admin"
+        );
 
-    const filteredData = data.filter((user) => {
-      if (
-        loggedInAdmin &&
-        user.email.toLowerCase() === userEmail &&
-        user.type === "admin"
-      ) {
-        return true;
+        const filteredData = data.filter((user) => {
+          if (
+            loggedInAdmin &&
+            user.email.toLowerCase() === userEmail &&
+            user.type === "admin"
+          ) {
+            return true;
+          }
+          return user.type !== "admin";
+        });
+
+        const sortedOptions = filteredData
+          .map((user) => ({
+            value: user.id,
+            label: user.type === "admin" ? "Custom" : user.display_name,
+            isCustom: user.type === "admin" ? 0 : 1,
+          }))
+          .sort((a, b) => a.isCustom - b.isCustom);
+
+        setOptions(sortedOptions);
+      } catch (error) {
+        console.error("Error fetching users:", error);
       }
-      return user.type !== "admin";
-    });
-
-    const sortedOptions = filteredData
-      .map((user) => ({
-        value: user.id,
-        label: user.type === "admin" ? "Custom" : user.display_name,
-        isCustom: user.type === "admin" ? 0 : 1,
-      }))
-      .sort((a, b) => a.isCustom - b.isCustom);
-
-    setOptions(sortedOptions);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-  }
-};
+    };
 
 
     fetchUsers();
@@ -243,6 +253,12 @@ const fetchUsers = async () => {
     setDateRange,
     filteredOrders,
   } = useOrderFilters(orders, poIs);
+
+
+
+  useEffect(() => {
+    loadOrders({ statusFilter, statusFilter2, searchQuery, dateRange,poIs });
+  }, [statusFilter, statusFilter2, searchQuery, dateRange, page,poIs,limit]);
 
   const handlePharmacyChange = async (pharmacyId: string) => {
     setSelectedPharmacy(pharmacyId);
@@ -300,12 +316,12 @@ const fetchUsers = async () => {
 
               let newPrice = sizeFetch?.price || size.price;
 
-        // 👇 Handle pricing based on selected_type
-        if (size.selected_type === "case") {
-          newPrice = sizeFetch?.price || size.price;
-        } else if (size.selected_type === "unit") {
-          newPrice = sizeFetch?.price_per_case ;
-        }
+              // 👇 Handle pricing based on selected_type
+              if (size.selected_type === "case") {
+                newPrice = sizeFetch?.price || size.price;
+              } else if (size.selected_type === "unit") {
+                newPrice = sizeFetch?.price_per_case;
+              }
               await handlePriceChange(item.productId, size.id, newPrice);
 
               // Check for applicable group pricing
@@ -375,7 +391,7 @@ const fetchUsers = async () => {
             zip_code: data.shipping_address?.zip_code || "",
           },
         },
-       
+
       }));
 
       console.log("Updated Order Data:", orderData);
@@ -414,7 +430,7 @@ const fetchUsers = async () => {
 
 
 
-    const handleVendorSubmit = (data: any) => {
+  const handleVendorSubmit = (data: any) => {
     console.log("Vendor data submitted:", data)
     // Here you would typically send the data to your API
   }
@@ -424,7 +440,7 @@ const fetchUsers = async () => {
 
 
 
-  
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row flex-wrap justify-between items-center gap-2 p-2 bg-card rounded-lg shadow-sm border">
@@ -447,12 +463,12 @@ const fetchUsers = async () => {
               type="status"
             /> */}
               <StatusFilter
-              value={statusFilter2}
-              onValueChange={setStatusFilter2}
-            />
-            
+                value={statusFilter2}
+                onValueChange={setStatusFilter2}
+              />
+
             </>
-          
+
           )}
 
           {/* Export Orders */}
@@ -495,9 +511,9 @@ const fetchUsers = async () => {
                     </div>
                   )}
 
-                  { (
+                  {(
                     <div className="mb-4 mt-2">
-                      <Label htmlFor="pharmacy-select">{poIs ?"Select Vendor":"Select Pharmacy"}</Label>
+                      <Label htmlFor="pharmacy-select">{poIs ? "Select Vendor" : "Select Pharmacy"}</Label>
                       <Select
                         id="pharmacy-select"
                         options={options}
@@ -507,7 +523,7 @@ const fetchUsers = async () => {
                         onChange={(selectedOption) =>
                           handlePharmacyChange(selectedOption.value)
                         }
-                        placeholder={`${poIs ?"Select Vendor":"Select Pharmacy"}`}
+                        placeholder={`${poIs ? "Select Vendor" : "Select Pharmacy"}`}
                         isSearchable
                         className="w-full mt-1"
                       />
@@ -541,7 +557,7 @@ const fetchUsers = async () => {
               </Sheet>
 
               {
-                poIs &&   <VendorDialogForm mode="add" onSubmit={handleVendorSubmit} />
+                poIs && <VendorDialogForm mode="add" onSubmit={handleVendorSubmit} />
               }
             </>
           )}
@@ -590,6 +606,14 @@ const fetchUsers = async () => {
         poIs={poIs}
         onCancelOrder={handleCancelOrder}
         isLoading={loading}
+      />
+
+      <Pagination
+        totalOrders={totalOrders}
+        page={page}
+        setPage={setPage}
+        limit={limit}
+        setLimit={setLimit}
       />
 
       {selectedOrder && (

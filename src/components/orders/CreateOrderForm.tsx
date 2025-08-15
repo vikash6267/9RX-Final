@@ -193,448 +193,705 @@ export function CreateOrderForm({
 
 
 
+  // const onSubmit = async (data: OrderFormValues) => {
+  //   console.log(cartItems);
+
+
+
+
+  //   try {
+  //     setIsSubmitting(true);
+  //     console.log("Starting order submission:", data);
+  //     const taxper = sessionStorage.getItem("taxper")
+
+  //     const cleanedCartItems = cleanCartItems(cartItems); // ✅ fixed items
+  //     // Validate order items
+  //     validateOrderItems(data.items);
+
+
+  //     // Calculate order total
+  //     const calculatedTotal = calculateOrderTotal(
+  //       cleanedCartItems,
+  //       totalShippingCost || 0
+  //     );
+
+
+
+  //     const newtax = ((calculatedTotal - totalShippingCost) * Number(taxper)) / 100;
+
+
+
+  //     console.log(cleanedCartItems)
+  //     console.log(calculatedTotal + newtax)
+
+
+  //     if (userProfile?.id == null) {
+  //       toast({
+  //         title: "User profile not found",
+  //         description: "Please log in to create an order.",
+  //         duration: 5000,
+  //         variant: "destructive",
+  //       });
+  //       return;
+  //     }
+
+
+  //     const defaultEstimatedDelivery = new Date();
+  //     defaultEstimatedDelivery.setDate(defaultEstimatedDelivery.getDate() + 10);
+
+  //     console.log(pId)
+
+  //     const generateUniqueOrderNumber = () => {
+  //       const timestamp = Date.now().toString().slice(-5); // Last 5 digits of time
+  //       const random = Math.floor(100 + Math.random() * 900); // 3 digit random number
+  //       return `PO-${timestamp}${random}`; // Total 8 digits after 'PO-'
+  //     };
+
+  //     // const orderNumber = "DEV-TEST123";
+  //     const orderNumber = poIs ? await generatePurchaseOrderId() : await generateOrderId();
+
+  //     if (!userProfile?.id) return
+  //     let profileID = userProfile?.id
+
+  //     sessionStorage.getItem('userType') === "admin" ? profileID = data.customer : userProfile?.id
+  //     sessionStorage.getItem('userType') === "group" ? profileID = pId : userProfile?.id
+  //     console.log(profileID)
+
+
+  //     const orderData = {
+  //       order_number: orderNumber,
+  //       profile_id: profileID,
+  //       status: data.status,
+  //       total_amount: calculatedTotal + newtax,
+  //       shipping_cost: totalShippingCost || 0,
+  //       tax_amount: newtax,
+  //       customization: isCus,
+  //       items: cleanedCartItems,
+  //       notes: data.specialInstructions,
+  //       shipping_method: data.shipping?.method,
+  //       customerInfo: data.customerInfo,
+  //       shippingAddress: data.shippingAddress,
+  //       tracking_number: data.shipping?.trackingNumber,
+  //       estimated_delivery:
+  //         data.shipping?.estimatedDelivery ||
+  //         defaultEstimatedDelivery.toISOString(),
+  //       location_id: pId,
+  //       poAccept: !poIs
+  //     };
+
+
+
+  //     // Save order to Supabase
+  //     const { data: orderResponse, error: orderError } = await supabase
+  //       .from("orders")
+  //       .insert([orderData])
+  //       .select();
+
+  //     if (orderError) {
+  //       console.error("Order creation error:", orderError);
+  //       throw new Error(orderError.message);
+  //     }
+
+  //     console.log(orderResponse);
+  //     const newOrder = orderResponse[0];
+  //     console.log("Order saved:", newOrder);
+
+
+  //     // !poIs
+  //     if (!poIs) {
+  //       const year = new Date().getFullYear(); // Get current year (e.g., 2025)
+
+
+  //       const { data: inData, error: erroIn } = await supabase
+  //         .from("centerize_data")
+  //         .select("id, invoice_no, invoice_start")
+  //         .order("id", { ascending: false }) // Get latest order
+  //         .limit(1);
+
+  //       if (erroIn) {
+  //         console.error("🚨 Supabase Fetch Error:", erroIn);
+  //         return null;
+  //       }
+
+  //       let newInvNo = 1; // Default to 1 if no previous order exists
+  //       let invoiceStart = "INV"; // Default order prefix
+
+
+  //       if (inData && inData.length > 0) {
+  //         newInvNo = (inData[0].invoice_no || 0) + 1; // Increment last order number
+  //         invoiceStart = inData[0].invoice_start || "INV"; // Use existing order_start
+  //       }
+
+
+  //       const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
+  //       // const invoiceNumber = "DEV-TEST123";
+
+
+
+  //       const { error: updateError } = await supabase
+  //         .from("centerize_data")
+  //         .update({ invoice_no: newInvNo }) // Correct update syntax
+  //         .eq("id", inData[0]?.id); // Update only the latest record
+
+  //       if (updateError) {
+  //         console.error("🚨 Supabase Update Error:", updateError);
+  //       } else {
+  //         console.log("✅ Order No Updated to:", newInvNo);
+  //       }
+
+  //       const estimatedDeliveryDate = new Date(newOrder.estimated_delivery);
+
+  //       // Calculate the due_date by adding 30 days to the estimated delivery
+  //       const dueDate = new Date(estimatedDeliveryDate);
+  //       dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
+
+  //       // Format the due_date as a string in ISO 8601 format with time zone (UTC in this case)
+  //       const formattedDueDate = dueDate.toISOString(); // Example: "2025-04-04T13:45:00.000Z"
+
+  //       const invoiceData = {
+  //         invoice_number: invoiceNumber,
+  //         order_id: newOrder.id,
+  //         due_date: formattedDueDate,
+  //         profile_id: newOrder.profile_id,
+  //         status: "pending" as InvoiceStatus,
+  //         amount: parseFloat(calculatedTotal + newtax) || 0,
+  //         tax_amount: orderData.tax_amount || 0,
+  //         total_amount: parseFloat(calculatedTotal + newtax),
+  //         payment_status: newOrder.payment_status,
+  //         payment_method: newOrder.paymentMethod as PaymentMethod,
+  //         payment_notes: newOrder.notes || null,
+  //         items: newOrder.items || [],
+  //         customer_info: newOrder.customerInfo || {
+  //           name: newOrder.customerInfo?.name,
+  //           email: newOrder.customerInfo?.email || "",
+  //           phone: newOrder.customerInfo?.phone || "",
+  //         },
+  //         shipping_info: orderData.shippingAddress || {},
+  //         shippin_cost: totalShippingCost,
+  //         subtotal:
+  //           calculatedTotal + newtax + (isCus ? 0.5 : 0) ||
+  //           parseFloat(calculatedTotal + newtax + (isCus ? 0.5 : 0)),
+  //       };
+
+
+  //       const { invoicedata2, error } = await supabase
+  //         .from("invoices")
+  //         .insert(invoiceData)
+  //         .select()
+  //         .single();
+
+  //       if (error) {
+  //         console.error("Error creating invoice:", error);
+  //         throw error;
+  //       }
+
+
+
+  //       // Prepare and save order items
+  //       const orderItemsData = cleanedCartItems.map((item) => ({
+  //         order_id: newOrder.id,
+  //         product_id: item.productId,
+  //         quantity: item.quantity,
+  //         unit_price: item.price,
+  //         total_price: item.quantity * item.price,
+  //         notes: item.notes,
+  //       }));
+
+  //       const { error: itemsError } = await supabase
+  //         .from("order_items")
+  //         .insert(orderItemsData);
+
+  //       if (itemsError) {
+  //         throw new Error(itemsError.message);
+  //       }
+
+
+
+  //       // Update product stock
+  //       for (const item of data.items) {
+  //         // console.log("Updating stock for quantity ID:", item.quantity);
+  //         const { error: stockUpdateError } = await supabase.rpc(
+  //           "decrement_stock",
+  //           { product_id: item.productId, quantity: item.quantity }
+  //         );
+  //         // console.log("stockUpdateError", stockUpdateError);
+  //         if (stockUpdateError) {
+  //           throw new Error(
+  //             `Failed to update stock for product ID: ${item.productId}`
+  //           );
+  //         }
+  //       }
+
+
+
+
+
+  //       const { data: orderResponse2, error: orderError2 } = await supabase
+  //         .from("orders")
+  //         .select()
+  //         .eq("id", newOrder.id);
+
+  //       if (orderError2) {
+  //         console.error("Order creation error:", orderError2);
+  //         throw new Error(orderError2.message);
+  //       }
+
+
+  //       const { data: profileData, error: profileEror } = await supabase
+  //         .from("profiles")
+  //         .select()
+  //         .eq("id", newOrder.profile_id)
+  //         .maybeSingle();
+
+  //       if (profileEror) {
+  //         console.error("🚨 Supabase Fetch Error:", profileEror);
+  //         return;
+  //       }
+  //       if (profileData.email_notifaction) {
+  //         try {
+  //           await axios.post("/order-place", newOrder);
+  //           console.log("Order status sent successfully to backend.");
+  //         } catch (apiError) {
+  //           console.error("Failed to send order status to backend:", apiError);
+  //         }
+
+  //       }
+  //     }
+
+
+  //     if(poIs && false){
+
+
+  //         const estimatedDeliveryDate = new Date(newOrder.estimated_delivery);
+
+  //       // Calculate the due_date by adding 30 days to the estimated delivery
+  //       const dueDate = new Date(estimatedDeliveryDate);
+  //       dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
+
+  //       // Format the due_date as a string in ISO 8601 format with time zone (UTC in this case)
+  //       const formattedDueDate = dueDate.toISOString(); // Example: "2025-04-04T13:45:00.000Z"
+
+  //       const invoiceData = {
+  //         invoice_number: `INV-${orderNumber}`,
+  //         order_id: newOrder.id,
+  //         due_date: formattedDueDate,
+  //         profile_id: newOrder.profile_id,
+  //         status: "pending" as InvoiceStatus,
+  //         amount: parseFloat(calculatedTotal + newtax) || 0,
+  //         tax_amount: orderData.tax_amount || 0,
+  //         total_amount: parseFloat(calculatedTotal + newtax),
+  //         payment_status: newOrder.payment_status,
+  //         payment_method: newOrder.paymentMethod as PaymentMethod,
+  //         payment_notes: newOrder.notes || null,
+  //         items: newOrder.items || [],
+  //         customer_info: newOrder.customerInfo || {
+  //           name: newOrder.customerInfo?.name,
+  //           email: newOrder.customerInfo?.email || "",
+  //           phone: newOrder.customerInfo?.phone || "",
+  //         },
+  //         shipping_info: orderData.shippingAddress || {},
+  //         shippin_cost: totalShippingCost,
+  //         subtotal:
+  //           calculatedTotal + newtax + (isCus ? 0.5 : 0) ||
+  //           parseFloat(calculatedTotal + newtax + (isCus ? 0.5 : 0)),
+  //       };
+
+
+  //       const { invoicedata2, error } = await supabase
+  //         .from("invoices")
+  //         .insert(invoiceData)
+  //         .select()
+  //         .single();
+
+  //       if (error) {
+  //         console.error("Error creating invoice:", error);
+  //         throw error;
+  //       }
+
+
+
+  //       // Prepare and save order items
+  //       const orderItemsData = cleanedCartItems.map((item) => ({
+  //         order_id: newOrder.id,
+  //         product_id: item.productId,
+  //         quantity: item.quantity,
+  //         unit_price: item.price,
+  //         total_price: item.quantity * item.price,
+  //         notes: item.notes,
+  //       }));
+
+  //       const { error: itemsError } = await supabase
+  //         .from("order_items")
+  //         .insert(orderItemsData);
+
+  //       if (itemsError) {
+  //         throw new Error(itemsError.message);
+  //       }
+
+  //     }
+
+
+
+  //     if (!poIs) {
+  //       for (const item of data.items) {
+  //         if (item.sizes && item.sizes.length > 0) {
+  //           for (const size of item.sizes) {
+  //             // Step 1: Fetch current size
+  //             const { data: currentSize, error: fetchError } = await supabase
+  //               .from("product_sizes")
+  //               .select("stock")
+  //               .eq("id", size.id)
+  //               .single();
+
+  //             if (fetchError || !currentSize) {
+  //               console.warn(`⚠️ Size not found in Supabase for ID: ${size.id}, skipping...`);
+  //               continue; // ✅ Skip this size if not found
+  //             }
+
+  //             const newQuantity = currentSize.stock - size.quantity;
+
+  //             // Step 2: Update with new quantity
+  //             const { error: updateError } = await supabase
+  //               .from("product_sizes")
+  //               .update({ stock: newQuantity })
+  //               .eq("id", size.id);
+
+  //             if (updateError) {
+  //               console.error(`❌ Failed to update size quantity for ID: ${size.id}`, updateError);
+  //               throw new Error(`Failed to update size quantity`);
+  //             } else {
+  //               console.log(`✅ Updated size quantity for ID: ${size.id}`);
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     // Reset form and local state
+  //     localStorage.removeItem("cart");
+  //     localStorage.removeItem("cartItems");
+  //     window.location.reload();
+
+
+  //     toast({
+  //       title: "Order Created Successfully",
+  //       description: `Order ID: ${newOrder.id} has been created.`,
+  //     });
+
+
+
+  //     const logsData = {
+  //       user_id: newOrder.profile_id,
+  //       order_id: orderNumber,
+  //       action: 'order_created',
+  //       details: {
+  //         message: `Order Created : ${orderNumber}`,
+  //         items: cleanedCartItems,
+  //         orderCreateBY: userProfile
+  //       },
+  //     };
+  //     try {
+  //       await axios.post("/logs/create", logsData);
+  //       console.log("LOGS STORED SUCCESSFULLYY");
+  //     } catch (apiError) {
+  //       console.error("Failed to store logs:", apiError);
+  //     }
+
+
+  //     form.reset();
+  //     // setOrderItems([{ id: 1 }]);
+
+  //     const userType = sessionStorage.getItem('userType');
+
+  //     if (userType.toLocaleLowerCase() === 'group') {
+  //       navigate("/group/orders");
+
+  //     }
+  //     if (userType.toLocaleLowerCase() === 'pharmacy') {
+  //       navigate("/pharmacy/orders");
+
+  //     }
+  //     if (userType.toLocaleLowerCase() === 'admin') {
+  //       if (poIs) {
+  //         navigate("/admin/po", { state: { createOrder: false } });
+  //       } else {
+  //         navigate("/admin/orders", { state: { createOrder: false } });
+  //       }
+  //     }
+
+
+  //     await clearCart();
+  //   } catch (error) {
+  //     console.error("Order creation error:", error);
+  //     toast({
+  //       title: "Error Creating Order",
+  //       description:
+  //         error instanceof Error
+  //           ? error.message
+  //           : "There was a problem creating your order.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+
+
+
   const onSubmit = async (data: OrderFormValues) => {
-    console.log(cartItems);
-
-
-
-
-    try {
-      setIsSubmitting(true);
-      console.log("Starting order submission:", data);
-      const taxper = sessionStorage.getItem("taxper")
-
-      const cleanedCartItems = cleanCartItems(cartItems); // ✅ fixed items
-      // Validate order items
-      validateOrderItems(data.items);
-
-
-      // Calculate order total
-      const calculatedTotal = calculateOrderTotal(
-        cleanedCartItems,
-        totalShippingCost || 0
-      );
-
-
-
-      const newtax = ((calculatedTotal - totalShippingCost) * Number(taxper)) / 100;
-
-
-
-      console.log(cleanedCartItems)
-      console.log(calculatedTotal + newtax)
-
-
-      if (userProfile?.id == null) {
-        toast({
-          title: "User profile not found",
-          description: "Please log in to create an order.",
-          duration: 5000,
-          variant: "destructive",
-        });
-        return;
-      }
-
-
-      const defaultEstimatedDelivery = new Date();
-      defaultEstimatedDelivery.setDate(defaultEstimatedDelivery.getDate() + 10);
-
-      console.log(pId)
-
-      const generateUniqueOrderNumber = () => {
-        const timestamp = Date.now().toString().slice(-5); // Last 5 digits of time
-        const random = Math.floor(100 + Math.random() * 900); // 3 digit random number
-        return `PO-${timestamp}${random}`; // Total 8 digits after 'PO-'
-      };
-
-      // const orderNumber = "DEV-TEST123";
-      const orderNumber = poIs ? await generatePurchaseOrderId() : await generateOrderId();
-
-      if (!userProfile?.id) return
-      let profileID = userProfile?.id
-
-      sessionStorage.getItem('userType') === "admin" ? profileID = data.customer : userProfile?.id
-      sessionStorage.getItem('userType') === "group" ? profileID = pId : userProfile?.id
-      console.log(profileID)
-
-
-      const orderData = {
-        order_number: orderNumber,
-        profile_id: profileID,
-        status: data.status,
-        total_amount: calculatedTotal + newtax,
-        shipping_cost: totalShippingCost || 0,
-        tax_amount: newtax,
-        customization: isCus,
-        items: cleanedCartItems,
-        notes: data.specialInstructions,
-        shipping_method: data.shipping?.method,
-        customerInfo: data.customerInfo,
-        shippingAddress: data.shippingAddress,
-        tracking_number: data.shipping?.trackingNumber,
-        estimated_delivery:
-          data.shipping?.estimatedDelivery ||
-          defaultEstimatedDelivery.toISOString(),
-        location_id: pId,
-        poAccept: !poIs
-      };
-
-
-
-      // Save order to Supabase
-      const { data: orderResponse, error: orderError } = await supabase
-        .from("orders")
-        .insert([orderData])
-        .select();
-
-      if (orderError) {
-        console.error("Order creation error:", orderError);
-        throw new Error(orderError.message);
-      }
-
-      console.log(orderResponse);
-      const newOrder = orderResponse[0];
-      console.log("Order saved:", newOrder);
-
-
-      // !poIs
-      if (!poIs) {
-        const year = new Date().getFullYear(); // Get current year (e.g., 2025)
-
-
-        const { data: inData, error: erroIn } = await supabase
-          .from("centerize_data")
-          .select("id, invoice_no, invoice_start")
-          .order("id", { ascending: false }) // Get latest order
-          .limit(1);
-
-        if (erroIn) {
-          console.error("🚨 Supabase Fetch Error:", erroIn);
-          return null;
-        }
-
-        let newInvNo = 1; // Default to 1 if no previous order exists
-        let invoiceStart = "INV"; // Default order prefix
-
-
-        if (inData && inData.length > 0) {
-          newInvNo = (inData[0].invoice_no || 0) + 1; // Increment last order number
-          invoiceStart = inData[0].invoice_start || "INV"; // Use existing order_start
-        }
-
-
-        const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
-        // const invoiceNumber = "DEV-TEST123";
-
-
-
-        const { error: updateError } = await supabase
-          .from("centerize_data")
-          .update({ invoice_no: newInvNo }) // Correct update syntax
-          .eq("id", inData[0]?.id); // Update only the latest record
-
-        if (updateError) {
-          console.error("🚨 Supabase Update Error:", updateError);
-        } else {
-          console.log("✅ Order No Updated to:", newInvNo);
-        }
-
-        const estimatedDeliveryDate = new Date(newOrder.estimated_delivery);
-
-        // Calculate the due_date by adding 30 days to the estimated delivery
-        const dueDate = new Date(estimatedDeliveryDate);
-        dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
-
-        // Format the due_date as a string in ISO 8601 format with time zone (UTC in this case)
-        const formattedDueDate = dueDate.toISOString(); // Example: "2025-04-04T13:45:00.000Z"
-
-        const invoiceData = {
-          invoice_number: invoiceNumber,
-          order_id: newOrder.id,
-          due_date: formattedDueDate,
-          profile_id: newOrder.profile_id,
-          status: "pending" as InvoiceStatus,
-          amount: parseFloat(calculatedTotal + newtax) || 0,
-          tax_amount: orderData.tax_amount || 0,
-          total_amount: parseFloat(calculatedTotal + newtax),
-          payment_status: newOrder.payment_status,
-          payment_method: newOrder.paymentMethod as PaymentMethod,
-          payment_notes: newOrder.notes || null,
-          items: newOrder.items || [],
-          customer_info: newOrder.customerInfo || {
-            name: newOrder.customerInfo?.name,
-            email: newOrder.customerInfo?.email || "",
-            phone: newOrder.customerInfo?.phone || "",
-          },
-          shipping_info: orderData.shippingAddress || {},
-          shippin_cost: totalShippingCost,
-          subtotal:
-            calculatedTotal + newtax + (isCus ? 0.5 : 0) ||
-            parseFloat(calculatedTotal + newtax + (isCus ? 0.5 : 0)),
-        };
-
-
-        const { invoicedata2, error } = await supabase
-          .from("invoices")
-          .insert(invoiceData)
-          .select()
-          .single();
-
-        if (error) {
-          console.error("Error creating invoice:", error);
-          throw error;
-        }
-
-
-
-        // Prepare and save order items
-        const orderItemsData = cleanedCartItems.map((item) => ({
-          order_id: newOrder.id,
-          product_id: item.productId,
-          quantity: item.quantity,
-          unit_price: item.price,
-          total_price: item.quantity * item.price,
-          notes: item.notes,
-        }));
-
-        const { error: itemsError } = await supabase
-          .from("order_items")
-          .insert(orderItemsData);
-
-        if (itemsError) {
-          throw new Error(itemsError.message);
-        }
-
-
-
-        // Update product stock
-        for (const item of data.items) {
-          // console.log("Updating stock for quantity ID:", item.quantity);
-          const { error: stockUpdateError } = await supabase.rpc(
-            "decrement_stock",
-            { product_id: item.productId, quantity: item.quantity }
-          );
-          // console.log("stockUpdateError", stockUpdateError);
-          if (stockUpdateError) {
-            throw new Error(
-              `Failed to update stock for product ID: ${item.productId}`
-            );
-          }
-        }
-
-
-
-
-
-        const { data: orderResponse2, error: orderError2 } = await supabase
-          .from("orders")
-          .select()
-          .eq("id", newOrder.id);
-
-        if (orderError2) {
-          console.error("Order creation error:", orderError2);
-          throw new Error(orderError2.message);
-        }
-
-
-        const { data: profileData, error: profileEror } = await supabase
-          .from("profiles")
-          .select()
-          .eq("id", newOrder.profile_id)
-          .maybeSingle();
-
-        if (profileEror) {
-          console.error("🚨 Supabase Fetch Error:", profileEror);
-          return;
-        }
-        if (profileData.email_notifaction) {
-          try {
-            await axios.post("/order-place", newOrder);
-            console.log("Order status sent successfully to backend.");
-          } catch (apiError) {
-            console.error("Failed to send order status to backend:", apiError);
-          }
-
-        }
-      }
-
-
-      if(poIs && false){
-
-
-          const estimatedDeliveryDate = new Date(newOrder.estimated_delivery);
-
-        // Calculate the due_date by adding 30 days to the estimated delivery
-        const dueDate = new Date(estimatedDeliveryDate);
-        dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
-
-        // Format the due_date as a string in ISO 8601 format with time zone (UTC in this case)
-        const formattedDueDate = dueDate.toISOString(); // Example: "2025-04-04T13:45:00.000Z"
-
-        const invoiceData = {
-          invoice_number: `INV-${orderNumber}`,
-          order_id: newOrder.id,
-          due_date: formattedDueDate,
-          profile_id: newOrder.profile_id,
-          status: "pending" as InvoiceStatus,
-          amount: parseFloat(calculatedTotal + newtax) || 0,
-          tax_amount: orderData.tax_amount || 0,
-          total_amount: parseFloat(calculatedTotal + newtax),
-          payment_status: newOrder.payment_status,
-          payment_method: newOrder.paymentMethod as PaymentMethod,
-          payment_notes: newOrder.notes || null,
-          items: newOrder.items || [],
-          customer_info: newOrder.customerInfo || {
-            name: newOrder.customerInfo?.name,
-            email: newOrder.customerInfo?.email || "",
-            phone: newOrder.customerInfo?.phone || "",
-          },
-          shipping_info: orderData.shippingAddress || {},
-          shippin_cost: totalShippingCost,
-          subtotal:
-            calculatedTotal + newtax + (isCus ? 0.5 : 0) ||
-            parseFloat(calculatedTotal + newtax + (isCus ? 0.5 : 0)),
-        };
-
-
-        const { invoicedata2, error } = await supabase
-          .from("invoices")
-          .insert(invoiceData)
-          .select()
-          .single();
-
-        if (error) {
-          console.error("Error creating invoice:", error);
-          throw error;
-        }
-
-
-
-        // Prepare and save order items
-        const orderItemsData = cleanedCartItems.map((item) => ({
-          order_id: newOrder.id,
-          product_id: item.productId,
-          quantity: item.quantity,
-          unit_price: item.price,
-          total_price: item.quantity * item.price,
-          notes: item.notes,
-        }));
-
-        const { error: itemsError } = await supabase
-          .from("order_items")
-          .insert(orderItemsData);
-
-        if (itemsError) {
-          throw new Error(itemsError.message);
-        }
-
-      }
-
-
-
-      if (!poIs) {
-        for (const item of data.items) {
-          if (item.sizes && item.sizes.length > 0) {
-            for (const size of item.sizes) {
-              // Step 1: Fetch current size
-              const { data: currentSize, error: fetchError } = await supabase
-                .from("product_sizes")
-                .select("stock")
-                .eq("id", size.id)
-                .single();
-
-              if (fetchError || !currentSize) {
-                console.warn(`⚠️ Size not found in Supabase for ID: ${size.id}, skipping...`);
-                continue; // ✅ Skip this size if not found
-              }
-
-              const newQuantity = currentSize.stock - size.quantity;
-
-              // Step 2: Update with new quantity
-              const { error: updateError } = await supabase
-                .from("product_sizes")
-                .update({ stock: newQuantity })
-                .eq("id", size.id);
-
-              if (updateError) {
-                console.error(`❌ Failed to update size quantity for ID: ${size.id}`, updateError);
-                throw new Error(`Failed to update size quantity`);
-              } else {
-                console.log(`✅ Updated size quantity for ID: ${size.id}`);
-              }
-            }
-          }
-        }
-      }
-
-      // Reset form and local state
-      localStorage.removeItem("cart");
-      localStorage.removeItem("cartItems");
-      window.location.reload();
-
-
-      toast({
-        title: "Order Created Successfully",
-        description: `Order ID: ${newOrder.id} has been created.`,
+  try {
+    setIsSubmitting(true);
+    console.log("Starting order submission:", data);
+
+    // Early validation
+    if (!userProfile?.id) {
+      toast({ title: "User profile not found", description: "Please log in to create an order.", duration: 5000, variant: "destructive" });
+      return;
+    }
+
+    // Parallel data preparation
+    const [taxPer, cleanedCartItems] = await Promise.all([
+      Promise.resolve(Number(sessionStorage.getItem("taxper") || 0)),
+      Promise.resolve(cleanCartItems(cartItems))
+    ]);
+
+    validateOrderItems(data.items);
+    
+    const calculatedTotal = calculateOrderTotal(cleanedCartItems, totalShippingCost || 0);
+    const newTax = ((calculatedTotal - totalShippingCost) * taxPer) / 100;
+    const totalAmount = calculatedTotal + newTax;
+
+    // Determine profile ID
+    const profileID = 
+      sessionStorage.getItem('userType') === "admin" ? data.customer :
+      sessionStorage.getItem('userType') === "group" ? pId :
+      userProfile.id;
+
+    // Generate order number
+    const orderNumber = poIs 
+      ? await generatePurchaseOrderId() 
+      : await generateOrderId();
+
+    // Prepare order data
+    const orderData = {
+      order_number: orderNumber,
+      profile_id: profileID,
+      status: data.status,
+      total_amount: totalAmount,
+      shipping_cost: totalShippingCost || 0,
+      tax_amount: newTax,
+      customization: isCus,
+      items: cleanedCartItems,
+      notes: data.specialInstructions,
+      shipping_method: data.shipping?.method,
+      customerInfo: data.customerInfo,
+      shippingAddress: data.shippingAddress,
+      tracking_number: data.shipping?.trackingNumber,
+      estimated_delivery: data.shipping?.estimatedDelivery || 
+        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+      location_id: pId,
+      poAccept: !poIs
+    };
+
+    // Create order
+    const { data: orderResponse, error: orderError } = await supabase
+      .from("orders")
+      .insert(orderData)
+      .select()
+      .single();
+
+    if (orderError) throw new Error(orderError.message);
+
+    // Parallel processing for non-PO orders
+    if (!poIs) {
+      // Parallel operations
+      await Promise.all([
+        createInvoice(orderResponse, totalAmount, newTax),
+        updateStock(data.items),
+        handlePostOrderProcessing(orderResponse, cleanedCartItems, totalAmount)
+      ]);
+    } else {
+      // For PO orders, just handle post-processing
+      await handlePostOrderProcessing(orderResponse, cleanedCartItems, totalAmount);
+    }
+
+    // Final cleanup
+    localStorage.removeItem("cart");
+    localStorage.removeItem("cartItems");
+    form.reset();
+    await clearCart();
+
+    // Navigation
+    const userType = sessionStorage.getItem('userType');
+    const routes = {
+      group: "/group/orders",
+      pharmacy: "/pharmacy/orders",
+      admin: poIs ? "/admin/po" : "/admin/orders"
+    };
+
+    if (routes[userType as keyof typeof routes]) {
+      navigate(routes[userType as keyof typeof routes], {
+        state: { createOrder: false }
       });
+    }
+window.location.reload();
+    toast({
+      title: "Order Created Successfully",
+      description: `Order ID: ${orderResponse.id} has been created.`,
+    });
 
+  } catch (error) {
+    console.error("Order creation error:", error);
+    toast({
+      title: "Error Creating Order",
+      description: error instanceof Error ? error.message : "There was a problem creating your order.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
+// Optimized helper functions
+const createInvoice = async (order: any, totalAmount: number, newTax: number) => {
+  const year = new Date().getFullYear();
+  
+  // Get invoice number in parallel with other operations
+  const { data: inData, error: fetchError } = await supabase
+    .from("centerize_data")
+    .select("id, invoice_no, invoice_start")
+    .order("id", { ascending: false })
+    .limit(1);
 
+  if (fetchError) throw new Error(fetchError.message);
+
+  const newInvNo = (inData?.[0]?.invoice_no || 0) + 1;
+  const invoiceStart = inData?.[0]?.invoice_start || "INV";
+
+  // Update invoice number
+  if (inData?.[0]?.id) {
+    const { error: updateError } = await supabase
+      .from("centerize_data")
+      .update({ invoice_no: newInvNo })
+      .eq("id", inData[0].id);
+
+    if (updateError) throw new Error(updateError.message);
+  }
+
+  const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
+  const dueDate = new Date(new Date(order.estimated_delivery).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Create invoice
+  const invoiceData = {
+    invoice_number: invoiceNumber,
+    order_id: order.id,
+    due_date: dueDate,
+    profile_id: order.profile_id,
+    status: "pending" as InvoiceStatus,
+    amount: totalAmount,
+    tax_amount: newTax,
+    total_amount: totalAmount,
+    payment_status: order.payment_status,
+    payment_method: order.paymentMethod as PaymentMethod,
+    payment_notes: order.notes || null,
+    items: order.items,
+    customer_info: order.customerInfo,
+    shipping_info: order.shippingAddress,
+    shippin_cost: order.shipping_cost,
+    subtotal: totalAmount + (isCus ? 0.5 : 0)
+  };
+
+  const { error: invoiceError } = await supabase
+    .from("invoices")
+    .insert(invoiceData);
+
+  if (invoiceError) throw new Error(invoiceError.message);
+};
+
+const updateStock = async (items: any[]) => {
+  // Batch product updates
+  const productUpdates = items.map(item => 
+    supabase.rpc("decrement_stock", {
+      product_id: item.productId,
+      quantity: item.quantity
+    })
+  );
+  
+  // Batch size updates
+  const sizeUpdates = items.flatMap(item => 
+    item.sizes?.map(size => 
+      supabase
+        .from("product_sizes")
+        .select("stock")
+        .eq("id", size.id)
+        .single()
+        .then(({ data, error }) => {
+          if (error || !data) throw new Error(`Size not found for ID: ${size.id}`);
+          return supabase
+            .from("product_sizes")
+            .update({ stock: data.stock - size.quantity })
+            .eq("id", size.id);
+        })
+    ) || []
+  );
+
+  // Execute all updates in parallel
+  const updatePromises = [...productUpdates, ...sizeUpdates];
+  const results = await Promise.allSettled(updatePromises);
+  
+  // Check for errors
+  const errors = results.filter(r => r.status === 'rejected');
+  if (errors.length > 0) {
+    throw new Error("Stock update failed for some items");
+  }
+};
+
+const handlePostOrderProcessing = async (order: any, cartItems: any[], totalAmount: number) => {
+  // Get profile data
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("email_notifaction")
+    .eq("id", order.profile_id)
+    .maybeSingle();
+
+  // Parallel operations
+  await Promise.all([
+    // Send email notification
+    (async () => {
+     if (profileData?.email_notifaction) {
+  await axios.post("/order-place", order)
+    .then(() => {
+      console.log("Order status sent successfully to backend.");
+    })
+    .catch((err) => {
+      console.error("Failed to send order status:", err);
+    });
+}
+    })(),
+
+    // Create logs
+    (async () => {
       const logsData = {
-        user_id: newOrder.profile_id,
-        order_id: orderNumber,
+        user_id: order.profile_id,
+        order_id: order.order_number,
         action: 'order_created',
         details: {
-          message: `Order Created : ${orderNumber}`,
-          items: cleanedCartItems,
+          message: `Order Created: ${order.order_number}`,
+          items: cartItems,
           orderCreateBY: userProfile
-        },
-      };
-      try {
-        await axios.post("/logs/create", logsData);
-        console.log("LOGS STORED SUCCESSFULLYY");
-      } catch (apiError) {
-        console.error("Failed to store logs:", apiError);
-      }
-
-
-      form.reset();
-      // setOrderItems([{ id: 1 }]);
-
-      const userType = sessionStorage.getItem('userType');
-
-      if (userType.toLocaleLowerCase() === 'group') {
-        navigate("/group/orders");
-
-      }
-      if (userType.toLocaleLowerCase() === 'pharmacy') {
-        navigate("/pharmacy/orders");
-
-      }
-      if (userType.toLocaleLowerCase() === 'admin') {
-        if (poIs) {
-          navigate("/admin/po", { state: { createOrder: false } });
-        } else {
-          navigate("/admin/orders", { state: { createOrder: false } });
         }
+      };
+
+      try {
+         await axios.post("/logs/create", logsData);
+      } catch (err) {
+        console.error("Failed to store logs:", err);
       }
+    })()
+  ]);
+};
 
-
-      await clearCart();
-    } catch (error) {
-      console.error("Order creation error:", error);
-      toast({
-        title: "Error Creating Order",
-        description:
-          error instanceof Error
-            ? error.message
-            : "There was a problem creating your order.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   useEffect(() => {
     const VVV = form.getValues();
