@@ -72,6 +72,7 @@ export const useOrderFilters = (orders: OrderFormValues[], po: boolean = true) =
       const orderDate = new Date(order.date);
       return orderDate >= dateRange.from && orderDate <= dateRange.to;
     })
+    .filter((order) => order.poAccept === !po);
 
 
   return {

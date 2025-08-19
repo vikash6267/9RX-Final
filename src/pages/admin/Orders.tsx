@@ -10,6 +10,7 @@ export default function Orders() {
   const [poIs, setPoIs] = useState(false);
 
   useEffect(() => {
+    setOrders([])
     if (location.pathname.startsWith('/admin/po')) {
       setPoIs(true);
     } else {
@@ -22,7 +23,8 @@ export default function Orders() {
     handleShipOrder,
     handleConfirmOrder,
     handleDeleteOrder,
-    handleCancelOrder
+    handleCancelOrder,
+    setOrders
   } = useOrderManagement();
 
   return (

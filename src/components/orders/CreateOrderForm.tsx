@@ -859,7 +859,7 @@ const handlePostOrderProcessing = async (order: any, cartItems: any[], totalAmou
   await Promise.all([
     // Send email notification
     (async () => {
-     if (profileData?.email_notifaction) {
+     if (profileData?.email_notifaction && !poIs)  {
   await axios.post("/order-place", order)
     .then(() => {
       console.log("Order status sent successfully to backend.");

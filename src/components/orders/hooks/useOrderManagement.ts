@@ -31,6 +31,7 @@ export const useOrderManagement = () => {
     dateRange?: { from?: Date; to?: Date };
     poIs?: boolean;
   } = {}) => {
+setOrders([])
     setLoading(true);
 
     console.log(poIs,"poIs")
@@ -555,6 +556,7 @@ export const useOrderManagement = () => {
     page,
     setPage,
     limit,
-    setLimit
+    setLimit,
+    setOrders
   };
 };
