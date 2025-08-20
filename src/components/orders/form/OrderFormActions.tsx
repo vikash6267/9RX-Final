@@ -255,11 +255,11 @@ export function OrderFormActions({
             >
               <ShoppingCart className="h-5 w-5" /> Pay And Order
 
-                  {isSubmitting
-              ? "Creating Order..."
-              : poIs
-                ? "Create Purchase Order"
-                : "Create Order"}
+              {isSubmitting
+                ? "Creating Order..."
+                : poIs
+                  ? "Create Purchase Order"
+                  : "Create Order"}
             </p>
 
           }

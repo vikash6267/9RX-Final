@@ -8,10 +8,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { FormLabel } from "@/components/ui/form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { OrderFormValues } from "../../schemas/orderSchema";
 import { useCart } from "@/hooks/use-cart";
+import { useLocation } from "react-router-dom";
 
 interface OrderItemRowProps {
   index: number;
@@ -46,6 +47,8 @@ export const OrderItemRow = ({
     selectedProductId.description || ""
   );
 
+
+  console.log(form.getValues())
   const handleRemove = async () => {
     const productId = selectedProductId.productId;
 
@@ -65,6 +68,21 @@ export const OrderItemRow = ({
     await updateDescription(selectedProductId.productId, tempDescription);
   };
 
+    const location = useLocation();
+  
+  const [poIsEdit, setPoIsEdit] = useState(false);
+
+  useEffect(() => {
+   
+    if (location.pathname.startsWith('/admin/po')) {
+      setPoIsEdit(true);
+    } else {
+      setPoIsEdit(false);
+    }
+  }, [location.pathname]);
+  
+
+  console.log(poIsEdit,"poIsEdit")
   return (
     <div className="flex flex-col p-4 border rounded-lg shadow-md">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
@@ -81,7 +99,7 @@ export const OrderItemRow = ({
             </p>
           )}
 
-     { poIs &&     <Button
+          {(poIs || poIsEdit )&& <Button
             type="button"
             variant="outline"
             className="mt-2"
@@ -111,7 +129,7 @@ export const OrderItemRow = ({
                   <div key={i} className="mb-1">
                     {size.size_value} {" "}
                     {size.size_unit?.toUpperCase()}
-                     ({size.quantity}{" "}
+                    ({size.quantity}{" "}
                     {size.type === "unit" ? "unit" : ""})
                   </div>
                 ))
