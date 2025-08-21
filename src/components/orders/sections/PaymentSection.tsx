@@ -21,6 +21,7 @@ import { processACHPayment } from "../utils/authorizeNetUtils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
 
 interface PaymentSettings {
   enabled: boolean;
@@ -224,6 +225,19 @@ export function PaymentSection({ form ,}: { form: any }) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Special Instructions</FormLabel>
+            <FormControl>
+              <Textarea {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="purchase_number_external"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>PO Number (Optional)</FormLabel>
             <FormControl>
               <Textarea {...field} />
             </FormControl>

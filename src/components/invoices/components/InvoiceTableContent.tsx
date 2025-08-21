@@ -51,7 +51,15 @@ export function InvoiceTableContent({
 
             >
               <TableCell className="text-center" onClick={() => onPreview(invoice)}>{invoice.invoice_number}</TableCell>
-              <TableCell className="text-center">{invoice.orders?.order_number}</TableCell>
+              <TableCell className="text-center">
+                <p className="font-medium">{invoice.orders?.order_number}</p>
+                {invoice?.purchase_number_external && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    PO - {invoice.purchase_number_external}
+                  </p>
+                )}
+              </TableCell>
+
               <TableCell className="text-center">
                 <div className="flex flex-col items-center justify-center">
                   <span className="text-base font-semibold text-gray-800">

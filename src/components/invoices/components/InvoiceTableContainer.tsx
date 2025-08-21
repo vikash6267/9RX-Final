@@ -115,7 +115,7 @@ export function InvoiceTableContainer({ filterStatus }: DataTableProps) {
       if (filters.search) {
         const searchTerm = `%${filters.search}%`;
         query = query.or(
-          `invoice_number.ilike.${searchTerm},customer_info->>name.ilike.${searchTerm},customer_info->>email.ilike.${searchTerm},customer_info->>phone.ilike.${searchTerm}`
+          `invoice_number.ilike.${searchTerm},customer_info->>name.ilike.${searchTerm},customer_info->>email.ilike.${searchTerm},customer_info->>phone.ilike.${searchTerm},purchase_number_external.ilike.${searchTerm}`
         );
       }
 

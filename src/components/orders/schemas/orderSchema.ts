@@ -91,6 +91,7 @@ export const orderFormSchema = z.object({
   shipping: shippingSchema,
   payment: paymentSchema,
   specialInstructions: z.string().optional(),
+  purchase_number_external: z.string().optional(),
   shippingAddress: shippingAddressSchema.optional(), // Add shipping address to main schema
 });
 

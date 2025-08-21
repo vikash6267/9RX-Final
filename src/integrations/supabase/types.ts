@@ -306,6 +306,7 @@ export type Database = {
           due_date: string;
           id: string;
           payment_status: string | null;
+          purchase_number_external: string | null;
 
           invoice_number: string;
           items: Json | null;
@@ -329,6 +330,7 @@ export type Database = {
           customer_info?: Json | null;
           due_date: string;
           payment_status: string | null;
+          purchase_number_external: string | null;
 
           id?: string;
           invoice_number: string;
@@ -351,6 +353,7 @@ export type Database = {
           created_at?: string | null;
           customer_info?: Json | null;
           due_date?: string;
+          purchase_number_external: string | null;
           id?: string;
           invoice_number?: string;
           payment_status: string | null;
@@ -501,6 +504,7 @@ export type Database = {
           tax_amount: number | null;
           total_amount: number;
           tracking_number: string | null;
+          purchase_number_external: string | null;
           updated_at: string | null;
         };
         Insert: {
@@ -510,6 +514,7 @@ export type Database = {
           id?: string;
           quickBooksID: number | null;
           notes?: string | null;
+          purchase_number_external: string | null;
           void?: string;
           order_number: string;
           profile_id?: string | null;
@@ -528,6 +533,7 @@ export type Database = {
           deleted_at?: string | null;
           estimated_delivery?: string | null;
           id?: string;
+          purchase_number_external: string | null;
           void?: string;
           quickBooksID: number | null;
           notes?: string | null;

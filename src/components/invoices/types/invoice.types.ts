@@ -145,6 +145,7 @@ export interface Invoice {
   id: string;
   invoice_number: string;
   order_number?: string;
+  purchase_number_external?: string;
   void?: boolean;
   order_id?: string | null;
   profile_id?: string | null;

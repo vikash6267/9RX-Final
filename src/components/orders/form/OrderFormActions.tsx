@@ -120,7 +120,8 @@ export function OrderFormActions({
           items: updatedData.items || [],
           total_amount: calculatedTotal + newtax || 0,
           tax_amount: newtax || 0,
-          notes:updatedData?.specialInstructions || ""
+          notes:updatedData?.specialInstructions || "",
+          purchase_number_external:updatedData?.purchase_number_external || ""
         })
         .eq("id", orderId)
         .select("*")
@@ -143,7 +144,8 @@ export function OrderFormActions({
           subtotal: calculatedTotal + newtax || 0,
           total_amount: calculatedTotal + newtax || 0,
           tax_amount: newtax || 0,
-          notes:updatedData?.specialInstructions || ""
+          notes:updatedData?.specialInstructions || "",
+          purchase_number_external:updatedData?.purchase_number_external || ""
 
         })
         .eq("order_id", orderId);

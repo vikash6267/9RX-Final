@@ -121,6 +121,7 @@ export function CreateOrderForm({
         notes: "",
       },
       specialInstructions: "",
+      purchase_number_external: "",
       ...initialData,
     },
   });
@@ -684,6 +685,7 @@ export function CreateOrderForm({
         customization: isCus,
         items: cleanedCartItems,
         notes: data.specialInstructions,
+        purchase_number_external: data.purchase_number_external,
         shipping_method: data.shipping?.method,
         customerInfo: data.customerInfo,
         shippingAddress: data.shippingAddress,
@@ -795,7 +797,7 @@ export function CreateOrderForm({
       payment_status: order.payment_status,
       payment_method: order.paymentMethod as PaymentMethod,
       notes: order.notes || null,
-
+purchase_number_external:order.purchase_number_external ,
       items: order.items,
       customer_info: order.customerInfo,
       shipping_info: order.shippingAddress,

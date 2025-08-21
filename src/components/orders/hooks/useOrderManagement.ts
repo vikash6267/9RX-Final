@@ -106,7 +106,7 @@ setOrders([])
       if (searchQuery) {
         const search = `%${searchQuery}%`;
         query = query.or(
-          `order_number.ilike.${search},customerInfo->>name.ilike.${search},customerInfo->>email.ilike.${search},customerInfo->>phone.ilike.${search}`
+          `order_number.ilike.${search},customerInfo->>name.ilike.${search},customerInfo->>email.ilike.${search},customerInfo->>phone.ilike.${search},purchase_number_external.ilike.${search}`
         );
       }
  // ✅ PO orders filter
@@ -175,6 +175,7 @@ setOrders([])
               notes: "",
             },
             specialInstructions: order.notes || "",
+            purchase_number_external: order.purchase_number_external || "",
             shippingAddress: order.shippingAddress
               ? {
                   fullName: order.shippingAddress.fullName || "",
