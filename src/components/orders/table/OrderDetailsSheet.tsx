@@ -405,7 +405,7 @@ export const OrderDetailsSheet = ({
       const tax = Number(currentOrder?.tax_amount || 0);
       const total = subtotal + handling + fred + shipping + tax;
 
-  
+
       const summaryBody = [
         ['Sub Total', `$${subtotal.toFixed(2)}`],
         ['Handling-Shipping', `$${handling.toFixed(2)}`],
@@ -414,7 +414,7 @@ export const OrderDetailsSheet = ({
       ];
 
       (doc as any).autoTable({
-       
+
         body: summaryBody,
         startY: finalY,
         theme: 'grid',
@@ -729,11 +729,25 @@ export const OrderDetailsSheet = ({
               shippingAddress={currentOrder.shippingAddress}
               componyName={componyName}
             />
+
+
             <OrderItemsList items={currentOrder.items} />
             <OrderPaymentInfo
               payment={currentOrder.payment}
               specialInstructions={currentOrder.specialInstructions}
             />
+
+            {currentOrder?.specialInstructions && (
+              <div className="mt-2">
+                <p className="font-medium text-gray-700">
+                  Special Instructions:{" "}
+                  <span className="font-normal text-gray-600">
+                    {currentOrder.specialInstructions}
+                  </span>
+                </p>
+              </div>
+            )}
+
           </div>
         )}
 

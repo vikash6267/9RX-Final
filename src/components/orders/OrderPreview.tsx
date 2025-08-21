@@ -72,7 +72,7 @@ export function OrderPreview({
       method: "card",
       notes: "",
     },
-    specialInstructions: orderData.specialInstructions || "",
+    specialInstructions: orderData.specialInstructions || orderData.notes|| "",
   };
 
   return (
@@ -96,6 +96,10 @@ export function OrderPreview({
             customerInfo={safeOrderData.customerInfo}
             shippingAddress={safeOrderData.shippingAddress}
           />
+          
+
+
+          
           <OrderItemsList items={safeOrderData.items} />
 
           <div className="space-y-2">

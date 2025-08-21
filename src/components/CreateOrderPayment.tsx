@@ -311,8 +311,8 @@ const cleanedCartItems = cleanCartItems(cartItems); // ✅ fixed items
             payment_transication: response.data.transactionId || "",
             payment_method: "card",
             shippin_cost: totalShippingCost || 0,
-
-            payment_notes: newOrder.notes || null,
+          
+            notes: newOrder.notes || null,
             items: newOrder.items || [],
             customer_info: newOrder.customerInfo || {
               name: newOrder.customerInfo?.name,

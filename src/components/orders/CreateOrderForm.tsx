@@ -10,7 +10,7 @@ import { PaymentSection } from "./sections/PaymentSection";
 import { ShippingSection } from "./sections/ShippingSection";
 import { OrderFormActions } from "./form/OrderFormActions";
 import { useNavigate } from "react-router-dom";
-import { generateOrderId, calculateOrderTotal,generatePurchaseOrderId } from "./utils/orderUtils";
+import { generateOrderId, calculateOrderTotal, generatePurchaseOrderId } from "./utils/orderUtils";
 import {
   validateOrderItems,
   useOrderValidation,
@@ -640,257 +640,258 @@ export function CreateOrderForm({
 
 
   const onSubmit = async (data: OrderFormValues) => {
-  try {
-    setIsSubmitting(true);
-    console.log("Starting order submission:", data);
+    try {
+      setIsSubmitting(true);
+      console.log("Starting order submission:", data);
 
-    // Early validation
-    if (!userProfile?.id) {
-      toast({ title: "User profile not found", description: "Please log in to create an order.", duration: 5000, variant: "destructive" });
-      return;
-    }
+      // Early validation
+      if (!userProfile?.id) {
+        toast({ title: "User profile not found", description: "Please log in to create an order.", duration: 5000, variant: "destructive" });
+        return;
+      }
 
-    // Parallel data preparation
-    const [taxPer, cleanedCartItems] = await Promise.all([
-      Promise.resolve(Number(sessionStorage.getItem("taxper") || 0)),
-      Promise.resolve(cleanCartItems(cartItems))
-    ]);
-
-    validateOrderItems(data.items);
-    
-    const calculatedTotal = calculateOrderTotal(cleanedCartItems, totalShippingCost || 0);
-    const newTax = ((calculatedTotal - totalShippingCost) * taxPer) / 100;
-    const totalAmount = calculatedTotal + newTax;
-
-    // Determine profile ID
-    const profileID = 
-      sessionStorage.getItem('userType') === "admin" ? data.customer :
-      sessionStorage.getItem('userType') === "group" ? pId :
-      userProfile.id;
-
-    // Generate order number
-    const orderNumber = poIs 
-      ? await generatePurchaseOrderId() 
-      : await generateOrderId();
-
-    // Prepare order data
-    const orderData = {
-      order_number: orderNumber,
-      profile_id: profileID,
-      status: data.status,
-      total_amount: totalAmount,
-      shipping_cost: totalShippingCost || 0,
-      tax_amount: newTax,
-      customization: isCus,
-      items: cleanedCartItems,
-      notes: data.specialInstructions,
-      shipping_method: data.shipping?.method,
-      customerInfo: data.customerInfo,
-      shippingAddress: data.shippingAddress,
-      tracking_number: data.shipping?.trackingNumber,
-      estimated_delivery: data.shipping?.estimatedDelivery || 
-        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-      location_id: pId,
-      poAccept: !poIs
-    };
-
-    // Create order
-    const { data: orderResponse, error: orderError } = await supabase
-      .from("orders")
-      .insert(orderData)
-      .select()
-      .single();
-
-    if (orderError) throw new Error(orderError.message);
-
-    // Parallel processing for non-PO orders
-    if (!poIs) {
-      // Parallel operations
-      await Promise.all([
-        createInvoice(orderResponse, totalAmount, newTax),
-        updateStock(data.items),
-        handlePostOrderProcessing(orderResponse, cleanedCartItems, totalAmount)
+      // Parallel data preparation
+      const [taxPer, cleanedCartItems] = await Promise.all([
+        Promise.resolve(Number(sessionStorage.getItem("taxper") || 0)),
+        Promise.resolve(cleanCartItems(cartItems))
       ]);
-    } else {
-      // For PO orders, just handle post-processing
-      await handlePostOrderProcessing(orderResponse, cleanedCartItems, totalAmount);
-    }
 
-    // Final cleanup
-    localStorage.removeItem("cart");
-    localStorage.removeItem("cartItems");
-    form.reset();
-    await clearCart();
+      validateOrderItems(data.items);
 
-    // Navigation
-    const userType = sessionStorage.getItem('userType');
-    const routes = {
-      group: "/group/orders",
-      pharmacy: "/pharmacy/orders",
-      admin: poIs ? "/admin/po" : "/admin/orders"
-    };
+      const calculatedTotal = calculateOrderTotal(cleanedCartItems, totalShippingCost || 0);
+      const newTax = ((calculatedTotal - totalShippingCost) * taxPer) / 100;
+      const totalAmount = calculatedTotal + newTax;
 
-    if (routes[userType as keyof typeof routes]) {
-      navigate(routes[userType as keyof typeof routes], {
-        state: { createOrder: false }
-      });
-    }
-window.location.reload();
-    toast({
-      title: "Order Created Successfully",
-      description: `Order ID: ${orderResponse.id} has been created.`,
-    });
+      // Determine profile ID
+      const profileID =
+        sessionStorage.getItem('userType') === "admin" ? data.customer :
+          sessionStorage.getItem('userType') === "group" ? pId :
+            userProfile.id;
 
-  } catch (error) {
-    console.error("Order creation error:", error);
-    toast({
-      title: "Error Creating Order",
-      description: error instanceof Error ? error.message : "There was a problem creating your order.",
-      variant: "destructive",
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      // Generate order number
+      const orderNumber = poIs
+        ? await generatePurchaseOrderId()
+        : await generateOrderId();
 
-// Optimized helper functions
-const createInvoice = async (order: any, totalAmount: number, newTax: number) => {
-  const year = new Date().getFullYear();
-  
-  // Get invoice number in parallel with other operations
-  const { data: inData, error: fetchError } = await supabase
-    .from("centerize_data")
-    .select("id, invoice_no, invoice_start")
-    .order("id", { ascending: false })
-    .limit(1);
-
-  if (fetchError) throw new Error(fetchError.message);
-
-  const newInvNo = (inData?.[0]?.invoice_no || 0) + 1;
-  const invoiceStart = inData?.[0]?.invoice_start || "INV";
-
-  // Update invoice number
-  if (inData?.[0]?.id) {
-    const { error: updateError } = await supabase
-      .from("centerize_data")
-      .update({ invoice_no: newInvNo })
-      .eq("id", inData[0].id);
-
-    if (updateError) throw new Error(updateError.message);
-  }
-
-  const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
-  const dueDate = new Date(new Date(order.estimated_delivery).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-
-  // Create invoice
-  const invoiceData = {
-    invoice_number: invoiceNumber,
-    order_id: order.id,
-    due_date: dueDate,
-    profile_id: order.profile_id,
-    status: "pending" as InvoiceStatus,
-    amount: totalAmount,
-    tax_amount: newTax,
-    total_amount: totalAmount,
-    payment_status: order.payment_status,
-    payment_method: order.paymentMethod as PaymentMethod,
-    payment_notes: order.notes || null,
-    items: order.items,
-    customer_info: order.customerInfo,
-    shipping_info: order.shippingAddress,
-    shippin_cost: order.shipping_cost,
-    subtotal: totalAmount + (isCus ? 0.5 : 0)
-  };
-
-  const { error: invoiceError } = await supabase
-    .from("invoices")
-    .insert(invoiceData);
-
-  if (invoiceError) throw new Error(invoiceError.message);
-};
-
-const updateStock = async (items: any[]) => {
-  // Batch product updates
-  const productUpdates = items.map(item => 
-    supabase.rpc("decrement_stock", {
-      product_id: item.productId,
-      quantity: item.quantity
-    })
-  );
-  
-  // Batch size updates
-  const sizeUpdates = items.flatMap(item => 
-    item.sizes?.map(size => 
-      supabase
-        .from("product_sizes")
-        .select("stock")
-        .eq("id", size.id)
-        .single()
-        .then(({ data, error }) => {
-          if (error || !data) throw new Error(`Size not found for ID: ${size.id}`);
-          return supabase
-            .from("product_sizes")
-            .update({ stock: data.stock - size.quantity })
-            .eq("id", size.id);
-        })
-    ) || []
-  );
-
-  // Execute all updates in parallel
-  const updatePromises = [...productUpdates, ...sizeUpdates];
-  const results = await Promise.allSettled(updatePromises);
-  
-  // Check for errors
-  const errors = results.filter(r => r.status === 'rejected');
-  if (errors.length > 0) {
-    throw new Error("Stock update failed for some items");
-  }
-};
-
-const handlePostOrderProcessing = async (order: any, cartItems: any[], totalAmount: number) => {
-  // Get profile data
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("email_notifaction")
-    .eq("id", order.profile_id)
-    .maybeSingle();
-
-  // Parallel operations
-  await Promise.all([
-    // Send email notification
-    (async () => {
-     if (profileData?.email_notifaction && !poIs)  {
-  await axios.post("/order-place", order)
-    .then(() => {
-      console.log("Order status sent successfully to backend.");
-    })
-    .catch((err) => {
-      console.error("Failed to send order status:", err);
-    });
-}
-    })(),
-
-    // Create logs
-    (async () => {
-      const logsData = {
-        user_id: order.profile_id,
-        order_id: order.order_number,
-        action: 'order_created',
-        details: {
-          message: `Order Created: ${order.order_number}`,
-          items: cartItems,
-          orderCreateBY: userProfile
-        }
+      // Prepare order data
+      const orderData = {
+        order_number: orderNumber,
+        profile_id: profileID,
+        status: data.status,
+        total_amount: totalAmount,
+        shipping_cost: totalShippingCost || 0,
+        tax_amount: newTax,
+        customization: isCus,
+        items: cleanedCartItems,
+        notes: data.specialInstructions,
+        shipping_method: data.shipping?.method,
+        customerInfo: data.customerInfo,
+        shippingAddress: data.shippingAddress,
+        tracking_number: data.shipping?.trackingNumber,
+        estimated_delivery: data.shipping?.estimatedDelivery ||
+          new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+        location_id: pId,
+        poAccept: !poIs
       };
 
-      try {
-         await axios.post("/logs/create", logsData);
-      } catch (err) {
-        console.error("Failed to store logs:", err);
+      // Create order
+      const { data: orderResponse, error: orderError } = await supabase
+        .from("orders")
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) throw new Error(orderError.message);
+
+      // Parallel processing for non-PO orders
+      if (!poIs) {
+        // Parallel operations
+        await Promise.all([
+          createInvoice(orderResponse, totalAmount, newTax),
+          updateStock(data.items),
+          handlePostOrderProcessing(orderResponse, cleanedCartItems, totalAmount)
+        ]);
+      } else {
+        // For PO orders, just handle post-processing
+        await handlePostOrderProcessing(orderResponse, cleanedCartItems, totalAmount);
       }
-    })()
-  ]);
-};
+
+      // Final cleanup
+      localStorage.removeItem("cart");
+      localStorage.removeItem("cartItems");
+      form.reset();
+      await clearCart();
+
+      // Navigation
+      const userType = sessionStorage.getItem('userType');
+      const routes = {
+        group: "/group/orders",
+        pharmacy: "/pharmacy/orders",
+        admin: poIs ? "/admin/po" : "/admin/orders"
+      };
+
+      if (routes[userType as keyof typeof routes]) {
+        navigate(routes[userType as keyof typeof routes], {
+          state: { createOrder: false }
+        });
+      }
+      window.location.reload();
+      toast({
+        title: "Order Created Successfully",
+        description: `Order ID: ${orderResponse.id} has been created.`,
+      });
+
+    } catch (error) {
+      console.error("Order creation error:", error);
+      toast({
+        title: "Error Creating Order",
+        description: error instanceof Error ? error.message : "There was a problem creating your order.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Optimized helper functions
+  const createInvoice = async (order: any, totalAmount: number, newTax: number) => {
+    const year = new Date().getFullYear();
+
+    // Get invoice number in parallel with other operations
+    const { data: inData, error: fetchError } = await supabase
+      .from("centerize_data")
+      .select("id, invoice_no, invoice_start")
+      .order("id", { ascending: false })
+      .limit(1);
+
+    if (fetchError) throw new Error(fetchError.message);
+
+    const newInvNo = (inData?.[0]?.invoice_no || 0) + 1;
+    const invoiceStart = inData?.[0]?.invoice_start || "INV";
+
+    // Update invoice number
+    if (inData?.[0]?.id) {
+      const { error: updateError } = await supabase
+        .from("centerize_data")
+        .update({ invoice_no: newInvNo })
+        .eq("id", inData[0].id);
+
+      if (updateError) throw new Error(updateError.message);
+    }
+
+    const invoiceNumber = `${invoiceStart}-${year}${newInvNo.toString().padStart(6, "0")}`;
+    const dueDate = new Date(new Date(order.estimated_delivery).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Create invoice
+    const invoiceData = {
+      invoice_number: invoiceNumber,
+      order_id: order.id,
+      due_date: dueDate,
+      profile_id: order.profile_id,
+      status: "pending" as InvoiceStatus,
+      amount: totalAmount,
+      tax_amount: newTax,
+      total_amount: totalAmount,
+      payment_status: order.payment_status,
+      payment_method: order.paymentMethod as PaymentMethod,
+      notes: order.notes || null,
+
+      items: order.items,
+      customer_info: order.customerInfo,
+      shipping_info: order.shippingAddress,
+      shippin_cost: order.shipping_cost,
+      subtotal: totalAmount + (isCus ? 0.5 : 0)
+    };
+
+    const { error: invoiceError } = await supabase
+      .from("invoices")
+      .insert(invoiceData);
+
+    if (invoiceError) throw new Error(invoiceError.message);
+  };
+
+  const updateStock = async (items: any[]) => {
+    // Batch product updates
+    const productUpdates = items.map(item =>
+      supabase.rpc("decrement_stock", {
+        product_id: item.productId,
+        quantity: item.quantity
+      })
+    );
+
+    // Batch size updates
+    const sizeUpdates = items.flatMap(item =>
+      item.sizes?.map(size =>
+        supabase
+          .from("product_sizes")
+          .select("stock")
+          .eq("id", size.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error || !data) throw new Error(`Size not found for ID: ${size.id}`);
+            return supabase
+              .from("product_sizes")
+              .update({ stock: data.stock - size.quantity })
+              .eq("id", size.id);
+          })
+      ) || []
+    );
+
+    // Execute all updates in parallel
+    const updatePromises = [...productUpdates, ...sizeUpdates];
+    const results = await Promise.allSettled(updatePromises);
+
+    // Check for errors
+    const errors = results.filter(r => r.status === 'rejected');
+    if (errors.length > 0) {
+      throw new Error("Stock update failed for some items");
+    }
+  };
+
+  const handlePostOrderProcessing = async (order: any, cartItems: any[], totalAmount: number) => {
+    // Get profile data
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("email_notifaction")
+      .eq("id", order.profile_id)
+      .maybeSingle();
+
+    // Parallel operations
+    await Promise.all([
+      // Send email notification
+      (async () => {
+        if (profileData?.email_notifaction && !poIs) {
+          await axios.post("/order-place", order)
+            .then(() => {
+              console.log("Order status sent successfully to backend.");
+            })
+            .catch((err) => {
+              console.error("Failed to send order status:", err);
+            });
+        }
+      })(),
+
+      // Create logs
+      (async () => {
+        const logsData = {
+          user_id: order.profile_id,
+          order_id: order.order_number,
+          action: 'order_created',
+          details: {
+            message: `Order Created: ${order.order_number}`,
+            items: cartItems,
+            orderCreateBY: userProfile
+          }
+        };
+
+        try {
+          await axios.post("/logs/create", logsData);
+        } catch (err) {
+          console.error("Failed to store logs:", err);
+        }
+      })()
+    ]);
+  };
 
 
   useEffect(() => {
@@ -918,7 +919,7 @@ const handlePostOrderProcessing = async (order: any, cartItems: any[], totalAmou
 
           <div className="">
 
-            { userTypeRole === "admin" && <div className="flex justify-end w-full gap-5">
+            {userTypeRole === "admin" && <div className="flex justify-end w-full gap-5">
               <p
                 onClick={(e) => {
                   e.preventDefault(); // Form submit hone se rokne ke liye
@@ -926,18 +927,18 @@ const handlePostOrderProcessing = async (order: any, cartItems: any[], totalAmou
                 }}
                 className="cursor-pointer px-4 py-2 bg-green-600 text-white font-medium rounded-lg shadow-md hover:bg-green-700 active:scale-95 transition-all inline-block text-center"
               >
-                { isPriceChange ? "Close Edit Price" : "Edit Price"}
+                {isPriceChange ? "Close Edit Price" : "Edit Price"}
               </p>
 
-              { <div>
-               <div className=" flex gap-4">
-                 <p onClick={() => setIsOpen(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
-                  Add Items
-                </p>
-               {<p onClick={() => setIsCustom(true)} className="p-2 cursor-pointer bg-gray-600 text-white rounded">
-                  Add Additional Items
-                </p>}
-               </div>
+              {<div>
+                <div className=" flex gap-4">
+                  <p onClick={() => setIsOpen(true)} className="p-2 cursor-pointer bg-blue-600 text-white rounded">
+                    Add Items
+                  </p>
+                  {<p onClick={() => setIsCustom(true)} className="p-2 cursor-pointer bg-gray-600 text-white rounded">
+                    Add Additional Items
+                  </p>}
+                </div>
 
                 <CustomProductForm isOpen={isCustom} onClose={() => setIsCustom(false)} isEditing={isEditing} form={form} />
               </div>}

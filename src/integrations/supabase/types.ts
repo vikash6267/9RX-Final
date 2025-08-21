@@ -320,6 +320,8 @@ export type Database = {
           tax_amount: number | null;
           total_amount: number;
           updated_at: string | null;
+          notes: string | null;
+
         };
         Insert: {
           amount: number;
@@ -341,6 +343,7 @@ export type Database = {
           subtotal?: number | null;
           tax_amount?: number | null;
           total_amount: number;
+          notes: string | null;
           updated_at?: string | null;
         };
         Update: {
@@ -362,6 +365,7 @@ export type Database = {
           subtotal?: number | null;
           tax_amount?: number | null;
           total_amount?: number;
+          notes: string | null;
           updated_at?: string | null;
         };
         Relationships: [

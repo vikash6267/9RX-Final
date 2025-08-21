@@ -99,7 +99,7 @@ export const OrderItemRow = ({
             </p>
           )}
 
-          {(poIs || poIsEdit )&& <Button
+          {<Button
             type="button"
             variant="outline"
             className="mt-2"
