@@ -4,10 +4,16 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { v4 as uuidv4 } from "uuid";
 import { useCart } from "@/hooks/use-cart";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const validationSchema = yup.object().shape({
   name: yup.string().required("Name is required"),
-
   price: yup.number().required("Price is required").positive("Price must be positive"),
   sizes: yup.array().of(
     yup.object().shape({
@@ -41,10 +47,7 @@ const CustomProductForm = ({ isOpen, onClose, isEditing, form }) => {
   });
 
   const onSubmit = async () => {
-    const data = getValues(); // Get form values
-
-
-
+    const data = getValues();
     const totalPrice = data.sizes.reduce(
       (sum, size) => sum + Number(size.price) * Number(size.quantity),
       0
@@ -56,100 +59,99 @@ const CustomProductForm = ({ isOpen, onClose, isEditing, form }) => {
         price: Number(totalPrice),
         image: "https://via.placeholder.com/150",
         shipping_cost: 0,
-        sizes: data.sizes.map((size) => {
-
-          return {
-            id: uuidv4(),
-            price: Number(size.price),
-            quantity: Number(size.quantity),
-            size_value: size.size,
-            size_unit: " ",
-          };
-        }),
+        sizes: data.sizes.map((size) => ({
+          id: uuidv4(),
+          price: Number(size.price),
+          quantity: Number(size.quantity),
+          size_value: size.size,
+          size_unit: " ",
+        })),
         quantity: data.sizes.reduce((total, size) => total + Number(size.quantity), 0),
         customizations: {},
         notes: "",
       };
 
-      console.log("Cart Item:", cartItem);
-
       if (isEditing) {
         form.setValue("items", [...form.getValues("items"), cartItem]);
-
       } else {
-
-        await addToCart(cartItem); // ✅ Cart me add hoga
+        await addToCart(cartItem);
       }
-      onClose(); // ✅ Form close hoga
+      onClose();
     } catch (error) {
       console.error("Error adding to cart:", error);
     }
   };
 
-  if (!isOpen) return null; // ✅ Agar modal open nahi hai toh kuch show na ho
-
   return (
- <div className="fixed inset-0 flex p-4 items-center justify-center bg-black bg-opacity-50 z-[9999999]">
-  <div className="max-w-lg w-full p-6 bg-white shadow-md rounded-lg">
-    <h2 className="text-xl font-semibold mb-4">Add Custom Product</h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg w-full p-6 bg-white shadow-md rounded-lg">
+        <DialogHeader>
+          <DialogTitle>Add Custom Product</DialogTitle>
+        </DialogHeader>
 
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="block font-medium"> Name</label>
-        <input
-          type="text"
-          {...register("name")}
-          className="w-full p-2 border rounded"
-          placeholder="Enter custom name"
-        />
-        {errors.name && (
-          <p className="text-red-500 text-sm">{errors.name.message}</p>
-        )}
-      </div>
-
-      <div>
-        <h3 className="text-lg font-medium">Size</h3>
-        {fields.map((field, index) => (
-          <div key={field.id} className="flex space-x-2 items-center">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label className="block font-medium"> Name</label>
             <input
               type="text"
-              placeholder="Name At least 2 words"
-              {...register(`sizes.${index}.size`)}
-              className="p-2 border border-gray-300 rounded w-1/3"
+              {...register("name")}
+              className="w-full p-2 border rounded"
+              placeholder="Enter custom name"
             />
-            <label>Price</label>
-            <input
-              type="number"
-              placeholder="Price"
-              {...register(`sizes.${index}.price`)}
-              className="p-2 border border-gray-300 rounded w-1/3"
-            />
-            <label>Quantity</label>
-            <input
-              type="number"
-              placeholder="Quantity"
-              {...register(`sizes.${index}.quantity`)}
-              className="p-2 border border-gray-300 rounded w-1/3"
-            />
-            <button type="button" onClick={() => remove(index)} className="text-red-500">
-              X
-            </button>
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name.message}</p>
+            )}
           </div>
-        ))}
-      </div>
 
-      <div className="flex justify-between">
-        <p onClick={onSubmit} className="p-2 bg-green-500 text-white rounded cursor-pointer">
-          Add to Cart
-        </p>
-        <button type="button" onClick={onClose} className="p-2 bg-gray-500 text-white rounded">
-          Close
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+          <div>
+            <h3 className="text-lg font-medium">Size</h3>
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex space-x-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Name At least 2 words"
+                  {...register(`sizes.${index}.size`)}
+                  className="p-2 border border-gray-300 rounded w-1/3"
+                />
+                <label>Price</label>
+                <input
+                  type="number"
+                  placeholder="Price"
+                  {...register(`sizes.${index}.price`)}
+                  className="p-2 border border-gray-300 rounded w-1/3"
+                />
+                <label>Quantity</label>
+                <input
+                  type="number"
+                  placeholder="Quantity"
+                  {...register(`sizes.${index}.quantity`)}
+                  className="p-2 border border-gray-300 rounded w-1/3"
+                />
+                <button type="button" onClick={() => remove(index)} className="text-red-500">
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
 
+          <DialogFooter className="flex justify-between">
+            <p
+              onClick={onSubmit}
+              className="p-2 bg-green-500 text-white rounded cursor-pointer"
+            >
+              Add to Cart
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 bg-gray-500 text-white rounded"
+            >
+              Close
+            </button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
