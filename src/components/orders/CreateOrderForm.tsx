@@ -9,7 +9,7 @@ import { OrderItemsSection } from "./sections/OrderItemsSection";
 import { PaymentSection } from "./sections/PaymentSection";
 import { ShippingSection } from "./sections/ShippingSection";
 import { OrderFormActions } from "./form/OrderFormActions";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { generateOrderId, calculateOrderTotal, generatePurchaseOrderId } from "./utils/orderUtils";
 import {
   validateOrderItems,
@@ -43,7 +43,7 @@ export function CreateOrderForm({
   isEditing,
   use,
   locationId,
-  poIs = false
+  
 }: CreateOrderFormProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -55,7 +55,19 @@ export function CreateOrderForm({
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [isCus, setIsCus] = useState<boolean>(false);
   const [isPriceChange, setIsPriceChange] = useState<boolean>(false);
+const location = useLocation();
+  const [poIs, setPoIs] = useState(false);
 
+  useEffect(() => {
+   
+    if (location.pathname.startsWith('/admin/po')) {
+      setPoIs(true);
+    } else {
+      setPoIs(false);
+    }
+  }, [location.pathname]);
+
+  
   console.log(userProfile);
   const [pId, setPId] = useState(
     initialData?.customerInfo.cusid || ""
@@ -982,7 +994,7 @@ purchase_number_external:order.purchase_number_external ,
           </div>
           <ShippingSection form={form} />
 
-          {!poIs && <PaymentSection form={form} />}
+          { <PaymentSection form={form} isEditing={isEditing} poIs={poIs} />}
 
           <OrderFormActions
             orderData={form.getValues()}

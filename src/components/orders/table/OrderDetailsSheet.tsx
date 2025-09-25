@@ -740,7 +740,7 @@ export const OrderDetailsSheet = ({
             {currentOrder?.specialInstructions && (
               <div className="mt-2">
                 <p className="font-medium text-gray-700">
-                  Special Instructions:{" "}
+                  {poIs ? "Notes" : "Special Instructions"}:{" "} 
                   <span className="font-normal text-gray-600">
                     {currentOrder.specialInstructions}
                   </span>

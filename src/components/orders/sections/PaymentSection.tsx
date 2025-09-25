@@ -31,7 +31,7 @@ interface PaymentSettings {
   poIs?: boolean;
 }
 
-export function PaymentSection({ form ,}: { form: any }) {
+export function PaymentSection({ form ,isEditing,poIs}: { form: any,isEditing:boolean,poIs:boolean }) {
   const { toast } = useToast();
   const paymentMethod = form.watch("payment.method");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -179,7 +179,7 @@ export function PaymentSection({ form ,}: { form: any }) {
 
   return (
     <div className="space-y-4">
-      <FormField
+     {!poIs &&  <FormField
         control={form.control}
         name="payment.method"
         render={({ field }) => (
@@ -202,7 +202,7 @@ export function PaymentSection({ form ,}: { form: any }) {
           </FormItem>
         )}
       />
-
+}
       {paymentMethod === "ach" && (
         <>
           <AuthorizeNetCredentials
@@ -224,7 +224,11 @@ export function PaymentSection({ form ,}: { form: any }) {
         name="specialInstructions"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Special Instructions</FormLabel>
+            <FormLabel>
+              {
+                poIs ? "Notes" :  "Special Instructions"
+              }
+              </FormLabel>
             <FormControl>
               <Textarea {...field} />
             </FormControl>
@@ -232,7 +236,7 @@ export function PaymentSection({ form ,}: { form: any }) {
           </FormItem>
         )}
       />
-      <FormField
+    { !poIs &&  <FormField
         control={form.control}
         name="purchase_number_external"
         render={({ field }) => (
@@ -244,7 +248,7 @@ export function PaymentSection({ form ,}: { form: any }) {
             <FormMessage />
           </FormItem>
         )}
-      />
+      />}
     </div>
   );
 }

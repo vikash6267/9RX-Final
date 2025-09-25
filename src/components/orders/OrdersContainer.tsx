@@ -258,7 +258,14 @@ export const OrdersContainer = ({
 
   useEffect(() => {
     loadOrders({ statusFilter, statusFilter2, searchQuery, dateRange,poIs });
-  }, [statusFilter, statusFilter2, searchQuery, dateRange, page,poIs,limit]);
+  }, [statusFilter, statusFilter2, searchQuery, dateRange, page,poIs,limit,location.pathname]);
+
+//ADDED 25-09-2025
+  useEffect(() => {
+    if (poIs) {
+        loadOrders({ statusFilter, statusFilter2, searchQuery, dateRange, poIs });
+    }
+}, [poIs]);
 
   const handlePharmacyChange = async (pharmacyId: string) => {
     setSelectedPharmacy(pharmacyId);

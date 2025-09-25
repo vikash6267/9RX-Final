@@ -416,9 +416,14 @@ export function OrdersList({
           {poIs && <TableHead className="font-semibold text-center border-gray-300">
             Order Number
           </TableHead>}
+           <TableHead className="font-semibold text-center border-gray-300">
+            Notes
+          </TableHead>
           <TableHead className="font-semibold text-center border-gray-300">
             {poIs ? "Vendor" : "Customer"} Name
           </TableHead>
+
+         
           <TableHead className="font-semibold text-center border-gray-300">
             Order Date
           </TableHead>
@@ -474,6 +479,17 @@ export function OrdersList({
                   {order.order_number}
                 </TableCell>
               }
+
+
+              {
+                poIs && <TableCell className="text-center border-gray-300" onClick={async () => {
+                  onOrderClick(order);
+                  await clearCart();
+                }}>
+                  {order.specialInstructions}
+                </TableCell>
+              }
+
               <TableCell
                 onClick={async () => {
                   onOrderClick(order);

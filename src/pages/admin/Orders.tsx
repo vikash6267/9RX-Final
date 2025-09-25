@@ -16,7 +16,7 @@ export default function Orders() {
     } else {
       setPoIs(false);
     }
-  }, [location.pathname]);
+  }, [location.pathname,location]);
 
   const {
     handleProcessOrder,
