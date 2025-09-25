@@ -497,7 +497,7 @@ export const OrdersContainer = ({
                 </SheetTrigger>
                 <SheetContent
                   side="right"
-                  className="w-[90vw] sm:max-w-[640px] overflow-y-auto"
+                  className="w-screen md:max-w-[640px] overflow-y-auto"
                 >
                   <SheetHeader>
                     <SheetTitle>
