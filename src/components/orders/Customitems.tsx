@@ -89,81 +89,67 @@ const CustomProductForm = ({ isOpen, onClose, isEditing, form }) => {
   if (!isOpen) return null; // ✅ Agar modal open nahi hai toh kuch show na ho
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="max-w-lg w-full mx-auto p-6 bg-white shadow-md rounded-lg">
-        <h2 className="text-xl font-semibold mb-4">Add Custom Product</h2>
+ <div className="fixed inset-0 flex p-4 items-center justify-center bg-black bg-opacity-50 z-[9999999]">
+  <div className="max-w-lg w-full p-6 bg-white shadow-md rounded-lg">
+    <h2 className="text-xl font-semibold mb-4">Add Custom Product</h2>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <label className="block font-medium"> Name</label>
+        <input
+          type="text"
+          {...register("name")}
+          className="w-full p-2 border rounded"
+          placeholder="Enter custom name"
+        />
+        {errors.name && (
+          <p className="text-red-500 text-sm">{errors.name.message}</p>
+        )}
+      </div>
 
-          <div>
-            <label className="block font-medium"> Name</label>
+      <div>
+        <h3 className="text-lg font-medium">Size</h3>
+        {fields.map((field, index) => (
+          <div key={field.id} className="flex space-x-2 items-center">
             <input
               type="text"
-              {...register("name")}
-              className="w-full p-2 border rounded"
-              placeholder="Enter custom name"
+              placeholder="Name At least 2 words"
+              {...register(`sizes.${index}.size`)}
+              className="p-2 border border-gray-300 rounded w-1/3"
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name.message}</p>
-            )}
-          </div>
-          {/* Dynamic Sizes Input */}
-          <div>
-            <h3 className="text-lg font-medium">Size</h3>
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex space-x-2 items-center">
-                {/* Size */}
-                <input
-                  type="text"
-                  placeholder="Name Atleat 2 words"
-                  {...register(`sizes.${index}.size`)}
-                  className="p-2 border border-gray-300 rounded w-1/3"
-                />
-                {/* Price */}
-                <label htmlFor="">Price  </label>
-                <input
-                  type="number"
-                  placeholder="Price"
-                  {...register(`sizes.${index}.price`)}
-                  className="p-2 border border-gray-300 rounded w-1/3"
-                />
-                {/* Quantity */}
-                <label htmlFor="">Qunity  </label>
-
-                <input
-                  type="number"
-                  placeholder="Quantity"
-                  {...register(`sizes.${index}.quantity`)}
-                  className="p-2 border border-gray-300 rounded w-1/3"
-                />
-                {/* Remove Button */}
-                <button type="button" onClick={() => remove(index)} className="text-red-500">
-                  X
-                </button>
-              </div>
-            ))}
-            {/* Add Size Button */}
-            {/* <button
-              type="button"
-              onClick={() => append({ size: "", price: 0, quantity: 0 })}
-              className="mt-2 p-2 bg-blue-500 text-white rounded"
-            >
-              Add Size
-            </button> */}
-          </div>
-
-          {/* Submit and Close Buttons */}
-          <div className="flex justify-between">
-            <p onClick={onSubmit} className="p-2 bg-green-500 text-white rounded">
-              Add to Cart
-            </p>
-            <button type="button" onClick={onClose} className="p-2 bg-gray-500 text-white rounded">
-              Close
+            <label>Price</label>
+            <input
+              type="number"
+              placeholder="Price"
+              {...register(`sizes.${index}.price`)}
+              className="p-2 border border-gray-300 rounded w-1/3"
+            />
+            <label>Quantity</label>
+            <input
+              type="number"
+              placeholder="Quantity"
+              {...register(`sizes.${index}.quantity`)}
+              className="p-2 border border-gray-300 rounded w-1/3"
+            />
+            <button type="button" onClick={() => remove(index)} className="text-red-500">
+              X
             </button>
           </div>
-        </form>
+        ))}
       </div>
-    </div>
+
+      <div className="flex justify-between">
+        <p onClick={onSubmit} className="p-2 bg-green-500 text-white rounded cursor-pointer">
+          Add to Cart
+        </p>
+        <button type="button" onClick={onClose} className="p-2 bg-gray-500 text-white rounded">
+          Close
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
   );
 };
 
