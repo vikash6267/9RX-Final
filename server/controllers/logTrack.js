@@ -3,10 +3,10 @@ const Log = require("../models/logsModels");
 // ✅ Create a new log
 const createLog = async (req, res) => {
   try {
-    const { user_id, order_id, action, details } = req.body;
+    const { user_id="NA", order_id, action, details } = req.body;
 console.log(req.body)
     // Validation
-    if (!user_id || !action) {
+    if ( !action) {
       return res.status(400).json({ success: false, message: "userId and action are required" });
     }
 
