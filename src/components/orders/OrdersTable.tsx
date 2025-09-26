@@ -56,7 +56,8 @@ export const OrdersTable = () => {
       searchQuery
         ? order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
           order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.order_number.includes(searchQuery.toLowerCase())
+          order.order_number.includes(searchQuery.toLowerCase())  ||
+          order.notes.includes(searchQuery.toLowerCase())  
         : true
     );
 

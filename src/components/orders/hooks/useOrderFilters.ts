@@ -35,6 +35,7 @@ export const useOrderFilters = (orders: OrderFormValues[], po: boolean = true) =
         customerInfo = {},
         id = "",
         order_number = "",
+        specialInstructions = ""
       } = order;
 
       const {
@@ -62,7 +63,8 @@ export const useOrderFilters = (orders: OrderFormValues[], po: boolean = true) =
         street.toLowerCase().includes(query) ||
         city.toLowerCase().includes(query) ||
         state.toLowerCase().includes(query) ||
-        zip_code.toLowerCase().includes(query)
+        zip_code.toLowerCase().includes(query) ||
+        specialInstructions?.toLowerCase().includes(query)
       );
     })
 

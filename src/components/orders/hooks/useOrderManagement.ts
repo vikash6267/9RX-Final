@@ -106,7 +106,7 @@ setOrders([])
       if (searchQuery) {
         const search = `%${searchQuery}%`;
         query = query.or(
-          `order_number.ilike.${search},customerInfo->>name.ilike.${search},customerInfo->>email.ilike.${search},customerInfo->>phone.ilike.${search},purchase_number_external.ilike.${search}`
+          `order_number.ilike.${search},customerInfo->>name.ilike.${search},customerInfo->>email.ilike.${search},customerInfo->>phone.ilike.${search},purchase_number_external.ilike.${search},notes.ilike.${search}`
         );
       }
  // ✅ PO orders filter
