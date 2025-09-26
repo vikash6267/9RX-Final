@@ -11,6 +11,8 @@ export function OrderCustomerInfo({
   shippingAddress,
   componyName,
 }: OrderCustomerInfoProps) {
+
+  console.log(customerInfo, "customerInfo check")
   if (!customerInfo) {
     return <div>No customer information available</div>;
   }
@@ -21,7 +23,7 @@ export function OrderCustomerInfo({
   return (
     <div className="space-y-4 p-4 border rounded-lg shadow-md bg-white">
       {/* Billing Information */}
-      <h3 className="font-semibold text-lg">Billing Address</h3>
+      <h3 className="font-semibold text-lg">Vendor Address</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
         <p>
           <span className="font-medium">Name:</span>{" "}
@@ -46,7 +48,7 @@ export function OrderCustomerInfo({
         )}
       </div>
       <div className="text-sm">
-        <p>
+        <p> 
           <span className="font-medium">Address:</span>{" "}
           {customerInfo?.address?.street || "N/A"}
         </p>
