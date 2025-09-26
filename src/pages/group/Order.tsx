@@ -155,7 +155,7 @@ export default function GroupOrder() {
  
         customerInfo: {
           cusid:data.id || "test",
-          type: "Pharmacy",
+          type:  data?.type || "Pharmacy",
           name: data.first_name,
           email: finalEmail  || "",
           phone: data.mobile_phone || "",

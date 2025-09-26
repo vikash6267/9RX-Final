@@ -4,12 +4,14 @@ interface OrderCustomerInfoProps {
   customerInfo?: OrderFormValues["customerInfo"];
   shippingAddress?: OrderFormValues["shippingAddress"];
   componyName?: string;
+  poIs?: boolean;
 }
 
 export function OrderCustomerInfo({
   customerInfo,
   shippingAddress,
   componyName,
+  poIs
 }: OrderCustomerInfoProps) {
 
   console.log(customerInfo, "customerInfo check")
@@ -39,7 +41,8 @@ export function OrderCustomerInfo({
         </p>
         <p>
           <span className="font-medium">Type:</span>{" "}
-          {customerInfo?.type || "N/A"}
+{poIs ? "Vendor" : (customerInfo?.type || "N/A")}
+         
         </p>
         {componyName && (
           <p>

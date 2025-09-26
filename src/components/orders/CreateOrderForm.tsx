@@ -57,7 +57,7 @@ export function CreateOrderForm({
   const [isPriceChange, setIsPriceChange] = useState<boolean>(false);
 const location = useLocation();
   const [poIs, setPoIs] = useState(false);
-
+console.log(initialData?.customerInfo)
   useEffect(() => {
    
     if (location.pathname.startsWith('/admin/po')) {
@@ -99,7 +99,7 @@ const location = useLocation();
         name: initialData?.customerInfo?.name || `${initialData?.customerInfo?.name || ""} ${userProfile?.last_name || ""}`,
         email: initialData?.customerInfo?.email || "",
         phone: userProfile?.mobile_phone || "",
-        type: "Pharmacy",
+        type: initialData?.customerInfo?.type ||  "Pharmacy",
         address: {
           street: initialData?.customerInfo?.address?.street || userProfile?.company_name || "",
           city: initialData?.customerInfo?.address?.city || userProfile?.city || "",

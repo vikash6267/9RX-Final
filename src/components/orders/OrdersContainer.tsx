@@ -369,12 +369,12 @@ export const OrdersContainer = ({
       console.log(mappedCart);
 
       sessionStorage.setItem("taxper", data.taxPercantage);
-
+// console.log(data?.type,"DATA")
       setOrderData((prevState) => ({
         ...prevState,
         customerInfo: {
           cusid: data.id || "test",
-          type: "Pharmacy",
+          type: data?.type || "Pharmacy",
           name: data.display_name,
           email: data.email || "",
           phone: data.mobile_phone || data?.work_phone || data?.phone || "",
@@ -387,7 +387,7 @@ export const OrdersContainer = ({
         },
         shippingAddress: {
           cusid: data.id || "test",
-          type: "Pharmacy",
+          type:  data?.type || "Pharmacy",
           name: data.display_name,
           email: data.email || "",
           phone: data.mobile_phone || data?.work_phone || data?.phone || "",

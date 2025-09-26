@@ -728,6 +728,7 @@ export const OrderDetailsSheet = ({
               customerInfo={currentOrder.customerInfo}
               shippingAddress={currentOrder.shippingAddress}
               componyName={componyName}
+              poIs={poIs}
             />
 
 
