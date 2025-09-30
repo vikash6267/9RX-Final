@@ -12,6 +12,15 @@ import { OrderFormActions } from "./form/OrderFormActions";
 import { useLocation, useNavigate } from "react-router-dom";
 import { generateOrderId, calculateOrderTotal, generatePurchaseOrderId } from "./utils/orderUtils";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogOverlay,
+} from "@/components/ui/dialog";
+import {
   validateOrderItems,
   useOrderValidation,
 } from "./form/OrderFormValidation";
@@ -965,23 +974,25 @@ purchase_number_external:order.purchase_number_external ,
               isPriceChange && <CartItemsPricing />
             }
 
-            {isOpen && (
-              <div className="fixed -inset-4 flex items-center justify-center bg-black bg-opacity-50 h-screen z-[50]">
-                <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] md:w-[50%] relative h-[80vh] overflow-y-scroll">
-                  {/* Close Button */}
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="absolute top-3 right-3 text-gray-600 hover:text-black text-lg"
-                  >
-                    ✖
-                  </button>
 
-                  {/* Modal Content */}
+                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
+  <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 z-50" />
+  <DialogContent 
+    className="bg-white p-6 rounded-lg shadow-lg 
+               overflow-x-hidden // Stops horizontal scroll
+               md:w-[60vw] max-w-full 
+               fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 
+               h-full max-h-[90vh] overflow-y-scroll flex justify-center" 
+  >
+    {/* Modal Content - THIS IS WHERE WE ADD THE FIX */}
+    <div className="p-4 w-full flex justify-center"> 
+      <ProductShowcase groupShow={true} isEditing={isEditing} form={form} />
+    </div>
+  </DialogContent>
+</Dialog>
 
-                  <ProductShowcase groupShow={true} isEditing={isEditing} form={form} />
-                </div>
-              </div>
-            )}
+
+          
             <OrderItemsSection
               orderItems={form.getValues('items') || cartItems}
               form={form}

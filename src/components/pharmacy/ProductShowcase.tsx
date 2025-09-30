@@ -189,7 +189,7 @@ const ProductShowcase = ({ groupShow,isEditing=false,form={} }: ProductShowcaseP
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-[90vw]">
       <div className="flex justify-between items-center">
         {!groupShow && <HeroSection />}
 
