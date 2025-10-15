@@ -225,7 +225,7 @@ export function CustomerSelectionField({ form ,initialData,locationId,poIs=false
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">Vendor Address</h2>
+        <h2 className="text-xl font-semibold">{poIs ? "Vendor Address": "Customer Address"}</h2>
         {isValidating ? (
           <div className="text-sm text-muted-foreground">
             Validating customer information...
